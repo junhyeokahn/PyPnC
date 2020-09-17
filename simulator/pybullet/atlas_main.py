@@ -11,22 +11,21 @@ from config.atlas_config import SimConfig
 
 
 def get_robot_config(robot):
-    nq, nv, na, actuator_id, joint_id, link_id = 0, 0, 0, [], dict(), dict()
+    nq, nv, na, joint_id, link_id = 0, 0, 0, dict(), dict()
     for i in range(p.getNumJoints(robot)):
         info = p.getJointInfo(robot, i)
         print(info)
         if info[2] != p.JOINT_FIXED:
-            actuator_id.append(info[0])
-        joint_id[info[1].decode("utf-8")] = info[0]
+            joint_id[info[1].decode("utf-8")] = info[0]
         link_id[info[12].decode("utf-8")] = info[0]
         nq = max(nq, info[3])
         nv = max(nv, info[4])
     nq += 1
     nv += 1
-    na = len(actuator_id)
+    na = len(joint_id)
     link_id["pelvis"] = -1
 
-    return nq, nv, na, actuator_id, joint_id, link_id
+    return nq, nv, na, joint_id, link_id
 
 
 def set_initial_config(robot, joint_id):
@@ -50,16 +49,33 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
 
 
-def set_joint_friction(robot, actuator_id, max_force=0):
-    p.setJointMotorControlArray(robot,
-                                actuator_id,
+def set_joint_friction(robot, joint_id, max_force=0):
+    p.setJointMotorControlArray(robot, [*joint_id.values()],
                                 p.VELOCITY_CONTROL,
-                                forces=[max_force] * len(actuator_id))
+                                forces=[max_force] * len(joint_id))
 
 
-def set_motor_trq(robot, actuator_id, trq):
-    assert len(actuator_id) == trq.shape[0]
-    p.setJointMotorControlArray(robot, actuator_id, trq.tolist())
+def set_motor_trq(robot, joint_id, trq):
+    assert len(joint_id) == trq.shape[0]
+    p.setJointMotorControlArray(robot, [*joint_id.values()], trq.tolist())
+
+
+def get_sensor_data(robot, joint_id):
+    sensor_data = dict()
+
+    base_pos, base_quat = p.getBasePositionAndOrientation(robot)
+    sensor_data['base_pos'] = np.asarray(base_pos)
+    sensor_data['base_quat'] = np.asarray(base_quat)
+
+    base_lin_vel, base_ang_vel = p.getBaseVelocity(robot)
+    sensor_data['base_lin_vel'] = np.asarray(base_lin_vel)
+    sensor_data['base_ang_vel'] = np.asarray(base_ang_vel)
+
+    joint_states = p.getJointStates(robot, [*joint_id.values()])
+    sensor_data['joint_pos'] = np.array([js[0] for js in joint_states])
+    sensor_data['joint_vel'] = np.array([js[1] for js in joint_states])
+
+    return sensor_data
 
 
 if __name__ == "__main__":
@@ -80,13 +96,16 @@ if __name__ == "__main__":
         [0, 0, 1.5 - 0.761])
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
-    nq, nv, na, actuator_id, joint_id, link_id = get_robot_config(robot)
+    nq, nv, na, joint_id, link_id = get_robot_config(robot)
 
     # Initial Config
     set_initial_config(robot, joint_id)
 
     # Joint Friction
-    set_joint_friction(robot, actuator_id, 1)
+    set_joint_friction(robot, joint_id, 1)
+
+    # Construct Interface
+    # interface = AtlasInterface()
 
     # Run Sim
     t = 0
@@ -94,6 +113,7 @@ if __name__ == "__main__":
     while (1):
         time.sleep(dt)
         t += dt
+        sensor_data = get_sensor_data(robot, joint_id)
         # interface.get_command()
-        # set_motor_trq(robot, actuator_id, trq)
+        # set_motor_trq(robot, joint_id, trq)
         p.stepSimulation()
