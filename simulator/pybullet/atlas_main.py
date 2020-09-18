@@ -8,6 +8,7 @@ import pybullet as p
 import numpy as np
 
 from config.atlas_config import SimConfig
+from pnc.atlas_pnc.atlas_interface import AtlasInterface
 
 
 def get_robot_config(robot):
@@ -94,6 +95,7 @@ if __name__ == "__main__":
     robot = p.loadURDF(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
         [0, 0, 1.5 - 0.761])
+
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id = get_robot_config(robot)
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     set_joint_friction(robot, joint_id, 1)
 
     # Construct Interface
-    # interface = AtlasInterface()
+    interface = AtlasInterface()
 
     # Run Sim
     t = 0
@@ -114,6 +116,6 @@ if __name__ == "__main__":
         time.sleep(dt)
         t += dt
         sensor_data = get_sensor_data(robot, joint_id)
-        # interface.get_command()
-        # set_motor_trq(robot, joint_id, trq)
+        # command = interface.get_command(sensor_data)
+        # set_motor_trq(robot, joint_id, command['joint_trq'])
         p.stepSimulation()
