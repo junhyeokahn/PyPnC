@@ -24,7 +24,7 @@ def get_robot_config(robot):
     nq += 1
     nv += 1
     na = len(joint_id)
-    link_id["pelvis"] = -1
+    link_id[(p.getBodyInfo(robot)[0]).decode("utf-8")] = -1
 
     return nq, nv, na, joint_id, link_id
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.dt, numSubSteps=1)
+    p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.DT, numSubSteps=1)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     # Run Sim
     t = 0
-    dt = SimConfig.dt
+    dt = SimConfig.DT
     while (1):
         time.sleep(dt)
         t += dt

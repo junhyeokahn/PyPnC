@@ -1,3 +1,6 @@
 class SimConfig(object):
-    init_config = []
-    dt = 0.001
+    DT = 0.001
+
+
+class PnCConfig(object):
+    DYN_LIB = "dart"
