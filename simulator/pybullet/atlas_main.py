@@ -9,13 +9,13 @@ import numpy as np
 
 from config.atlas_config import SimConfig
 from pnc.atlas_pnc.atlas_interface import AtlasInterface
+from util import util as util
 
 
 def get_robot_config(robot):
     nq, nv, na, joint_id, link_id = 0, 0, 0, dict(), dict()
     for i in range(p.getNumJoints(robot)):
         info = p.getJointInfo(robot, i)
-        print(info)
         if info[2] != p.JOINT_FIXED:
             joint_id[info[1].decode("utf-8")] = info[0]
         link_id[info[12].decode("utf-8")] = info[0]
@@ -25,6 +25,16 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
     link_id[(p.getBodyInfo(robot)[0]).decode("utf-8")] = -1
+
+    # print("=" * 80)
+    # print("SimulationRobot")
+    # print("nq: ", nq, ", nv: ", nv, ", na: ", na)
+    # print("+" * 80)
+    # print("Joint Infos")
+    # util.pretty_print(joint_id)
+    # print("+" * 80)
+    # print("Link Infos")
+    # util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -72,9 +82,11 @@ def get_sensor_data(robot, joint_id):
     sensor_data['base_lin_vel'] = np.asarray(base_lin_vel)
     sensor_data['base_ang_vel'] = np.asarray(base_ang_vel)
 
-    joint_states = p.getJointStates(robot, [*joint_id.values()])
-    sensor_data['joint_pos'] = np.array([js[0] for js in joint_states])
-    sensor_data['joint_vel'] = np.array([js[1] for js in joint_states])
+    sensor_data['joint_pos'], sensor_data['joint_vel'] = dict(), dict()
+    for k, v in joint_id.items():
+        js = p.getJointState(robot, v)
+        sensor_data['joint_pos'][k] = js[0]
+        sensor_data['joint_vel'][k] = js[1]
 
     return sensor_data
 
@@ -116,6 +128,6 @@ if __name__ == "__main__":
         time.sleep(dt)
         t += dt
         sensor_data = get_sensor_data(robot, joint_id)
-        # command = interface.get_command(sensor_data)
+        command = interface.get_command(sensor_data)
         # set_motor_trq(robot, joint_id, command['joint_trq'])
         p.stepSimulation()

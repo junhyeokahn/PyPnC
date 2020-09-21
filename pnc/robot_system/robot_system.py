@@ -2,10 +2,19 @@ import abc
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self, filepath):
-        self._nq = 0
-        self._nqdot = 0
-        self._na = 0
+    def __init__(self, n_virtual, filepath):
+        """
+        Base RobotSystem Class
+
+        Parameters
+        ----------
+        n_virtual (int): Number of DOF for Root
+        filepath (str): urdf path
+        """
+        self._n_virtual = n_virtual
+        self._n_q = 0
+        self._n_qdot = 0
+        self._n_a = 0
         self._total_mass = 0.
         self._joint_pos_limit = []
         self._joint_vel_limit = []
@@ -16,16 +25,20 @@ class RobotSystem(abc.ABC):
         self.config_robot(filepath)
 
     @property
-    def nq(self):
-        return self._nq
+    def n_virtual(self):
+        return self._n_virtual
 
     @property
-    def nqdot(self):
-        return self._nqdot
+    def n_q(self):
+        return self._n_q
 
     @property
-    def na(self):
-        return self._na
+    def n_qdot(self):
+        return self._n_qdot
+
+    @property
+    def n_a(self):
+        return self._n_a
 
     @property
     def total_mass(self):
@@ -53,53 +66,127 @@ class RobotSystem(abc.ABC):
 
     @abc.abstractmethod
     def config_robot(self, filepath):
+        """
+        Set properties.
+
+        Parameters
+        ----------
+        filepath (str): urdf path
+        """
         pass
 
     @abc.abstractmethod
     def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
                       joint_pos, joint_vel):
+        """
+        Update generalized coordinate
+
+        Parameters
+        ----------
+        base_pos (np.array): Root pos, None if the robot is fixed in the world
+        base_quat (np.array): Root quat
+        base_lin_vel (np.array): Root linear velocity
+        base_ang_vel (np.array): Root angular velocity
+        joint_pos (dict): Actuator pos
+        joint_vel (dict): Actuator vel
+        """
         pass
 
     @abc.abstractmethod
     def get_q(self):
+        """
+        Returns
+        -------
+        q (np.array): positions in generalized coordinate
+        """
         pass
 
     @abc.abstractmethod
     def get_qdot(self):
+        """
+        Returns
+        -------
+        qdot (np.array): velocities in generalized coordinate
+        """
         pass
 
     @abc.abstractmethod
     def get_mass_matrix(self):
+        """
+        Returns
+        -------
+        A (np.array): Mass matrix in generalized coordinate
+        """
         pass
 
     @abc.abstractmethod
     def get_gravity(self):
+        """
+        Returns
+        -------
+        g (np.array): Gravity forces in generalized coordinate
+        """
         pass
 
     @abc.abstractmethod
     def get_coriolis(self):
+        """
+        Returns
+        -------
+        c (np.array): Coriolis forces in generalized coordinate
+        """
         pass
 
     @abc.abstractmethod
     def get_com_pos(self):
+        """
+        Returns
+        -------
+        com_pos (np.array): COM position
+        """
         pass
 
     @abc.abstractmethod
-    def get_com_vel(self):
+    def get_com_lin_vel(self):
+        """
+        Returns
+        -------
+        com_lin_vel (np.array): COM linear velocity
+        """
         pass
 
     @abc.abstractmethod
-    def get_com_jac(self):
+    def get_com_lin_jac(self):
+        """
+        Returns
+        -------
+        com_lin_jac (np.array): COM linear jacobian
+        """
         pass
 
     @abc.abstractmethod
-    def get_body_iso(self, body_id):
+    def get_link_iso(self, link_id):
+        """
+        Returns
+        -------
+        link_iso (np.array): Link SE(3)
+        """
         pass
 
     @abc.abstractmethod
-    def get_body_vel(self, body_id):
+    def get_link_vel(self, link_id):
+        """
+        Returns
+        -------
+        link_vel (np.array): Link Screw
+        """
         pass
 
     @abc.abstractmethod
-    def get_body_jac(self, body_id):
+    def get_link_jac(self, link_id):
+        """
+        Returns
+        -------
+        link_jac (np.array): Link jacobian
+        """
         pass

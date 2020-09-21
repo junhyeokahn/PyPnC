@@ -53,12 +53,10 @@ class HelloWorldNode(dart.gui.osg.RealTimeWorldNode):
 
 
 if __name__ == "__main__":
-    # world = dart.simulation.World()
+    world = dart.simulation.World()
 
     urdfParser = dart.utils.DartLoader()
     kr5 = urdfParser.parseSkeleton("dart://sample/urdf/KR5/KR5 sixx R650.urdf")
-    atlas = urdfParser.parseSkeleton(cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf")
-    __import__('ipdb').set_trace()
     ground = urdfParser.parseSkeleton("dart://sample/urdf/KR5/ground.urdf")
     world.addSkeleton(kr5)
     world.addSkeleton(ground)
