@@ -1,0 +1,75 @@
+import numpy as np
+
+from pnc.config.atlas_config import WBCConfig
+from pnc.task_force_container import TaskForceContainer
+from pnc.wbc.basic_task import BasicTask
+from pnc.wbc.basic_contact import BasicContact
+
+
+class AtlasTaskForceContainer(TaskForceContainer):
+    def __init__(self, robot):
+        super(AtlasTaskForceContainer, self).__init__(robot)
+
+        # ======================================================================
+        # Initialize Task
+        # ======================================================================
+        # COM Task
+        self._com_task = BasicTask(robot, "COM")
+        self._com_task.kp = WBCConfig.KP_COM
+        self._com_task.kd = WBCConfig.KD_COM
+        self._com_task.w_hierarchy = WBCConfig.W_COM
+        # Pelvis Task
+        self._pelvis_ori_task = BasicTask(robot, "LINK_ORI", 3, "pelvis")
+        self._pelvis_ori_task.kp = WBCConfig.KP_PELVIS
+        self._pelvis_ori_task.kd = WBCConfig.KD_PELVIS
+        self._pelvis_ori_task.w_hierarchy = WBCConfig.W_PELVIS
+        # Non leg related joints (18, so 18 + 6*2 = n_a)
+        selected_joint = [
+            "back_bkx", "back_bky", "back_bkz", "l_arm_elx", "l_arm_ely",
+            "l_arm_shx", "l_arm_shz", "l_arm_wrx", "l_arm_wry", "l_arm_wry2",
+            "neck_ry", "r_arm_elx", "r_arm_ely", "r_arm_shx", "r_arm_shz",
+            "r_arm_wrx", "r_arm_wry", "r_arm_wry2"
+        ]
+        self._upper_body_task = BasicTask(robot, "SELECTED_JOINT",
+                                          len(selected_joint), selected_joint)
+        self._upper_body_task.kp = WBCConfig.KP_UPPER_BODY
+        self._upper_body_task.kd = WBCConfig.KD_UPPER_BODY
+        self._upper_body_task.w_hierarchy = WBCConfig.W_UPPER_BODY
+        # Rfoot Pos Task
+        self._rfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "r_sole")
+        self._rfoot_pos_task.kp = WBCConfig.KP_FOOT_POS
+        self._rfoot_pos_task.kd = WBCConfig.KD_FOOT_POS
+        self._rfoot_pos_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
+        # Lfoot Pos Task
+        self._lfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "l_sole")
+        self._lfoot_pos_task.kp = WBCConfig.KP_FOOT
+        self._lfoot_pos_task.kd = WBCConfig.KD_FOOT
+        self._lfoot_pos_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
+        # Rfoot Ori Task
+        self._rfoot_ori_task = BasicTask(robot, "LINK_ORI", 3, "r_sole")
+        self._rfoot_ori_task.kp = WBCConfig.KP_FOOT
+        self._rfoot_ori_task.kd = WBCConfig.KD_FOOT
+        self._rfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
+        # Lfoot Ori Task
+        self._lfoot_ori_task = BasicTask(robot, "LINK_ORI", 3, "l_sole")
+        self._lfoot_ori_task.kp = WBCConfig.KP_FOOT
+        self._lfoot_ori_task.kd = WBCConfig.KD_FOOT
+        self._lfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
+
+        self._task_list = [
+            self._com_task, self._pelvis_ori_task, self._upper_body_task,
+            self._rfoot_pos_task, self._lfoot_pos_task, self._rfoot_ori_task,
+            self._lfoot_ori_task
+        ]
+
+        # ======================================================================
+        # Initialize Contact
+        # ======================================================================
+        # Rfoot Contact
+        self._rfoot_contact = SurfaceContact(robot, "r_sole", 0.11, 0.065, 0.7)
+        self._rfoot_contact.max_z = WBCConfig.MAX_Z_FORCE
+        # Lfoot Contact
+        self._lfoot_contact = SurfaceContact(robot, "l_sole", 0.11, 0.065, 0.7)
+        self._lfoot_contact.max_z = WBCConfig.MAX_Z_FORCE
+
+        self_contact_list = [self._rfoot_contact, self._lfoot_contact]

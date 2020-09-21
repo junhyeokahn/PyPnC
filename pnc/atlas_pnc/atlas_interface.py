@@ -21,6 +21,7 @@ class AtlasInterface(Interface):
         super(AtlasInterface, self).__init__()
 
     def get_command(self, sensor_data):
+        # Update RobotSystem
         self._robot.update_system(sensor_data["base_pos"],
                                   sensor_data["base_quat"],
                                   sensor_data["base_lin_vel"],
