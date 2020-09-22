@@ -97,9 +97,10 @@ class WBC(object):
         if contact_list is not None:
             uf_mat = np.array(
                 block_diag(
-                    *[contact.rf_constraint_mat for contact in contact_list]))
+                    *[contact.cone_constraint_mat
+                      for contact in contact_list]))
             uf_vec = np.concatenate(
-                [contact.rf_constraint_vec for contact in contact_list])
+                [contact.cone_constraint_vec for contact in contact_list])
             contact_jacobian = np.concatenate(
                 [contact.jacobian for contact in contact_list], axis=0)
             assert uf_mat.shape[1] == uf_vec.shape[0]
