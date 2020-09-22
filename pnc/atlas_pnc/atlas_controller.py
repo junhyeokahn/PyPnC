@@ -17,8 +17,8 @@ class AtlasController(object):
             self._wbc.trq_limit = self._robot.joint_trq_limit
         else:
             self._wbc.trq_limit = None
-        self._wbc.lambda_qddot = WBCConfig.LAMBDA_QDDOT
-        self._wbc.lambda_fr = WBCConfig.LAMBDA_FR
+        self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
+        self._wbc.lambda_rf = WBCConfig.LAMBDA_RF
         # Initialize Joint Integrator
         self._joint_integrator = JointIntegrator(robot.n_a, PnCConfig.DT)
         self._joint_integrator.pos_cutoff_freq = WBCConfig.POS_CUTOFF_FREQ
@@ -35,9 +35,12 @@ class AtlasController(object):
         gravity = robot.get_gravity()
         self._wbc.update_setting(A, Ainv, coriolis, gravity)
         # Task and Contact Setup
+        w_hierarchy_list = []
         for task in self._tf_container._task_list:
             task.update_jacobian()
-            task.compute_command()
+            task.update_cmd()
+            w_hierarchy_list.append(task.w_hierarchy)
+        self._wbc.w_hierarchy = np.array(w_hierarchy_list)
         for contact in self._tf_container._contact_list:
             contact.update_contact()
         # WBC commands

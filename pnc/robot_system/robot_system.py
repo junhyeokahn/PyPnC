@@ -13,7 +13,7 @@ class RobotSystem(abc.ABC):
         """
         self._n_virtual = n_virtual
         self._n_q = 0
-        self._n_qdot = 0
+        self._n_q_dot = 0
         self._n_a = 0
         self._total_mass = 0.
         self._joint_pos_limit = []
@@ -33,8 +33,8 @@ class RobotSystem(abc.ABC):
         return self._n_q
 
     @property
-    def n_qdot(self):
-        return self._n_qdot
+    def n_q_dot(self):
+        return self._n_q_dot
 
     @property
     def n_a(self):

@@ -12,19 +12,6 @@ class BasicTask(Task):
         self._target_id = target_id
         self._task_type = task_type
 
-        if task_type is "JOINT":
-            pass
-        elif task_type is "SELECTED_JOINT":
-            pass
-        elif task_type is "LINK_XYZ":
-            pass
-        elif task_type is "LINK_ORI":
-            pass
-        elif task_type is "COM":
-            pass
-        else:
-            raise ValueError
-
     def update_cmd(self):
 
         if task_type is "JOINT":

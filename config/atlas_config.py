@@ -35,8 +35,8 @@ class WBCConfFig(object):
     KD_FOOT = np.array([10., 10., 10.])
 
     # Regularization terms
-    LAMBDA_QDDOT = 1e-6
-    LAMBDA_FR = 1e-6
+    LAMBDA_Q_DDOT = 1e-6
+    LAMBDA_RF = 1e-6
 
     B_TRQ_LIMIT = True
 

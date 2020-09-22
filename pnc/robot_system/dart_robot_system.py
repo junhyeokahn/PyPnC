@@ -20,8 +20,8 @@ class DartRobotSystem(RobotSystem):
     def config_robot(self, filepath):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
 
-        self._n_q = self._n_qdot = self._skel.getNumDofs()
-        self._n_a = self._n_qdot - self.n_virtual
+        self._n_q = self._n_q_dot = self._skel.getNumDofs()
+        self._n_a = self._n_q_dot - self.n_virtual
         self._total_mass = self._skel.getMass()
         self._skel.getPositionLowerLimits()
         self._skel.getPositionUpperLimits()
@@ -51,7 +51,7 @@ class DartRobotSystem(RobotSystem):
 
         # print("=" * 80)
         # print("DartRobotSystem")
-        # print("nq: ", self._n_q, ", nv: ", self._n_qdot, ", na: ", self._n_a)
+        # print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ", self._n_a)
         # print("+" * 80)
         # print("Joint Infos")
         # util.pretty_print(self._joint_id)
@@ -137,11 +137,11 @@ class DartRobotSystem(RobotSystem):
         ret[0:3, 3] = link_iso.get_translation()
         return ret
 
-    def get_link_vel(self):
+    def get_link_vel(self, link_id):
         return self._link_id[link_id].getSpatialVelocity()
 
-    def get_link_jacobian(self):
+    def get_link_jacobian(self, link_id):
         return self._link_id[link_id].getJacobian(dart.dynamics.Frame.World())
 
-    def get_link_jacobian_dot(self):
+    def get_link_jacobian_dot(self, link_id):
         return self._link_id[link_id].getJacobianClassicDeriv()

@@ -49,12 +49,12 @@ class Task(abc.ABC):
         assert value.shape[0] == self._dim_task
         self._kd = value
 
-    @w_hierarcy.setter
-    def w_hierarcy(self, value):
+    @w_hierarchy.setter
+    def w_hierarchy(self, value):
         self._w_hierarchy = value
 
     @property
-    def w_hierarcy(self):
+    def w_hierarchy(self):
         return self._w_hierarchy
 
     @property
