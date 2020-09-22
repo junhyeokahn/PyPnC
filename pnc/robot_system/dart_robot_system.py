@@ -73,10 +73,9 @@ class DartRobotSystem(RobotSystem):
         joint_idx (int or list of int)
         """
         if type(joint_id) is list:
-            ret = []
-            for joint in joint_id:
-                ret.append(self._joint_id[joint].getIndexInSkeleton(0))
-            return ret
+            return [
+                self._joint_id[id].getIndexInSkeleton(0) for id in joint_id
+            ]
         else:
             return self._joint_id[joint].getIndexInSkeleton(0)
 
@@ -107,7 +106,7 @@ class DartRobotSystem(RobotSystem):
     def get_q(self):
         return self._skel.getPositions()
 
-    def get_qdot(self):
+    def get_q_dot(self):
         return self._skel.getVelocities()
 
     def get_mass_matrix(self):
@@ -125,8 +124,11 @@ class DartRobotSystem(RobotSystem):
     def get_com_lin_vel(self):
         return self._skel.getCOMLinearVelocity()
 
-    def get_com_lin_jac(self):
+    def get_com_lin_jacobian(self):
         return self._skel.getCOMLinearJacobian()
+
+    def get_com_lin_jacobian_dot(self):
+        return self._skel.getCOMLinearJacobianDeriv()
 
     def get_link_iso(self, link_id):
         link_iso = self._link_id[link_id].getTransform()
@@ -138,5 +140,8 @@ class DartRobotSystem(RobotSystem):
     def get_link_vel(self):
         return self._link_id[link_id].getSpatialVelocity()
 
-    def get_link_jac(self):
+    def get_link_jacobian(self):
         return self._link_id[link_id].getJacobian(dart.dynamics.Frame.World())
+
+    def get_link_jacobian_dot(self):
+        return self._link_id[link_id].getJacobianClassicDeriv()

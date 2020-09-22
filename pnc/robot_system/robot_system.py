@@ -102,7 +102,7 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_qdot(self):
+    def get_q_dot(self):
         """
         Returns
         -------
@@ -156,11 +156,20 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_com_lin_jac(self):
+    def get_com_lin_jacobian(self):
         """
         Returns
         -------
         com_lin_jac (np.array): COM linear jacobian
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_com_lin_jacobian_dot(self):
+        """
+        Returns
+        -------
+        com_lin_jac_dot (np.array): COM linear jacobian dot
         """
         pass
 
@@ -183,10 +192,19 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_link_jac(self, link_id):
+    def get_link_jacobian(self, link_id):
         """
         Returns
         -------
         link_jac (np.array): Link jacobian
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_link_jacobian_dot(self, link_id):
+        """
+        Returns
+        -------
+        link_jac_dot (np.array): Link jacobian dot
         """
         pass

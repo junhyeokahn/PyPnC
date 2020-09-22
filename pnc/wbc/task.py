@@ -1,51 +1,52 @@
 import abc
 import numpy as np
 
-class Task():
+
+class Task(abc.ABC):
+    """
+    WBC Task
+    --------
+    Usage:
+        update_desired --> update_jacobian --> update_cmd
+    """
     def __init__(self, robot, dim):
-        self._robot = robot 
-        self._b_set_task = False
+        self._robot = robot
         self._dim_task = dim
 
         self._w_hierarchy = 1.0
+
         self._kp = np.zeros(self._dim)
         self._kd = np.zeros(self._dim)
-        self._jtdot_qdot = np.zeors(self._dim)
-        self._jt = np.zeros((self._dim, self._robot.n_q))
 
-        ## For Dyn WBC
+        self._jacobian = np.zeros((self._dim, self._robot.n_qdot))
+        self._jacobian_dot_q_dot = np.zeors(self._dim)
+
         self._op_cmd = np.zeros(self._dim)
 
-        ## For Kin WBC
-        self._pos_err = np.zeros(self._dim)
+        self._pos_des = np.zeros(self._dim)
         self._vel_des = np.zeros(self._dim)
         self._acc_des = np.zeros(self._dim)
-
-        ## Store for reuse old command
-        self._pos_des_old = np.zeros(self._dim)
-        self._vel_des_old = np.zeros(self._dim)
-        self._acc_des_old = np.zeros(self._dim)
-    
-    ##TODO: virrtual int getLinkID(){}
 
     @property
     def op_cmd(self):
         return self._op_cmd
 
     @property
-    def jt(self):
-        return self._Jt
+    def jacobian(self):
+        return self._jacobian
 
     @property
-    def jtdot_qdot(self):
-        return self._jtdot_qdot
+    def jacobian_dot_q_dot(self):
+        return self._jacobian_dot_q_dot
 
     @kp.setter
     def kp(self, value):
+        assert value.shape[0] == self._dim_task
         self._kp = value
 
     @kd.setter
     def kd(self, value):
+        assert value.shape[0] == self._dim_task
         self._kd = value
 
     @w_hierarcy.setter
@@ -57,62 +58,40 @@ class Task():
         return self._w_hierarchy
 
     @property
-    def b_set_task(self):
-        return self._b_set_task
-
-    @b_set_task.setter
-    def b_set_task(self, value):
-        self._b_set_task = value
-
-    @property
     def dim_task(self):
         return self._dim_task
 
-    def update_jacobian(self):
-        self.update_task_jacobian()
-        self.update_task_jdot_qdot()
-
     def update_desired(self, pos_des, vel_des, acc_des):
-        self._pos_des_old = pos_des
-        self._vel_des_old = vel_des
-        self._acc_des_old = acc_des
+        """
+        Update pos_des, vel_des, acc_des which will be used later to compute
+        op_cmd
 
-    def compute_command(self):
-        self.update_commnad(self._pos_des_old, self._vel_des_old, self._acc_des_old)
-
-    def update_task(self, pos_des, vel_des, acc_des):
-        self.update_jacobian()
-        self.update_desired(pos_des, vel_des, acc_des)
-        self.compute_command()
-        self._b_set_task = True
-        return True
+        Parameters
+        ----------
+        pos_des (np.array):
+            For orientation task, the size of numpy array is 4, and it should
+            be represented in scalar-last quaternion
+        vel_des (np.array):
+            Velocity desired
+        acc_des (np.array):
+            Acceleration desired
+        """
+        assert vel_des.shape[0] == self._dim
+        assert acc_des.shape[0] == self._dim
+        self._pos_des = pos_des
+        self._vel_des = vel_des
+        self._acc_des = acc_des
 
     @abc.abstractmethod
-    def update_commnad(self, pos_des, vel_des, acc_des):
+    def update_cmd(self):
         """
-        Returns
-        -------
-        boolean 
-        """
-        pass
-    
-    @abc.abstractmethod
-    def update_task_jacobian(self):
-        """
-        Returns
-        -------
-        boolean 
+        Update op_cmd given updated pos_des, vel_des, acc_des
         """
         pass
 
     @abc.abstractmethod
-    def update_task_jdot_qdot(self):
+    def update_jacobian(self):
         """
-        Returns
-        -------
-        boolean 
+        Update jacobian and jacobian_dot_q_dot
         """
         pass
-
-
-

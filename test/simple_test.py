@@ -10,3 +10,9 @@ class Child(Base):
         
 
 child = Child()
+
+import numpy as np
+
+if True:
+    aa = np.array([1])
+print(aa)

@@ -14,7 +14,7 @@ class AtlasTaskForceContainer(TaskForceContainer):
         # Initialize Task
         # ======================================================================
         # COM Task
-        self._com_task = BasicTask(robot, "COM")
+        self._com_task = BasicTask(robot, "COM", 3)
         self._com_task.kp = WBCConfig.KP_COM
         self._com_task.kd = WBCConfig.KD_COM
         self._com_task.w_hierarchy = WBCConfig.W_COM
