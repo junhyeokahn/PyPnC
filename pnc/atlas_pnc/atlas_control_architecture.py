@@ -47,7 +47,8 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
             "lfoot": self._lfoot_tm,
-            "upper_body": self._upper_body_tm
+            "upper_body": self._upper_body_tm,
+            "floating_base": self._floating_base_tm
         }
         # self._dcm_tm = DCMTrajectoryManager(self._dcm_planner, self._taf_container.com_task, self._taf_container.pelvis_ori_task, "l_sole", "r_sole")
 
@@ -73,9 +74,9 @@ class AtlasControlArchitecture(ControlArchitecture):
 
         # Initialize Reaction Force Manager
         self._rfoot_fm = ReactionForceManager(
-            self._taf_container.rfoot_contact, WBCConfig.FR_Z_MAX, robot)
+            self._taf_container.rfoot_contact, WBCConfig.RF_Z_MAX, robot)
         self._lfoot_fm = ReactionForceManager(
-            self._taf_container.lfoot_contact, WBCConfig.FR_Z_MAX, robot)
+            self._taf_container.lfoot_contact, WBCConfig.RF_Z_MAX, robot)
         self._reaction_force_managers = {
             "rfoot": self._rfoot_fm,
             "lfoot": self._lfoot_fm
@@ -87,6 +88,10 @@ class AtlasControlArchitecture(ControlArchitecture):
             self._reaction_force_managers, robot)
         self._state_machine[
             AtlasStates.STAND].end_time = WalkingConfig.INIT_STAND_DUR
+        self._state_machine[
+            AtlasStates.STAND].rf_z_max_time = WalkingConfig.RF_Z_MAX_TIME
+        self._state_machine[
+            AtlasStates.STAND].com_height_des = WalkingConfig.COM_HEIGHT
 
         self._state_machine[AtlasStates.BALANCE] = DoubleSupportStand(
             1, self._trajectory_managers, self._hierarchy_managers,

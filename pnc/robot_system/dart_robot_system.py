@@ -60,6 +60,26 @@ class DartRobotSystem(RobotSystem):
         # util.pretty_print(self._link_id)
         # print("=" * 80)
 
+    def get_q_idx(self, joint_id):
+        """
+        Get joint index in generalized coordinate
+
+        Parameters
+        ----------
+        joint_id (str or list of str)
+
+        Returns
+        -------
+        joint_idx (int or list of int)
+        """
+        if type(joint_id) is list:
+            ret = []
+            for joint in joint_id:
+                ret.append(self._joint_id[joint].getIndexInSkeleton(0))
+            return ret
+        else:
+            return self._joint_id[joint].getIndexInSkeleton(0)
+
     def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
                       joint_pos, joint_vel):
         if base_pos is not None:
@@ -79,8 +99,10 @@ class DartRobotSystem(RobotSystem):
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):
-            self._joint_id[p_k].setPosition(p_v)
-            self._joint_id[v_k].setVelocity(v_v)
+            __import__('ipdb').set_trace()
+            # Assume the joints have 1 dof
+            self._joint_id[p_k].setPosition(0, p_v)
+            self._joint_id[v_k].setVelocity(0, v_v)
 
     def get_q(self):
         return self._skel.getPositions()

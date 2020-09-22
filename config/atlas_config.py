@@ -10,9 +10,9 @@ class PnCConfig(object):
     DT = SimConfig.DT
 
 
-class WBCConfig(object):
+class WBCConfFig(object):
     # Max normal force per contact
-    FR_Z_MAX = 2000.0
+    RF_Z_MAX = 2000.0
 
     # Task Hierarchy Weights
     W_COM = 10.0
@@ -47,6 +47,10 @@ class WBCConfig(object):
 
 
 class WalkingConfig(object):
+    # STAND
     INIT_STAND_DUR = 1.0
+    RF_Z_MAX_TIME = 0.1
+
+    COM_HEIGHT = 1.02
 
     SWING_HEIGHT = 0.05  #cm

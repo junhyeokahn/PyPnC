@@ -1,5 +1,7 @@
 import abc
 
+from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
+
 
 class StateMachine(abc.ABC):
     def __init__(self, state_id, robot):
