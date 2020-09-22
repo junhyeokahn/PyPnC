@@ -8,7 +8,7 @@ class ContactSpec():
         self._b_set_contact = False
         self._idx_fz = self._dim_contact - 1
         self._jc = np.zeros((self._dim_contact, self._robot.n_q))
-        self._jcdot_qdot = np.zeors(self._dim_contact)
+        self._jcdot_qdot = np.zeros(self._dim_contact)
 
         self._max_fz = 0.
         self._uf = None
@@ -51,7 +51,7 @@ class ContactSpec():
 
     def update_contact_spec(self):
         self.update_jc()
-        self.update_jdot_qdot()
+        self.update_jcdot_qdot()
         self.update_uf()
         self.update_ieq_vec()
         self._b_set_contact = True
@@ -67,7 +67,7 @@ class ContactSpec():
         pass
 
     @abc.abstractmethod
-    def update_jdot_qdot(self):
+    def update_jcdot_qdot(self):
         """
         Returns
         -------
