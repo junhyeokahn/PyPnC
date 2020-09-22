@@ -9,7 +9,7 @@ import numpy as np
 
 from config.atlas_config import SimConfig
 from pnc.atlas_pnc.atlas_interface import AtlasInterface
-from util import util as util
+from util import util
 
 
 def get_robot_config(robot):

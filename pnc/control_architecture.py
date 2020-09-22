@@ -6,7 +6,10 @@ class ControlArchitecture(abc.ABC):
         self._robot = robot
         self._state = 0
         self._prev_state = 0
-        self._state_machines = dict()
+        self._state_machine = dict()
+        self._trajectory_managers = dict()
+        self._hierarchy_manangers = dict()
+        self._reaction_force_managers = dict()
 
     @property
     def state(self):

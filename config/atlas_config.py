@@ -7,18 +7,19 @@ class SimConfig(object):
 
 class PnCConfig(object):
     DYN_LIB = "dart"
+    DT = SimConfig.DT
 
 
 class WBCConfig(object):
     # Max normal force per contact
-    MAX_Z_FORCE = 2000.0
+    FR_Z_MAX = 2000.0
 
     # Task Hierarchy Weights
     W_COM = 10.0
     W_PELVIS = 10.0
     W_UPPER_BODY = 20.0
     W_CONTACT_FOOT = 40.0
-    W_SWING_FOOT = 40.0
+    W_SWING_FOOT = 20.0
 
     # Task Gains
     KP_COM = np.array([50., 50., 50])
@@ -32,3 +33,18 @@ class WBCConfig(object):
 
     KP_FOOT = np.array([100., 100., 100.])
     KD_FOOT = np.array([10., 10., 10.])
+
+    # Regularization terms
+    LAMBDA_QDDOT = 1e-6
+    LAMBDA_FR = 1e-6
+
+    B_TRQ_LIMIT = True
+
+    # Integration Parameters
+    VEL_CUTOFF_FREQ = 2.0  #Hz
+    POS_CUTOFF_FREQ = 1.0  #Hz
+    MAX_POS_ERR = 0.2  #Radians
+
+
+class WalkingConfig(object):
+    SWING_HEIGHT = 0.05  #cm

@@ -67,9 +67,45 @@ class AtlasTaskForceContainer(TaskForceContainer):
         # ======================================================================
         # Rfoot Contact
         self._rfoot_contact = SurfaceContact(robot, "r_sole", 0.11, 0.065, 0.7)
-        self._rfoot_contact.max_z = WBCConfig.MAX_Z_FORCE
+        self._rfoot_contact.fr_z_max = WBCConfig.FR_Z_MAX
         # Lfoot Contact
         self._lfoot_contact = SurfaceContact(robot, "l_sole", 0.11, 0.065, 0.7)
-        self._lfoot_contact.max_z = WBCConfig.MAX_Z_FORCE
+        self._lfoot_contact.fr_z_max = WBCConfig.FR_Z_MAX
 
         self_contact_list = [self._rfoot_contact, self._lfoot_contact]
+
+    @property
+    def com_task(self):
+        return self._com_task
+
+    @property
+    def pelvis_ori_task(self):
+        return self._pelvis_ori_task
+
+    @property
+    def upper_body_task(self):
+        return self._upper_body_task
+
+    @property
+    def rfoot_pos_task(self):
+        return self._rfoot_pos_task
+
+    @property
+    def lfoot_pos_task(self):
+        return self._lfoot_pos_task
+
+    @property
+    def rfoot_ori_task(self):
+        return self._rfoot_ori_task
+
+    @property
+    def lfoot_ori_task(self):
+        return self._lfoot_ori_task
+
+    @property
+    def rfoot_contact(self):
+        return self._rfoot_contact
+
+    @property
+    def lfoot_contact(self):
+        return self._lfoot_contact
