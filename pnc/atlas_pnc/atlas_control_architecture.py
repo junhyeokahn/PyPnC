@@ -4,6 +4,16 @@ from config.atlas_config import WalkingConfig, WBCConfig
 from pnc.control_architecture import ControlArchitecture
 from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
 from pnc.atlas_pnc.atlas_controller import AtlasController
+from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
+from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
+from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
+from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
+from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
+
+
+class AtlasStates(object):
+    STAND = 0
+    BALANCE = 1
 
 
 class AtlasControlArchitecture(ControlArchitecture):
@@ -31,22 +41,15 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._lfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
         self._upper_body_tm = UpperBodyTrajectoryManager(
             self._taf_container.upper_body_task, robot)
+        self._floating_base_tm = FloatingBaseTrajectoryManager(
+            self._taf_container.com_task, self._taf_container.base_ori_task,
+            robot)
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
             "lfoot": self._lfoot_tm,
             "upper_body": self._upper_body_tm
         }
         # self._dcm_tm = DCMTrajectoryManager(self._dcm_planner, self._taf_container.com_task, self._taf_container.pelvis_ori_task, "l_sole", "r_sole")
-
-        # Initialize Reaction Force Manager
-        self._rfoot_fm = ReactionForceManager(
-            self._taf_container.rfoot_contact, WBCConfig.FR_Z_MAX, robot)
-        self._lfoot_fm = ReactionForceManager(
-            self._taf_container.lfoot_contact, WBCConfig.FR_Z_MAX, robot)
-        self._reaction_force_managers = {
-            "rfoot": self._rfoot_fm,
-            "lfoot": self._lfoot_fm
-        }
 
         # Initialize Hierarchy Manager
         self._rfoot_pos_hm = TaskHierarchyManager(
@@ -68,12 +71,24 @@ class AtlasControlArchitecture(ControlArchitecture):
             "lfoot_ori": self._lfoot_ori_hm
         }
 
+        # Initialize Reaction Force Manager
+        self._rfoot_fm = ReactionForceManager(
+            self._taf_container.rfoot_contact, WBCConfig.FR_Z_MAX, robot)
+        self._lfoot_fm = ReactionForceManager(
+            self._taf_container.lfoot_contact, WBCConfig.FR_Z_MAX, robot)
+        self._reaction_force_managers = {
+            "rfoot": self._rfoot_fm,
+            "lfoot": self._lfoot_fm
+        }
+
         # Initialize State Machines
-        self._state_machine["STAND"] = DoubleSupportStand(
+        self._state_machine[AtlasStates.STAND] = DoubleSupportStand(
             0, self._trajectory_managers, self._hierarchy_managers,
             self._reaction_force_managers, robot)
+        self._state_machine[
+            AtlasStates.STAND].end_time = WalkingConfig.INIT_STAND_DUR
 
-        self._state_machine["BALANCE"] = DoubleSupportStand(
+        self._state_machine[AtlasStates.BALANCE] = DoubleSupportStand(
             1, self._trajectory_managers, self._hierarchy_managers,
             self._reaction_force_managers, robot)
 

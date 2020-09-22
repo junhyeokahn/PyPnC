@@ -47,4 +47,6 @@ class WBCConfig(object):
 
 
 class WalkingConfig(object):
+    INIT_STAND_DUR = 1.0
+
     SWING_HEIGHT = 0.05  #cm

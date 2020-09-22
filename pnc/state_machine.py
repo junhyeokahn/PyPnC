@@ -32,3 +32,7 @@ class StateMachine(abc.ABC):
     @abc.abstractmethod
     def end_of_state(self):
         pass
+
+    @abc.abstractmethod
+    def get_next_state(self):
+        pass
