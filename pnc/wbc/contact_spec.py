@@ -6,63 +6,59 @@ class ContactSpec():
         self._robot = robot
         self._dim_contact = dim
         self._b_set_contact = False
-        self._idx_Fz = self._dim_contact - 1
-        self._Jc = np.zeros(self._dim_contact, self._robot.n_q)
-        self._JcDotQdot = np.zeors(self._dim_contact)
+        self._idx_fz = self._dim_contact - 1
+        self._jc = np.zeros((self._dim_contact, self._robot.n_q))
+        self._jcdot_qdot = np.zeors(self._dim_contact)
 
-        self._Uf = np.array([])
+        self._max_fz = 0.
+        self._uf = None
         self._ieq_vec = []
-        ##TODO: self._Uf
-        ##TODO: self._ieq_vec
 
     @property
-    def getContactJacobian(self):
-        return self._Jc
+    def jc(self):
+        return self._jc
 
     @property
-    def getJcDotQdot(self):
-        return self._JcDotQdot
+    def jcdot_qdot(self):
+        return self._jcdot_qdot
 
     @property
-    def getDim(self):
+    def dim_contact(self):
         return self._dim_contact
 
-    @unsetContact.setter
-    def unsetContact(self):
-        self._b_set_contact = False
+    @b_set_contact.setter
+    def b_set_contact(self, value):
+        self._b_set_contact = value
 
-    ##TODO: virtual void setMaxFz(double _max_fz) {}
-    ##TODO: virtual double getMaxFz() { return 0. }
-    @property
-    def getMaxFz(self):
-        return 0.
-
-    def updateContactSpec(self):
-        self.UpdateJc()
-        self.UpdateJcDotQdot()
-        self.UpdateUf()
-        self.UpdateInequalityVector()
-        self._b_set_contact = True
-        return True
+    @max_fz.setter
+    def max_fz(self, value):
+        return self._max_fz = value
 
     @property
-    def getDimRFConstraint(self):
-        return np.shape(self._Uf)[0]
+    def uf(self):
+        return self._uf
 
     @property
-    def getRFConstraintMtx(self):
-        return self._Uf
-
-    @property
-    def getRFConstraintVec(self):
+    def ieq_vec(self):
         return self._ieq_vec
 
     @property
-    def getFzIndex(self):
-        return self._idx_Fz
+    def idx_fz(self):
+        return self._idx_fz
+
+    def get_dim_rf_constraint(self):
+        return np.shape(self._uf)[0]
+
+    def update_contact_spec(self):
+        self.update_jc()
+        self.update_jdot_qdot()
+        self.update_uf()
+        self.update_ieq_vec()
+        self._b_set_contact = True
+        return True
 
     @abc.abstractmethod
-    def UpdateJc(self):
+    def update_jc(self):
         """
         Returns
         -------
@@ -71,7 +67,7 @@ class ContactSpec():
         pass
 
     @abc.abstractmethod
-    def UpdateJcDotQdot(self):
+    def update_jdot_qdot(self):
         """
         Returns
         -------
@@ -80,7 +76,7 @@ class ContactSpec():
         pass
 
     @abc.abstractmethod
-    def UpdateUf(self):
+    def update_uf(self):
         """
         Returns
         -------
@@ -89,7 +85,7 @@ class ContactSpec():
         pass
 
     @abc.abstractmethod
-    def UpdateInequalityVector(self):
+    def update_ieq_vec(self):
         """
         Returns
         -------
