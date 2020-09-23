@@ -24,7 +24,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._taf_container = AtlasTaskForceContainer(robot)
 
         # Initialize Controller
-        self._main_controller = AtlasController(self._taf_container, robot)
+        self._atlas_controller = AtlasController(self._taf_container, robot)
 
         # Initialize Planner
         # self._dcm_planner = DCMPlanner()
@@ -100,3 +100,20 @@ class AtlasControlArchitecture(ControlArchitecture):
         # Set Starting State
         self._state = "STAND"
         self._prev_state = "STAND"
+        self._b_state_first_visit = True
+
+    def get_command(self):
+        if self._b_state_first_visit:
+            self._state_machine[self._state].first_visit()
+            self._b_state_first_visit = False
+
+        self._state_machine[self._state].one_step()
+        command = self._atlas_controller.get_command()
+
+        if self._state_machine[self._state].end_of_state():
+            self._state_machine[self._state].last_visit()
+            self._prev_state = self._state
+            self._state = self._state_machine[self._state].get_next_state()
+            self._b_state_first_visit = True
+
+        return command
