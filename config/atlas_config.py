@@ -2,12 +2,13 @@ import numpy as np
 
 
 class SimConfig(object):
-    DT = 0.001
+    CONTROLLER_DT = 0.001
+    CAMERA_DT = 0.05
 
 
 class PnCConfig(object):
     DYN_LIB = "dart"
-    DT = SimConfig.DT
+    CONTROLLER_DT = SimConfig.CONTROLLER_DT
 
 
 class WBCConfig(object):
