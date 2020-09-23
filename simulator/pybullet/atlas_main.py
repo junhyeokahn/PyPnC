@@ -33,8 +33,8 @@ def get_robot_config(robot):
     # print("Joint Infos")
     # util.pretty_print(joint_id)
     # print("+" * 80)
-    # print("Link Infos")
-    # util.pretty_print(link_id)
+    print("Link Infos")
+    util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -90,6 +90,27 @@ def get_sensor_data(robot, joint_id):
 
     return sensor_data
 
+def get_camera_image(robot, projection_matrix):
+    link_info = p.getLinkState(robot,10) #Get head link info
+    link_pos = link_info[0] #Get link com pos wrt world
+    link_ori = link_info[1] #Get link com ori wrt world
+    rot = p.getMatrixFromQuaternion(link_ori)
+    rot = np.array(rot).reshape(3,3)
+
+    global_camera_x_unit = np.array([1,0,0])
+    global_camera_z_unit = np.array([0,0,1])
+
+    camera_eye_pos = link_pos + np.dot(rot, 0.1*global_camera_x_unit)
+    camera_target_pos = link_pos + np.dot(rot, 1.0*global_camera_x_unit)
+    camera_up_vector = np.dot(rot, global_camera_z_unit)
+    view_matrix = p.computeViewMatrix(camera_eye_pos, camera_target_pos, camera_up_vector)
+    width, height, rgb_img, depth_img, seg_img = p.getCameraImage(
+                                                50, #image width
+                                                10, #image height
+                                                view_matrix,
+                                                projection_matrix)
+    return width, height, rgb_img, depth_img, seg_img
+
 
 if __name__ == "__main__":
 
@@ -118,16 +139,33 @@ if __name__ == "__main__":
     # Joint Friction
     set_joint_friction(robot, joint_id, 1)
 
+    #camera intrinsic parameter
+    fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10 
+    projection_matrix = p.computeProjectionMatrixFOV(
+                                                fov,
+                                                aspect,
+                                                nearval,
+                                                farval)
+
     # Construct Interface
-    interface = AtlasInterface()
+    # interface = AtlasInterface()
 
     # Run Sim
     t = 0
     dt = SimConfig.DT
+    count = 0
     while (1):
         time.sleep(dt)
         t += dt
+        if count % 50 == 0:
+            camera_img = get_camera_image(robot, projection_matrix)
+            # print("rgb_img")
+            # print(camera_img[2])
+            # print("depth_img")
+            # print(camera_img[3])
+            # print("seg_img")
+            # print(camera_img[4])
         sensor_data = get_sensor_data(robot, joint_id)
-        command = interface.get_command(sensor_data)
+        # command = interface.get_command(sensor_data)
         # set_motor_trq(robot, joint_id, command['joint_trq'])
         p.stepSimulation()
