@@ -5,7 +5,7 @@ sys.path.append(cwd)
 
 import numpy as np
 
-from pnc.wbc.contact_spec import Contact
+from pnc.wbc.contact import Contact
 
 
 class PointContact(Contact):
@@ -157,4 +157,4 @@ class SurfaceContact(Contact):
 
         u[17, 5] = -1.
 
-    return u
+        return u

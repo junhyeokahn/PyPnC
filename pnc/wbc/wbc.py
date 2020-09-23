@@ -21,10 +21,10 @@ class WBC(object):
         j = k = 0
         for i in range(self._n_q_dot):
             if act_list[i]:
-                self._sa(j, i) = 1.
+                self._sa[j, i] = 1.
                 j += 1
             else:
-                self._sv(k, i) = 1.
+                self._sv[k, i] = 1.
                 k += 1
 
         # Assume first six is floating
@@ -35,6 +35,22 @@ class WBC(object):
         self._lambda_q_ddot = 0.
         self._lambda_rf = 0.
         self._w_hierarchy = 0.
+
+    @property
+    def trq_limit(self):
+        return self._trq_limit
+
+    @property
+    def lambda_q_ddot(self):
+        return self._lambda_q_ddot
+
+    @property
+    def lambda_rf(self):
+        return self._lambda_rf
+
+    @property
+    def w_hierarchy(self):
+        return self._w_hierarchy
 
     @trq_limit.setter
     def trq_limit(self, val):

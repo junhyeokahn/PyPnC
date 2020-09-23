@@ -1,9 +1,9 @@
 import numpy as np
 
-from pnc.config.atlas_config import WBCConfig
+from config.atlas_config import WBCConfig
 from pnc.task_force_container import TaskForceContainer
 from pnc.wbc.basic_task import BasicTask
-from pnc.wbc.basic_contact import BasicContact
+from pnc.wbc.basic_contact import SurfaceContact
 
 
 class AtlasTaskForceContainer(TaskForceContainer):
