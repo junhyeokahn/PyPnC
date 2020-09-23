@@ -39,7 +39,7 @@ class WBC(object):
     @trq_limit.setter
     def trq_limit(self, val):
         assert val.shape[0] == self._n_active
-        self._trq_limit = val
+        self._trq_limit = np.copy(val)
 
     @lambda_q_ddot.setter
     def lambda_q_ddot(self, val):
@@ -54,10 +54,10 @@ class WBC(object):
         self._w_hierarchy = val
 
     def update_setting(self, mass_matrix, mass_matrix_inv, coriolis, gravity):
-        self._mass_matrix = mass_matrix
-        self._mass_matrix_inv = mass_matrix_inv
-        self._coriolis = coriolis
-        self._gravity = gravity
+        self._mass_matrix = np.copy(mass_matrix)
+        self._mass_matrix_inv = np.copy(mass_matrix_inv)
+        self._coriolis = np.copy(coriolis)
+        self._gravity = np.copy(gravity)
 
     def solve(self, task_list, contact_list):
         """
@@ -77,9 +77,11 @@ class WBC(object):
         sol_rf (np.array):
             Reaction force
         """
-        # qddot' cost_t_mat qddot + cost_t_vec' qddot
-        # cost_t_mat \in (nqdot, nqdot)
-        # cost_t_vec \in (nqdot, 1)
+
+        # ======================================================================
+        # Cost
+        # ======================================================================
+
         cost_t_mat = np.zeors((self._n_q_dot, self._n_q_dot))
         cost_t_vec = np.zeros(self._n_q_dot)
 
@@ -103,48 +105,80 @@ class WBC(object):
                 [contact.cone_constraint_vec for contact in contact_list])
             contact_jacobian = np.concatenate(
                 [contact.jacobian for contact in contact_list], axis=0)
-            assert uf_mat.shape[1] == uf_vec.shape[0]
-            assert contact_jacobian.shape[0] == uf_mat.shape[0]
-            dim_contact_constraints, dim_contacts = uf_mat.shape
+
+            assert uf_mat.shape[0] == uf_vec.shape[0]
+            assert uf_mat.shape[1] == contact_jacobian.shape[0]
+            dim_cone_constraint, dim_contacts = uf_mat.shape
 
             cost_rf_mat = self._lambda_rf * np.ones(dim_contacts)
             v_f = np.zeros(dim_contacts)
+
+            cost_mat = np.array(block_diag(
+                cost_t_mat, cost_rf_mat))  # (nqdot+nc, nqdot+nc)
+            cost_vec = np.concatenate([cost_t_vec, v_f])  # (nqdot+nc,)
+
         else:
-            dim_contacts = dim_contact_constraints = 0
+            dim_contacts = dim_cone_constraint = 0
+            cost_mat = np.copy(cost_t_mat)
+            cost_vec = np.copy(cost_t_vec)
 
-        cost_mat = np.array(block_diag(cost_t_mat,
-                                       cost_rf_mat))  # (nqdot+nc, nqdot+nc)
-        cost_vec = np.concatenate([cost_t_vec, v_f])  # (nqdot+nc,)
+        # ======================================================================
+        # Equality Constraint
+        # ======================================================================
 
-        eq_mat = np.concatenate([
-            np.dot(self._sf, self._mass_matrix),
-            -np.dot(self._sf, contact_jacobian.transpose())
-        ])  # (6, nqdot+nc)
-        eq_vec = -np.dot(self._sf, (self._coriolis + self._gravity))  #(6,)
+        if contact_list is not None:
+            eq_mat = np.concatenate(
+                (np.dot(self._sf, self._mass_matrix),
+                 -np.dot(self._sf, contact_jacobian.transpose())),
+                axis=1)  # (6, nqdot+nc)
+        else:
+            eq_mat = np.dot(self._sf, self._mass_matrix)
+        eq_vec = -np.dot(self._sf, (self._coriolis + self._gravity))
+
+        # ======================================================================
+        # Inequality Constraint
+        # ======================================================================
 
         if self._trq_limit is None:
-            ineq_mat = np.concatenate((np.zeros(
-                (dim_contact_constraints, self._n_qdot)), -uf_mat),
-                                      axis=1)
-            ineq_vec = -uf_vec
+            if contact_list is not None:
+                ineq_mat = np.concatenate((np.zeros(
+                    (dim_cone_constraint, self._n_qdot)), -uf_mat),
+                                          axis=1)
+                ineq_vec = -uf_vec
+            else:
+                ineq_mat = None
+                ineq_vec = None
 
         else:
-            ineq_mat = np.concatenate(
-                np.concatenate((np.zeros(
-                    (dim_contact_constraints, self._n_qdot)),
-                                -np.dot(self._sa, self._mass_matrix),
-                                np.dot(self._sa, self._mass_matrix)),
-                               axis=0),
-                np.concatenate(
-                    (-uf_mat, np.dot(self._sa, contact_jacobian.transpose()),
-                     -np.dot(self._sa, contact_jacobian.transpose())),
-                    axis=0),
-                axis=1)
-            ineq_vec = np.concatenate(
-                (-uf_vec, np.dot(self._sa, self._coriolis + self._gravity) -
-                 self._trq_limit[:, 0],
-                 -np.dot(self._sa, self._coriolis + self._gravity) +
-                 self._trq_limit[:, 1]))
+            if contact_list is not None:
+                ineq_mat = np.concatenate(
+                    np.concatenate((np.zeros(
+                        (dim_cone_constraint, self._n_qdot)),
+                                    -np.dot(self._sa, self._mass_matrix),
+                                    np.dot(self._sa, self._mass_matrix)),
+                                   axis=0),
+                    np.concatenate(
+                        (-uf_mat, np.dot(self._sa,
+                                         contact_jacobian.transpose()),
+                         -np.dot(self._sa, contact_jacobian.transpose())),
+                        axis=0),
+                    axis=1)
+                ineq_vec = np.concatenate(
+                    (-uf_vec,
+                     np.dot(self._sa, self._coriolis + self._gravity) -
+                     self._trq_limit[:, 0],
+                     -np.dot(self._sa, self._coriolis + self._gravity) +
+                     self._trq_limit[:, 1]))
+            else:
+                ineq_mat = np.concatenate(
+                    (-np.dot(self._sa, self._mass_matrix),
+                     np.dot(self._sa, self._mass_matrix)),
+                    axis=0)
+                ineq_vec = np.concatenate(
+                    (np.dot(self._sa, self._coriolis + self._gravity) -
+                     self._trq_limit[:, 0],
+                     -np.dot(self._sa, self._coriolis + self._gravity) +
+                     self._trq_limit[:, 1]))
 
         sol = solve_qp(cost_mat,
                        cost_vec,
@@ -155,7 +189,10 @@ class WBC(object):
                        solver="quadprog",
                        verbose=True)
 
-        sol_q_ddot, sol_rf = sol[:self._n_q_dot], sol[self._n_q_dot:]
+        if contact_list is not None:
+            sol_q_ddot, sol_rf = sol[:self._n_q_dot], sol[self._n_q_dot:]
+        else:
+            sol_q_ddot, sol_rf = sol, None
 
         if contact_list is not None:
             joint_trq_cmd = np.dot(

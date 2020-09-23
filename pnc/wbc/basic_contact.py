@@ -13,37 +13,36 @@ class PointContact(Contact):
         super(PointContact, self).__init__(robot, 3)
 
         self._link_id = link_id
-        self._max_fz = 500.
         self._mu = mu
 
     def _update_jacobian(self):
-        jt_temp = self._robot.get_link_jac(self._link_id)
-        self._jacobian = jt_temp[self._dim_contact:, :]
+        self._jacobian = self._robot.get_link_jac(
+            self._link_id)[self._dim_contact:, :]
         self._jacobian_dot_q_dot = np.dot(
             self._robot.get_link_jacobian_dot(
                 self._link_id)[self._dim_contact:, :], self._robot.get_qdot())
 
     def _update_cone_constraint(self):
         rot = self._robot.get_link_iso(self._link_id)[0:3, 0:3].transpose()
-        self._uf = np.zeros((6, self._dim_contact))
-        self._uf[0, 2] = 1.
+        self._cone_constraint_mat = np.zeros((6, self._dim_contact))
+        self._cone_constraint_mat[0, 2] = 1.
 
-        self._uf[1, 0] = 1.
-        self._uf[1, 2] = self._mu
-        self._uf[2, 0] = -1.
-        self._uf[2, 2] = self._mu
+        self._cone_constraint_mat[1, 0] = 1.
+        self._cone_constraint_mat[1, 2] = self._mu
+        self._cone_constraint_mat[2, 0] = -1.
+        self._cone_constraint_mat[2, 2] = self._mu
 
-        self._uf[3, 1] = 1.
-        self._uf[3, 2] = self._mu
-        self._uf[4, 1] = -1.
-        self._uf[4, 2] = self._mu
+        self._cone_constraint_mat[3, 1] = 1.
+        self._cone_constraint_mat[3, 2] = self._mu
+        self._cone_constraint_mat[4, 1] = -1.
+        self._cone_constraint_mat[4, 2] = self._mu
 
-        self._uf[5, 2] = -1.
+        self._cone_constraint_mat[5, 2] = -1.
 
-        self._uf = np.dot(self._uf, rot)
+        self._cone_constraint_mat = np.dot(self._cone_constraint_mat, rot)
 
-        self._ieq_vec = np.zeors(6)
-        self._ieq_vec[5] = -self._max_fz
+        self._cone_constraint_vec = np.zeors(6)
+        self._cone_constraint_vec[5] = -self._rf_z_max
 
 
 class SurfaceContact(Contact):
@@ -51,7 +50,6 @@ class SurfaceContact(Contact):
         super(SurfaceContact, self).__init__(robot, 6)
 
         self._link_id = link_id
-        self._max_fz = 1500.
         self._x = x
         self._y = y
         self._mu = mu
@@ -62,7 +60,7 @@ class SurfaceContact(Contact):
             self._robot.get_jacobian_dot(self._link_id), self.get_qdot())
 
     def _update_cone_constraint(self):
-        self._uf = np.zeros((16 + 2, self._dim_contact))
+        self._cone_constraint_mat = np.zeros((16 + 2, self._dim_contact))
 
         u = self._get_u(self._x, self._y, self._mu)
         rot = self._robot.get_link_iso(self._link_id)[0:3, 0:3]
@@ -70,10 +68,10 @@ class SurfaceContact(Contact):
         rot_foot[0:3, 0:3] = rot.transpose()
         rot_foot[3:6, 3:6] = rot.transpose()
 
-        self._uf = np.dot(u, rot_foot)
+        self._cone_constraint_mat = np.dot(u, rot_foot)
 
-        self._ieq_vec = np.zeors(16 + 2)
-        self._ieq_vec[17] = -self._max_fz
+        self._cone_constraint_vec = np.zeors(16 + 2)
+        self._cone_constraint_vec[17] = -self._rf_z_max
 
     def _get_u(self, x, y, mu):
         u = np.zeors((16 + 2, 6))

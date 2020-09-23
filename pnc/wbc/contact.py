@@ -3,10 +3,15 @@ import numpy as np
 
 
 class Contact(abc.ABC):
+    """
+    WBC Contact
+    -----------
+    Usage:
+        update_contact
+    """
     def __init__(self, robot, dim):
         self._robot = robot
         self._dim_contact = dim
-        self._rf_z_idx = self._dim_contact - 1
         self._jacobian = np.zeros((self._dim_contact, self._robot.n_q))
         self._jacobian_dot_q_dot = np.zeros(self._dim_contact)
         self._rf_z_max = 0.
@@ -37,14 +42,9 @@ class Contact(abc.ABC):
     def cone_constraint_vec(self):
         return self._cone_constraint_vec
 
-    @property
-    def rf_z_idx(self):
-        return self._rf_z_idx
-
-    def update_contact_spec(self):
+    def update_contact(self):
         self._update_jacobian()
         self._update_cone_constraint()
-        return True
 
     @abc.abstractmethod
     def _update_jacobian(self):
