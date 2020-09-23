@@ -98,7 +98,6 @@ class DartRobotSystem(RobotSystem):
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):
-            __import__('ipdb').set_trace()
             # Assume the joints have 1 dof
             self._joint_id[p_k].setPosition(0, p_v)
             self._joint_id[v_k].setVelocity(0, v_v)

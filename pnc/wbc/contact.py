@@ -30,6 +30,10 @@ class Contact(abc.ABC):
     def dim_contact(self):
         return self._dim_contact
 
+    @property
+    def rf_z_max(self):
+        return self._rf_z_max
+
     @rf_z_max.setter
     def rf_z_max(self, value):
         self._rf_z_max = value

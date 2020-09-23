@@ -3,6 +3,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
 from util import util
+from pnc.wbc.task import Task
 
 
 class BasicTask(Task):

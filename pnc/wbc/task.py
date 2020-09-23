@@ -39,6 +39,18 @@ class Task(abc.ABC):
     def jacobian_dot_q_dot(self):
         return self._jacobian_dot_q_dot
 
+    @property
+    def kp(self):
+        return self._kp
+
+    @property
+    def kd(self):
+        return self._kd
+
+    @property
+    def w_hierarchy(self):
+        return self._w_hierarchy
+
     @kp.setter
     def kp(self, value):
         assert value.shape[0] == self._dim_task

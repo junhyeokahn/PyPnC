@@ -10,7 +10,7 @@ class PnCConfig(object):
     DT = SimConfig.DT
 
 
-class WBCConfFig(object):
+class WBCConfig(object):
     # Max normal force per contact
     RF_Z_MAX = 2000.0
 
