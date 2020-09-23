@@ -12,7 +12,7 @@ class WBC(object):
     """
     def __init__(self, act_list):
         self._n_q_dot = len(act_list)
-        self._n_active = np.count_non_zero(np.array(act_list))
+        self._n_active = np.count_nonzero(np.array(act_list))
         self._n_passive = self._n_q_dot - self._n_active
 
         # Selection matrix

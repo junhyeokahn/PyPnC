@@ -9,6 +9,8 @@ from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTraject
 from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
 from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
+from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
+from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
 
 
 class AtlasStates(object):
@@ -42,7 +44,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._upper_body_tm = UpperBodyTrajectoryManager(
             self._taf_container.upper_body_task, robot)
         self._floating_base_tm = FloatingBaseTrajectoryManager(
-            self._taf_container.com_task, self._taf_container.base_ori_task,
+            self._taf_container.com_task, self._taf_container.pelvis_ori_task,
             robot)
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
@@ -55,7 +57,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         # Initialize Hierarchy Manager
         self._rfoot_pos_hm = TaskHierarchyManager(
             self._taf_container.rfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
-            WBCCongif.W_SWING_FOOT, robot)
+            WBCConfig.W_SWING_FOOT, robot)
         self._lfoot_pos_hm = TaskHierarchyManager(
             self._taf_container.lfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
@@ -98,8 +100,8 @@ class AtlasControlArchitecture(ControlArchitecture):
             self._reaction_force_managers, robot)
 
         # Set Starting State
-        self._state = "STAND"
-        self._prev_state = "STAND"
+        self._state = AtlasStates.STAND
+        self._prev_state = AtlasStates.STAND
         self._b_state_first_visit = True
 
     def get_command(self):

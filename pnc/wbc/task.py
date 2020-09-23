@@ -11,15 +11,15 @@ class Task(abc.ABC):
     """
     def __init__(self, robot, dim):
         self._robot = robot
-        self._dim_task = dim
+        self._dim = dim
 
         self._w_hierarchy = 1.0
 
         self._kp = np.zeros(self._dim)
         self._kd = np.zeros(self._dim)
 
-        self._jacobian = np.zeros((self._dim, self._robot.n_qdot))
-        self._jacobian_dot_q_dot = np.zeors(self._dim)
+        self._jacobian = np.zeros((self._dim, self._robot.n_q_dot))
+        self._jacobian_dot_q_dot = np.zeros(self._dim)
 
         self._op_cmd = np.zeros(self._dim)
 
@@ -51,27 +51,23 @@ class Task(abc.ABC):
     def w_hierarchy(self):
         return self._w_hierarchy
 
+    @property
+    def dim(self):
+        return self._dim
+
     @kp.setter
     def kp(self, value):
-        assert value.shape[0] == self._dim_task
+        assert value.shape[0] == self._dim
         self._kp = value
 
     @kd.setter
     def kd(self, value):
-        assert value.shape[0] == self._dim_task
+        assert value.shape[0] == self._dim
         self._kd = value
 
     @w_hierarchy.setter
     def w_hierarchy(self, value):
         self._w_hierarchy = value
-
-    @property
-    def w_hierarchy(self):
-        return self._w_hierarchy
-
-    @property
-    def dim_task(self):
-        return self._dim_task
 
     def update_desired(self, pos_des, vel_des, acc_des):
         """

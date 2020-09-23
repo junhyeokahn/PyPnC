@@ -23,7 +23,7 @@ class AtlasInterface(Interface):
         else:
             raise ValueError
         self._sp = AtlasStateProvider(self._robot)
-        self._control_architecture = AtlasControlArchitecture()
+        self._control_architecture = AtlasControlArchitecture(self._robot)
 
     def get_command(self, sensor_data):
 

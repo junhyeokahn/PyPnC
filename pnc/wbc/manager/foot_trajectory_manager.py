@@ -10,8 +10,8 @@ class FootTrajectoryManager(object):
         self._robot = robot
         self._swing_height = 0.05
 
-        assert self._pos_task.link_id == self._ori_task.link_id
-        self._link_id = self._pos_task_link_id
+        assert self._pos_task.target_id == self._ori_task.target_id
+        self._target_id = self._pos_task.target_id
 
     @property
     def swing_height(self):
@@ -22,8 +22,8 @@ class FootTrajectoryManager(object):
         self._swing_height = val
 
     def use_current(self):
-        foot_iso = self._robot.get_link_iso(self._link_id)
-        foot_vel = self._robot.get_link_vel(self._link_id)
+        foot_iso = self._robot.get_link_iso(self._target_id)
+        foot_vel = self._robot.get_link_vel(self._target_id)
 
         foot_pos_des = foot_iso[0:3, 3]
         foot_lin_vel_des = foot_vel[3:6]

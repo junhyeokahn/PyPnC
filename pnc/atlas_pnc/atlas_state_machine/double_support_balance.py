@@ -1,7 +1,6 @@
 import numpy as np
 
 from pnc.state_machine import StateMachine
-from pnc.atlas_pnc.atlas_control_architecture import AtlasStates
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 
@@ -14,6 +13,10 @@ class DoubleSupportBalance(StateMachine):
         self._sp = AtlasStateProvider()
         self._start_time = 0.
         self._b_state_switch_trigger = False
+
+    @property
+    def b_state_switch_trigger(self):
+        return self._b_state_switch_trigger
 
     @b_state_switch_trigger.setter
     def b_state_switch_trigger(self, val):

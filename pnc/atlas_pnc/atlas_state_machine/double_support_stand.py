@@ -3,7 +3,6 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
 from pnc.state_machine import StateMachine
-from pnc.atlas_pnc.atlas_control_architecture import AtlasStates
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 
@@ -18,6 +17,18 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = 0.
         self._start_time = 0.
         self._sp = AtlasStateProvider()
+
+    @property
+    def end_time(self):
+        return self._end_time
+
+    @property
+    def rf_z_max_time(self):
+        return self.rf_z_max_time
+
+    @property
+    def com_height_des(self):
+        return self.com_height_des
 
     @end_time.setter
     def end_time(self, val):

@@ -13,6 +13,10 @@ class BasicTask(Task):
         self._target_id = target_id
         self._task_type = task_type
 
+    @property
+    def target_id(self):
+        return self._target_id
+
     def update_cmd(self):
 
         if task_type is "JOINT":

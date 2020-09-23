@@ -88,3 +88,10 @@ def exp_to_quat(exp):
         ret[2] = 0.5 * exp[2]
         ret[3] = 1.0
     return ret
+
+
+def get_alpha_from_frequency(hz, dt):
+    omega = 2 * np.pi * hz
+    alpha = (omega * dt) / (1. + (omega * dt))
+
+    return np.clip(alpha, 0., 1.)

@@ -32,13 +32,15 @@ class AtlasTaskForceContainer(TaskForceContainer):
         ]
         self._upper_body_task = BasicTask(robot, "SELECTED_JOINT",
                                           len(selected_joint), selected_joint)
-        self._upper_body_task.kp = WBCConfig.KP_UPPER_BODY
-        self._upper_body_task.kd = WBCConfig.KD_UPPER_BODY
+        self._upper_body_task.kp = np.array([WBCConfig.KP_UPPER_BODY] *
+                                            self._upper_body_task.dim)
+        self._upper_body_task.kd = np.array([WBCConfig.KD_UPPER_BODY] *
+                                            self._upper_body_task.dim)
         self._upper_body_task.w_hierarchy = WBCConfig.W_UPPER_BODY
         # Rfoot Pos Task
         self._rfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "r_sole")
-        self._rfoot_pos_task.kp = WBCConfig.KP_FOOT_POS
-        self._rfoot_pos_task.kd = WBCConfig.KD_FOOT_POS
+        self._rfoot_pos_task.kp = WBCConfig.KP_FOOT
+        self._rfoot_pos_task.kd = WBCConfig.KD_FOOT
         self._rfoot_pos_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
         # Lfoot Pos Task
         self._lfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "l_sole")
