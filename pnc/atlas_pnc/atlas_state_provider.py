@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 
 
@@ -14,7 +16,7 @@ class MetaSingleton(type):
 class AtlasStateProvider(metaclass=MetaSingleton):
     def __init__(self, robot):
         self._robot = robot
-        self._nominal_joint_pos = dict()
+        self._nominal_joint_pos = OrderedDict()
         self._state = 0
         self._curr_time = 0.
 

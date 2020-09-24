@@ -1,17 +1,22 @@
 import abc
+from collections import OrderedDict
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self, n_virtual, filepath):
+    def __init__(self, filepath, floating_joint_list, fixed_joint_list):
         """
         Base RobotSystem Class
 
         Parameters
         ----------
-        n_virtual (int): Number of DOF for Root
-        filepath (str): urdf path
+        filepath (str):
+            urdf path
+        floating_joint_list (list of str):
+            list of floating joint name
+        floating_fixed_list (list of str):
+            list of fixed joint name
         """
-        self._n_virtual = n_virtual
+        self._n_virtual = 0
         self._n_q = 0
         self._n_q_dot = 0
         self._n_a = 0
@@ -19,10 +24,11 @@ class RobotSystem(abc.ABC):
         self._joint_pos_limit = []
         self._joint_vel_limit = []
         self._joint_trq_limit = []
-        self._joint_id = dict()
-        self._link_id = dict()
+        self._joint_id = OrderedDict()
+        self._floating_id = OrderedDict()
+        self._link_id = OrderedDict()
 
-        self.config_robot(filepath)
+        self.config_robot(filepath, floating_joint_list, fixed_joint_list)
 
     @property
     def n_virtual(self):
@@ -76,6 +82,42 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def get_q_idx(self, joint_id):
+        """
+        Get joint index in generalized coordinate
+
+        Parameters
+        ----------
+        joint_id (str or list of str)
+
+        Returns
+        -------
+        joint_idx (int or list of int)
+        """
+        pass
+
+    @abc.abstractmethod
+    def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
+                                joint_trq_cmd):
+        """
+        Create command ordered dict
+
+        Parameters
+        ----------
+        joint_pos_cmd (np.array):
+            Joint Pos Cmd
+        joint_vel_cmd (np.array):
+            Joint Vel Cmd
+        joint_trq_cmd (np.array):
+            Joint Trq Cmd
+
+        Returns
+        -------
+        command (OrderedDict)
+        """
+        pass
+
+    @abc.abstractmethod
     def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
                       joint_pos, joint_vel):
         """
@@ -87,8 +129,8 @@ class RobotSystem(abc.ABC):
         base_quat (np.array): Root quat
         base_lin_vel (np.array): Root linear velocity
         base_ang_vel (np.array): Root angular velocity
-        joint_pos (dict): Actuator pos
-        joint_vel (dict): Actuator vel
+        joint_pos (OrderedDict): Actuator pos
+        joint_vel (OrderedDict): Actuator vel
         """
         pass
 

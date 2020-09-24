@@ -3,6 +3,7 @@ import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
+from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
@@ -13,7 +14,8 @@ from util import util
 
 
 def get_robot_config(robot):
-    nq, nv, na, joint_id, link_id = 0, 0, 0, dict(), dict()
+    nq, nv, na, joint_id, link_id = 0, 0, 0, OrderedDict(), OrderedDict()
+    link_id[(p.getBodyInfo(robot)[0]).decode("utf-8")] = -1
     for i in range(p.getNumJoints(robot)):
         info = p.getJointInfo(robot, i)
         if info[2] != p.JOINT_FIXED:
@@ -24,7 +26,6 @@ def get_robot_config(robot):
     nq += 1
     nv += 1
     na = len(joint_id)
-    link_id[(p.getBodyInfo(robot)[0]).decode("utf-8")] = -1
 
     # print("=" * 80)
     # print("SimulationRobot")
@@ -66,13 +67,22 @@ def set_joint_friction(robot, joint_id, max_force=0):
                                 forces=[max_force] * len(joint_id))
 
 
-def set_motor_trq(robot, joint_id, trq):
-    assert len(joint_id) == trq.shape[0]
-    p.setJointMotorControlArray(robot, [*joint_id.values()], trq.tolist())
+def set_motor_trq(robot, joint_id, command):
+    assert len(joint_id) == len(command['joint_trq'])
+
+    for (joint_name, pos_des), (_, vel_des), (_, trq_des) in zip(
+            command['joint_pos'].items(), command['joint_vel'].items(),
+            command['joint_trq'].items()):
+        joint_state = p.getJointState(robot, joint_id[joint_name])
+        joint_pos, joint_vel = joint_state[0], joint_state[1]
+        trq_applied = trq_des + SimConfig.KP * (
+            pos_des - joint_pos) + SimConfig.KD * (vel_des - joint_vel)
+        p.setJointMotorControl2(robot, joint_id[joint_name], p.TORQUE_CONTROL,
+                                trq_applied)
 
 
 def get_sensor_data(robot, joint_id):
-    sensor_data = dict()
+    sensor_data = OrderedDict()
 
     base_pos, base_quat = p.getBasePositionAndOrientation(robot)
     sensor_data['base_pos'] = np.asarray(base_pos)
@@ -82,7 +92,8 @@ def get_sensor_data(robot, joint_id):
     sensor_data['base_lin_vel'] = np.asarray(base_lin_vel)
     sensor_data['base_ang_vel'] = np.asarray(base_ang_vel)
 
-    sensor_data['joint_pos'], sensor_data['joint_vel'] = dict(), dict()
+    sensor_data['joint_pos'] = OrderedDict()
+    sensor_data['joint_vel'] = OrderedDict()
     for k, v in joint_id.items():
         js = p.getJointState(robot, v)
         sensor_data['joint_pos'][k] = js[0]
@@ -165,7 +176,7 @@ if __name__ == "__main__":
             # print(camera_img[4])
         sensor_data = get_sensor_data(robot, joint_id)
         command = interface.get_command(sensor_data)
-        # set_motor_trq(robot, joint_id, command['joint_trq'])
+        set_motor_trq(robot, joint_id, command)
         p.stepSimulation()
 
         time.sleep(dt)

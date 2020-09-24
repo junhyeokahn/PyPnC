@@ -4,6 +4,7 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
 import pprint
+from collections import OrderedDict
 
 import pybullet as p
 import dartpy as dart
@@ -14,11 +15,26 @@ from util import util as util
 
 
 class DartRobotSystem(RobotSystem):
-    def __init__(self, n_virtual, filepath):
-        super(DartRobotSystem, self).__init__(n_virtual, filepath)
+    def __init__(self, filepath, floating_joint_list, fixed_joint_list):
+        super(DartRobotSystem, self).__init__(filepath, floating_joint_list,
+                                              fixed_joint_list)
 
-    def config_robot(self, filepath):
+    def config_robot(self, filepath, floating_joint_list, fixed_joint_list):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
+
+        for i in range(self._skel.getNumJoints()):
+            j = self._skel.getJoint(i)
+            if j.getName() in floating_joint_list:
+                self._n_virtual += j.getNumDofs()
+                self._floating_id[j.getName()] = j
+            elif j.getName() not in fixed_joint_list:
+                self._joint_id[j.getName()] = j
+            else:
+                pass
+
+        for i in range(self._skel.getNumBodyNodes()):
+            bn = self._skel.getBodyNode(i)
+            self._link_id[bn.getName()] = bn
 
         self._n_q = self._n_q_dot = self._skel.getNumDofs()
         self._n_a = self._n_q_dot - self.n_virtual
@@ -41,37 +57,22 @@ class DartRobotSystem(RobotSystem):
         ],
                                          axis=1)[self._n_virtual:, :]
 
-        for i in range(self._skel.getNumJoints()):
-            j = self._skel.getJoint(i)
-            self._joint_id[j.getName()] = j
-
-        for i in range(self._skel.getNumBodyNodes()):
-            bn = self._skel.getBodyNode(i)
-            self._link_id[bn.getName()] = bn
-
         # print("=" * 80)
         # print("DartRobotSystem")
-        # print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ", self._n_a)
+        # print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ", self._n_a,
+        # ", nvirtual: ", self._n_virtual)
         # print("+" * 80)
         # print("Joint Infos")
-        # util.pretty_print(self._joint_id)
+        # util.pretty_print([*self._joint_id.keys()])
+        # print("+" * 80)
+        # print("Floating Joint Infos")
+        # util.pretty_print([*self._floating_id.keys()])
         # print("+" * 80)
         # print("Link Infos")
-        # util.pretty_print(self._link_id)
+        # util.pretty_print([*self._link_id.keys()])
         # print("=" * 80)
 
     def get_q_idx(self, joint_id):
-        """
-        Get joint index in generalized coordinate
-
-        Parameters
-        ----------
-        joint_id (str or list of str)
-
-        Returns
-        -------
-        joint_idx (int or list of int)
-        """
         if type(joint_id) is list:
             return [
                 self._joint_id[id].getIndexInSkeleton(0) for id in joint_id
@@ -79,9 +80,32 @@ class DartRobotSystem(RobotSystem):
         else:
             return self._joint_id[joint].getIndexInSkeleton(0)
 
+    def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
+                                joint_trq_cmd):
+
+        command = OrderedDict()
+        command["joint_pos"] = OrderedDict()
+        command["joint_vel"] = OrderedDict()
+        command["joint_trq"] = OrderedDict()
+
+        for k, v in (self._joint_id).items():
+            joint_idx = self._joint_id[k].getIndexInSkeleton(
+                0) - self._n_virtual
+            command["joint_pos"][k] = joint_pos_cmd[joint_idx]
+            command["joint_vel"][k] = joint_vel_cmd[joint_idx]
+            command["joint_trq"][k] = joint_trq_cmd[joint_idx]
+        return command
+
     def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
                       joint_pos, joint_vel):
-        if base_pos is not None:
+
+        assert len(joint_pos.keys()) == self._n_a
+
+        if len(self._floating_id) > 1:
+            # Assume (x,y,z,rz,ry,rx)
+            #TODO
+            pass
+        elif len(self._floating_id) == 1:
             base_iso = dart.math.Isometry3()
             base_iso.set_rotation(
                 np.reshape(np.asarray(p.getMatrixFromQuaternion(base_quat)),
@@ -93,8 +117,8 @@ class DartRobotSystem(RobotSystem):
                 np.reshape(base_vel, (6, 1)), dart.dynamics.Frame.World(),
                 dart.dynamics.Frame.World(), np.zeros((6, 1)),
                 dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
-
-        assert len(joint_pos.keys()) == self._n_a
+        else:
+            pass
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):

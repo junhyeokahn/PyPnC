@@ -54,11 +54,9 @@ class AtlasController(object):
             self._robot.get_q_dot()[self._robot.n_virtual:],
             self._robot.get_q()[self._robot.n_virtual:])
 
-        command = dict()
-        command["joint_pos"] = joint_pos_cmd
-        command["joint_vel"] = joint_vel_cmd
-        command["joint_trq"] = joint_trq_cmd
-
+        command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
+                                                      joint_vel_cmd,
+                                                      joint_trq_cmd)
         return command
 
     def first_visit(self):

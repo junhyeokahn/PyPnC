@@ -1,11 +1,11 @@
+from collections import OrderedDict
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-import yaml
+import json
 
 
 def pretty_print(ob):
-    if type(ob) is dict:
-        print(yaml.dump(ob, default_flow_style=False))
+    print(json.dumps(ob, indent=4))
 
 
 def quat_to_rot(quat):

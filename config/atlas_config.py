@@ -4,6 +4,8 @@ import numpy as np
 class SimConfig(object):
     CONTROLLER_DT = 0.005
     CAMERA_DT = 0.05
+    KP = 100.
+    KD = 10.
 
 
 class PnCConfig(object):

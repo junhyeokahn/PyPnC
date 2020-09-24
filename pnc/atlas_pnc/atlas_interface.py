@@ -19,7 +19,8 @@ class AtlasInterface(Interface):
         if PnCConfig.DYN_LIB == "dart":
             from pnc.robot_system.dart_robot_system import DartRobotSystem
             self._robot = DartRobotSystem(
-                6, cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf")
+                cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+                ['rootJoint'], ["l_sole_fixed", "r_sole_fixed"])
         else:
             raise ValueError
         self._sp = AtlasStateProvider(self._robot)
