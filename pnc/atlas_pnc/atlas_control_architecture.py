@@ -1,6 +1,6 @@
 import numpy as np
 
-from config.atlas_config import WalkingConfig, WBCConfig
+from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
 from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
 from pnc.atlas_pnc.atlas_controller import AtlasController
@@ -11,11 +11,6 @@ from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
 from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
 from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
-
-
-class AtlasStates(object):
-    STAND = 0
-    BALANCE = 1
 
 
 class AtlasControlArchitecture(ControlArchitecture):
@@ -85,23 +80,23 @@ class AtlasControlArchitecture(ControlArchitecture):
         }
 
         # Initialize State Machines
-        self._state_machine[AtlasStates.STAND] = DoubleSupportStand(
+        self._state_machine[WalkingState.STAND] = DoubleSupportStand(
             0, self._trajectory_managers, self._hierarchy_managers,
             self._reaction_force_managers, robot)
         self._state_machine[
-            AtlasStates.STAND].end_time = WalkingConfig.INIT_STAND_DUR
+            WalkingState.STAND].end_time = WalkingConfig.INIT_STAND_DUR
         self._state_machine[
-            AtlasStates.STAND].rf_z_max_time = WalkingConfig.RF_Z_MAX_TIME
+            WalkingState.STAND].rf_z_max_time = WalkingConfig.RF_Z_MAX_TIME
         self._state_machine[
-            AtlasStates.STAND].com_height_des = WalkingConfig.COM_HEIGHT
+            WalkingState.STAND].com_height_des = WalkingConfig.COM_HEIGHT
 
-        self._state_machine[AtlasStates.BALANCE] = DoubleSupportStand(
+        self._state_machine[WalkingState.BALANCE] = DoubleSupportBalance(
             1, self._trajectory_managers, self._hierarchy_managers,
             self._reaction_force_managers, robot)
 
         # Set Starting State
-        self._state = AtlasStates.STAND
-        self._prev_state = AtlasStates.STAND
+        self._state = WalkingState.STAND
+        self._prev_state = WalkingState.STAND
         self._b_state_first_visit = True
 
     def get_command(self):

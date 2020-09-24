@@ -16,6 +16,7 @@ class AtlasStateProvider(metaclass=MetaSingleton):
         self._robot = robot
         self._nominal_joint_pos = dict()
         self._state = 0
+        self._curr_time = 0.
 
     @property
     def nominal_joint_pos(self):
@@ -25,6 +26,10 @@ class AtlasStateProvider(metaclass=MetaSingleton):
     def state(self):
         return self._state
 
+    @property
+    def curr_time(self):
+        return self._curr_time
+
     @nominal_joint_pos.setter
     def nominal_joint_pos(self, val):
         assert self._robot.n_a == len(val.keys())
@@ -33,3 +38,7 @@ class AtlasStateProvider(metaclass=MetaSingleton):
     @state.setter
     def state(self, val):
         self._state = val
+
+    @curr_time.setter
+    def curr_time(self, val):
+        self._curr_time = val

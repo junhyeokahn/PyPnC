@@ -98,7 +98,7 @@ class WBC(object):
         # Cost
         # ======================================================================
 
-        cost_t_mat = np.zeors((self._n_q_dot, self._n_q_dot))
+        cost_t_mat = np.zeros((self._n_q_dot, self._n_q_dot))
         cost_t_vec = np.zeros(self._n_q_dot)
 
         for i, task in enumerate(task_list):
@@ -109,7 +109,7 @@ class WBC(object):
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(
                 (j_dot_q_dot - x_ddot).transpose(), j)
-        # cost_t_mat += self._lambda_q_ddot * np.ones(self._n_q_dot)
+        # cost_t_mat += self._lambda_q_ddot * np.eye(self._n_q_dot)
         cost_t_mat += self._lambda_q_ddot * self._mass_matrix
 
         if contact_list is not None:
@@ -126,7 +126,7 @@ class WBC(object):
             assert uf_mat.shape[1] == contact_jacobian.shape[0]
             dim_cone_constraint, dim_contacts = uf_mat.shape
 
-            cost_rf_mat = self._lambda_rf * np.ones(dim_contacts)
+            cost_rf_mat = self._lambda_rf * np.eye(dim_contacts)
             v_f = np.zeros(dim_contacts)
 
             cost_mat = np.array(block_diag(
@@ -158,7 +158,7 @@ class WBC(object):
         if self._trq_limit is None:
             if contact_list is not None:
                 ineq_mat = np.concatenate((np.zeros(
-                    (dim_cone_constraint, self._n_qdot)), -uf_mat),
+                    (dim_cone_constraint, self._n_q_dot)), -uf_mat),
                                           axis=1)
                 ineq_vec = -uf_vec
             else:
@@ -168,16 +168,16 @@ class WBC(object):
         else:
             if contact_list is not None:
                 ineq_mat = np.concatenate(
-                    np.concatenate((np.zeros(
-                        (dim_cone_constraint, self._n_qdot)),
-                                    -np.dot(self._sa, self._mass_matrix),
-                                    np.dot(self._sa, self._mass_matrix)),
-                                   axis=0),
-                    np.concatenate(
-                        (-uf_mat, np.dot(self._sa,
-                                         contact_jacobian.transpose()),
-                         -np.dot(self._sa, contact_jacobian.transpose())),
-                        axis=0),
+                    (np.concatenate((np.zeros(
+                        (dim_cone_constraint, self._n_q_dot)),
+                                     -np.dot(self._sa, self._mass_matrix),
+                                     np.dot(self._sa, self._mass_matrix)),
+                                    axis=0),
+                     np.concatenate(
+                         (-uf_mat,
+                          np.dot(self._sa, contact_jacobian.transpose()),
+                          -np.dot(self._sa, contact_jacobian.transpose())),
+                         axis=0)),
                     axis=1)
                 ineq_vec = np.concatenate(
                     (-uf_vec,
@@ -199,7 +199,7 @@ class WBC(object):
         sol = solve_qp(cost_mat,
                        cost_vec,
                        ineq_mat,
-                       ienq_vec,
+                       ineq_vec,
                        eq_mat,
                        eq_vec,
                        solver="quadprog",

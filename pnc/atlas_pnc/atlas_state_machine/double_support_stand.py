@@ -2,6 +2,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
+from config.atlas_config import WalkingState
 from pnc.state_machine import StateMachine
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
@@ -43,6 +44,7 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = val
 
     def first_visit(self):
+        print("[WalkingState] STAND")
         self._start_time = self._sp.curr_time
 
         # Initialize CoM Trajectory
@@ -50,16 +52,15 @@ class DoubleSupportStand(StateMachine):
         rfoot_iso = self._robot.get_link_iso("r_sole")
         com_pos_des = (lfoot_iso[0:3, 3] + rfoot_iso[0:3, 3]) / 2.0
         com_pos_des[2] = self._com_height_des
-        base_quat_slerp = Slerp([0, 1],
-                                R.from_matrix(lfoot_iso[0:3, 0:3],
-                                              rfoot_iso[0:3, 0:3]))
+        base_quat_slerp = Slerp(
+            [0, 1], R.from_matrix([lfoot_iso[0:3, 0:3], rfoot_iso[0:3, 0:3]]))
         base_quat_des = base_quat_slerp(0.5).as_quat()
         self._trajectory_managers[
             "floating_base"].initialize_floating_base_trajectory(
                 self._sp.curr_time, self._end_time, com_pos_des, base_quat_des)
 
         # Initialize Reaction Force Ramp to Max
-        for fm in self._force_managers:
+        for fm in self._force_managers.values():
             fm.initialize_ramp_to_max(self._sp.curr_time, self._rf_z_max_time)
 
     def one_step(self):
@@ -67,16 +68,16 @@ class DoubleSupportStand(StateMachine):
 
         # Update Floating Base Task
         self._trajectory_managers[
-            "floating_base"].update_floating_base_desired(sp._curr_time)
+            "floating_base"].update_floating_base_desired(self._sp._curr_time)
         # Update UpperBodyJoint Task
         self._trajectory_managers[
             "upper_body"].use_nominal_upper_body_joint_pos()
         # Update Foot Task
-        self._trajectory_managers["l_foot"].use_current()
-        self._trajectory_managers["r_foot"].use_current()
+        self._trajectory_managers["lfoot"].use_current()
+        self._trajectory_managers["rfoot"].use_current()
 
         # Update Max Normal Reaction Force
-        for fm in self._force_managers:
+        for fm in self._force_managers.values():
             fm.update_ramp_to_max(self._sp.curr_time)
 
     def last_visit(self):
@@ -89,4 +90,4 @@ class DoubleSupportStand(StateMachine):
             return False
 
     def get_next_state(self):
-        return AtlasStates.BALANCE
+        return WalkingState.BALANCE

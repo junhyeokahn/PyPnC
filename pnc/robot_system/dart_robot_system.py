@@ -132,15 +132,15 @@ class DartRobotSystem(RobotSystem):
     def get_link_iso(self, link_id):
         link_iso = self._link_id[link_id].getTransform()
         ret = np.eye(4)
-        ret[0:3, 0:3] = link_iso.get_rotation()
-        ret[0:3, 3] = link_iso.get_translation()
+        ret[0:3, 0:3] = link_iso.rotation()
+        ret[0:3, 3] = link_iso.translation()
         return ret
 
     def get_link_vel(self, link_id):
         return self._link_id[link_id].getSpatialVelocity()
 
     def get_link_jacobian(self, link_id):
-        return self._link_id[link_id].getJacobian(dart.dynamics.Frame.World())
+        return self._skel.getJacobian(self._link_id[link_id])
 
     def get_link_jacobian_dot(self, link_id):
-        return self._link_id[link_id].getJacobianClassicDeriv()
+        return self._skel.getJacobianClassicDeriv(self._link_id[link_id])

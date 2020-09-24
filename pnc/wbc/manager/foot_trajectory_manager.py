@@ -31,7 +31,7 @@ class FootTrajectoryManager(object):
                                       np.zeros(3))
 
         foot_rot_des = util.rot_to_quat(foot_iso[0:3, 0:3])
-        fooot_ang_vel_des = foot_vel[0:3]
+        foot_ang_vel_des = foot_vel[0:3]
         self._ori_task.update_desired(foot_rot_des, foot_ang_vel_des,
                                       np.zeros(3))
 

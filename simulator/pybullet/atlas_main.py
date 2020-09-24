@@ -33,8 +33,8 @@ def get_robot_config(robot):
     # print("Joint Infos")
     # util.pretty_print(joint_id)
     # print("+" * 80)
-    print("Link Infos")
-    util.pretty_print(link_id)
+    # print("Link Infos")
+    # util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
                                                      farval)
 
     # Construct Interface
-    # interface = AtlasInterface()
+    interface = AtlasInterface()
 
     # Run Sim
     t = 0
@@ -164,7 +164,7 @@ if __name__ == "__main__":
             # print("seg_img")
             # print(camera_img[4])
         sensor_data = get_sensor_data(robot, joint_id)
-        # command = interface.get_command(sensor_data)
+        command = interface.get_command(sensor_data)
         # set_motor_trq(robot, joint_id, command['joint_trq'])
         p.stepSimulation()
 

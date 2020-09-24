@@ -20,12 +20,12 @@ class ReactionForceManager(object):
     def update_ramp_to_zero(self, current_time):
         t = np.clip(current_time, self._start_time,
                     self._start_time + self._duration)
-        max_normal = -self._rf_z_max / duration * (
+        max_normal = -self._rf_z_max / self._duration * (
             t - self._start_time) + self._rf_z_max
         self._contact.rf_z_max = max_normal
 
     def update_ramp_to_max(self, current_time):
         t = np.clip(current_time, self._start_time,
                     self._start_time + self._duration)
-        max_normal = self._rf_z_max / duration * (t - self._start_time)
+        max_normal = self._rf_z_max / self._duration * (t - self._start_time)
         self._contact.rf_z_max = max_normal

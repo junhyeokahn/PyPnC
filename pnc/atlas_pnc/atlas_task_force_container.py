@@ -74,7 +74,7 @@ class AtlasTaskForceContainer(TaskForceContainer):
         self._lfoot_contact = SurfaceContact(robot, "l_sole", 0.11, 0.065, 0.7)
         self._lfoot_contact.rf_z_max = WBCConfig.RF_Z_MAX
 
-        self_contact_list = [self._rfoot_contact, self._lfoot_contact]
+        self._contact_list = [self._rfoot_contact, self._lfoot_contact]
 
     @property
     def com_task(self):
@@ -111,3 +111,11 @@ class AtlasTaskForceContainer(TaskForceContainer):
     @property
     def lfoot_contact(self):
         return self._lfoot_contact
+
+    @property
+    def task_list(self):
+        return self._task_list
+
+    @property
+    def contact_list(self):
+        return self._contact_list

@@ -2,7 +2,7 @@ import numpy as np
 
 
 class SimConfig(object):
-    CONTROLLER_DT = 0.001
+    CONTROLLER_DT = 0.005
     CAMERA_DT = 0.05
 
 
@@ -55,3 +55,8 @@ class WalkingConfig(object):
     COM_HEIGHT = 1.02
 
     SWING_HEIGHT = 0.05  #cm
+
+
+class WalkingState(object):
+    STAND = 0
+    BALANCE = 1

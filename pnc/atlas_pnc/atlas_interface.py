@@ -42,7 +42,7 @@ class AtlasInterface(Interface):
 
         # Increase time variables
         self._count += 1
-        self._running_time += PnCConfig.DT
+        self._running_time += PnCConfig.CONTROLLER_DT
         self._sp.curr_time = self._running_time
         self._sp.state = self._control_architecture.state
 

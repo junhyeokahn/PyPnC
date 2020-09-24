@@ -26,10 +26,11 @@ class DoubleSupportBalance(StateMachine):
         self._state_machine_time = self._sp.curr_time - self._start_time
 
         # Update Foot Task
-        self._trajectory_managers["l_foot"].use_current()
-        self._trajectory_managers["r_foot"].use_current()
+        self._trajectory_managers["lfoot"].use_current()
+        self._trajectory_managers["rfoot"].use_current()
 
     def first_visit(self):
+        print("[WalkingState] BALANCE")
         self._b_state_switch_trigger = False
         self._start_time = self._sp.curr_time
         pass

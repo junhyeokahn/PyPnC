@@ -78,4 +78,4 @@ class JointIntegrator(object):
         self._pos = np.clip((1.0 - alpha_pos) * self._pos + alpha_pos * pos +
                             self._vel * self._dt, self._joint_vel_limit[:, 0],
                             self._joint_vel_limit[:, 1])
-        return vel_out, pos_out
+        return self._vel, self._pos

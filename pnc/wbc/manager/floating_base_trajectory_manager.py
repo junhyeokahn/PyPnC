@@ -26,20 +26,20 @@ class FloatingBaseTrajectoryManager(object):
         self._target_com_pos = target_com_pos
 
         self._ini_base_quat = util.rot_to_quat(
-            self._robot.get_link_iso(self._bask_ori_task.link_id)[0:3, 0:3])
+            self._robot.get_link_iso(self._base_ori_task.target_id)[0:3, 0:3])
         self._target_base_quat = target_base_quat
         self._quat_error = (R.from_quat(self._target_base_quat) *
                             R.from_quat(self._ini_base_quat).inv()).as_quat()
         self._exp_error = util.quat_to_exp(self._quat_error)
 
         ## TODO : Check this with dart function
-        import dartpy as dart
-        _quat_error = dart.math.Quaternion()
-        _quat_error.set_wxyz(self._quat_error[3], self._quat_error[0],
-                             self._quat_error[1], self._quat_error[2])
-        _exp_error = dart.math.quatToExp(_quat_error)
-        print(self._exp_error, _exp_error)
-        __import__('ipdb').set_trace()
+        # import dartpy as dart
+        # _quat_error = dart.math.Quaternion()
+        # _quat_error.set_wxyz(self._quat_error[3], self._quat_error[0],
+        # self._quat_error[1], self._quat_error[2])
+        # _exp_error = dart.math.quatToExp(_quat_error)
+        # print(self._exp_error, _exp_error)
+        # __import__('ipdb').set_trace()
         ##
 
     def update_floating_base_desired(self, current_time):
@@ -67,9 +67,10 @@ class FloatingBaseTrajectoryManager(object):
         exp_inc = self._exp_error * scaled_t
         quat_inc = util.exp_to_quat(exp_inc)
         ## TODO : Check this with dart function
-        quat_inc_ = dart.math.expToQuat(exp_inc)
-        print(quat, quat_inc)
-        __import__('ipdb').set_trace()
+        # import dartpy as dart
+        # quat_inc_ = dart.math.expToQuat(exp_inc)
+        # print(quat_inc, quat_inc_)
+        # __import__('ipdb').set_trace()
         ##
         base_quat_des = (R.from_quat(quat_inc) *
                          R.from_quat(self._ini_base_quat)).as_quat()
