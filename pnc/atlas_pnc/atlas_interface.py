@@ -38,6 +38,7 @@ class AtlasInterface(Interface):
                                   sensor_data["base_ang_vel"],
                                   sensor_data["joint_pos"],
                                   sensor_data["joint_vel"])
+        # self._robot.debug_print_link_info()
         # Compute Cmd
         command = self._control_architecture.get_command()
 

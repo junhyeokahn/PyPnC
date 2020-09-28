@@ -9,6 +9,7 @@ from collections import OrderedDict
 import pybullet as p
 import dartpy as dart
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 from pnc.robot_system.robot_system import RobotSystem
 from util import util as util
@@ -106,13 +107,15 @@ class DartRobotSystem(RobotSystem):
             #TODO
             pass
         elif len(self._floating_id) == 1:
+            # Assume base_iso is representing root com frame
+            p_com_joint = self._skel.getRootBodyNode().getLocalCOM()
             base_iso = dart.math.Isometry3()
             base_iso.set_rotation(
                 np.reshape(np.asarray(p.getMatrixFromQuaternion(base_quat)),
                            (3, 3)))
-            base_iso.set_translation(base_pos)
+            base_iso.set_translation(base_pos - p_com_joint)
             base_vel = np.concatenate([base_ang_vel, base_lin_vel])
-            self._skel.getJoint(0).setSpatialMotion(
+            self._skel.getRootJoint().setSpatialMotion(
                 base_iso, dart.dynamics.Frame.World(),
                 np.reshape(base_vel, (6, 1)), dart.dynamics.Frame.World(),
                 dart.dynamics.Frame.World(), np.zeros((6, 1)),
@@ -154,17 +157,66 @@ class DartRobotSystem(RobotSystem):
         return self._skel.getCOMLinearJacobianDeriv()
 
     def get_link_iso(self, link_id):
+        """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
+        Returns
+        -------
+            Link CoM SE(3)
+        """
         link_iso = self._link_id[link_id].getTransform()
         ret = np.eye(4)
         ret[0:3, 0:3] = link_iso.rotation()
-        ret[0:3, 3] = link_iso.translation()
+        ret[0:3, 3] = self._link_id[link_id].getCOM()
         return ret
 
     def get_link_vel(self, link_id):
-        return self._link_id[link_id].getSpatialVelocity()
+        """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
+        Returns
+        -------
+            Link CoM Screw
+        """
+        return self._link_id[link_id].getCOMSpatialVelocity()
 
     def get_link_jacobian(self, link_id):
-        return self._skel.getJacobian(self._link_id[link_id])
+        """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
+        Returns
+        -------
+            Link CoM Jacobian
+        """
+        return self._skel.getJacobian(self._link_id[link_id],
+                                      self._link_id[link_id].getLocalCOM())
 
     def get_link_jacobian_dot(self, link_id):
-        return self._skel.getJacobianClassicDeriv(self._link_id[link_id])
+        """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
+        Returns
+        -------
+            Link CoM Jacobian Dot
+        """
+        return self._skel.getJacobianClassicDeriv(
+            self._link_id[link_id], self._link_id[link_id].getLocalCOM())
+
+    def debug_print_link_info(self):
+        print("-" * 80)
+        print("Controller")
+        print("-" * 80)
+        for (k, v) in self._link_id.items():
+            print(k,
+                  self.get_link_iso(k)[0:3, 3],
+                  R.from_matrix(self.get_link_iso(k)[0:3, 0:3]).as_quat(),
+                  self.get_link_vel(k)[3:6],
+                  self.get_link_vel(k)[0:3])

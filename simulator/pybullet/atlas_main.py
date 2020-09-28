@@ -81,7 +81,35 @@ def set_motor_trq(robot, joint_id, command):
                                 trq_applied)
 
 
+def debug(robot, joint_id, link_id):
+    print("-" * 80)
+    print("Sim")
+    print("-" * 80)
+    for (k, v) in link_id.items():
+        if k != "pelvis":
+            link_info = p.getLinkState(robot, v, 1, 1)
+            print(k, np.asarray(link_info[0]), np.asarray(link_info[1]),
+                  np.asarray(link_info[6]), np.asarray(link_info[7]))
+
+
 def get_sensor_data(robot, joint_id):
+    """
+    Parameters
+    ----------
+    joint_id (dict):
+        Joint ID Dict
+    Returns
+    -------
+    sensor_data (dict):
+        base_pos (np.array):
+            Base CoM Pos
+        base_quat (np.array):
+            Base CoM Quat
+        joint_pos (dict):
+            Joint pos
+        joint_vel (dict):
+            Joint vel
+    """
     sensor_data = OrderedDict()
 
     base_pos, base_quat = p.getBasePositionAndOrientation(robot)
@@ -98,6 +126,10 @@ def get_sensor_data(robot, joint_id):
         js = p.getJointState(robot, v)
         sensor_data['joint_pos'][k] = js[0]
         sensor_data['joint_vel'][k] = js[1]
+
+    # util.pretty_print(sensor_data['joint_pos'])
+    # print(sensor_data['base_pos'])
+    # print(sensor_data['base_quat'])
 
     return sensor_data
 
@@ -166,17 +198,16 @@ if __name__ == "__main__":
     dt = SimConfig.CONTROLLER_DT
     count = 0
     while (1):
+
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             camera_img = get_camera_image(robot, link_id, projection_matrix)
-            # print("rgb_img")
-            # print(camera_img[2])
-            # print("depth_img")
-            # print(camera_img[3])
-            # print("seg_img")
-            # print(camera_img[4])
+
         sensor_data = get_sensor_data(robot, joint_id)
+        # debug(robot, joint_id, link_id)
         command = interface.get_command(sensor_data)
+
         set_motor_trq(robot, joint_id, command)
+
         p.stepSimulation()
 
         time.sleep(dt)
