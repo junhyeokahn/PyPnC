@@ -6,6 +6,7 @@ import time, math
 import pprint
 from collections import OrderedDict
 
+from scipy.linalg import block_diag
 import pybullet as p
 import dartpy as dart
 import numpy as np
@@ -108,18 +109,32 @@ class DartRobotSystem(RobotSystem):
             pass
         elif len(self._floating_id) == 1:
             # Assume base_iso is representing root com frame
-            p_com_joint = self._skel.getRootBodyNode().getLocalCOM()
-            base_iso = dart.math.Isometry3()
-            base_iso.set_rotation(
+            p_joint_com_in_joint = self._skel.getRootBodyNode().getLocalCOM()
+            T_joint_com = np.eye(4)
+            T_joint_com[0:3, 3] = p_joint_com_in_joint
+            adjoint_joint_com_in_joint = util.adjoint(T_joint_com)
+            joint_iso = dart.math.Isometry3()
+            joint_iso.set_rotation(
                 np.reshape(np.asarray(p.getMatrixFromQuaternion(base_quat)),
                            (3, 3)))
-            base_iso.set_translation(base_pos - p_com_joint)
-            base_vel = np.concatenate([base_ang_vel, base_lin_vel])
+            joint_iso.set_translation(
+                base_pos - np.dot(joint_iso.rotation(), p_joint_com_in_joint))
+            base_vel_in_world = np.concatenate([base_ang_vel, base_lin_vel])
+            base_vel_in_com = np.dot(
+                block_diag(joint_iso.rotation().transpose(),
+                           joint_iso.rotation().transpose()),
+                base_vel_in_world)
+            joint_vel_in_joint = np.dot(adjoint_joint_com_in_joint,
+                                        base_vel_in_com)
+            joint_vel_in_world = np.dot(
+                block_diag(joint_iso.rotation(), joint_iso.rotation()),
+                joint_vel_in_joint)
             self._skel.getRootJoint().setSpatialMotion(
-                base_iso, dart.dynamics.Frame.World(),
-                np.reshape(base_vel, (6, 1)), dart.dynamics.Frame.World(),
-                dart.dynamics.Frame.World(), np.zeros((6, 1)),
-                dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
+                joint_iso, dart.dynamics.Frame.World(),
+                np.reshape(joint_vel_in_world, (6, 1)),
+                dart.dynamics.Frame.World(), dart.dynamics.Frame.World(),
+                np.zeros((6, 1)), dart.dynamics.Frame.World(),
+                dart.dynamics.Frame.World())
         else:
             pass
 
@@ -145,16 +160,18 @@ class DartRobotSystem(RobotSystem):
         return self._skel.getCoriolisForces()
 
     def get_com_pos(self):
-        return self._skel.getCOM()
+        return self._skel.getCOM(dart.dynamics.Frame.World())
 
     def get_com_lin_vel(self):
-        return self._skel.getCOMLinearVelocity()
+        return self._skel.getCOMLinearVelocity(dart.dynamics.Frame.World(),
+                                               dart.dynamics.Frame.World())
 
     def get_com_lin_jacobian(self):
-        return self._skel.getCOMLinearJacobian()
+        return self._skel.getCOMLinearJacobian(dart.dynamics.Frame.World())
 
     def get_com_lin_jacobian_dot(self):
-        return self._skel.getCOMLinearJacobianDeriv()
+        return self._skel.getCOMLinearJacobianDeriv(
+            dart.dynamics.Frame.World())
 
     def get_link_iso(self, link_id):
         """
@@ -166,10 +183,12 @@ class DartRobotSystem(RobotSystem):
         -------
             Link CoM SE(3)
         """
-        link_iso = self._link_id[link_id].getTransform()
+        link_iso = self._link_id[link_id].getTransform(
+            dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
         ret = np.eye(4)
         ret[0:3, 0:3] = link_iso.rotation()
-        ret[0:3, 3] = self._link_id[link_id].getCOM()
+        ret[0:3,
+            3] = self._link_id[link_id].getCOM(dart.dynamics.Frame.World())
         return ret
 
     def get_link_vel(self, link_id):
@@ -180,9 +199,11 @@ class DartRobotSystem(RobotSystem):
             Link ID
         Returns
         -------
-            Link CoM Screw
+            Link CoM Screw described in World Frame
         """
-        return self._link_id[link_id].getCOMSpatialVelocity()
+
+        return self._link_id[link_id].getCOMSpatialVelocity(
+            dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
 
     def get_link_jacobian(self, link_id):
         """
@@ -192,10 +213,11 @@ class DartRobotSystem(RobotSystem):
             Link ID
         Returns
         -------
-            Link CoM Jacobian
+            Link CoM Jacobian described in World Frame
         """
         return self._skel.getJacobian(self._link_id[link_id],
-                                      self._link_id[link_id].getLocalCOM())
+                                      self._link_id[link_id].getLocalCOM(),
+                                      dart.dynamics.Frame.World())
 
     def get_link_jacobian_dot(self, link_id):
         """
@@ -208,15 +230,20 @@ class DartRobotSystem(RobotSystem):
             Link CoM Jacobian Dot
         """
         return self._skel.getJacobianClassicDeriv(
-            self._link_id[link_id], self._link_id[link_id].getLocalCOM())
+            self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
+            dart.dynamics.Frame.World())
 
     def debug_print_link_info(self):
         print("-" * 80)
         print("Controller")
         print("-" * 80)
         for (k, v) in self._link_id.items():
+            jac = self.get_link_jacobian(k)
+            qdot = self.get_q_dot()
+            jac_times_qdot = np.dot(jac, qdot)
             print(k,
                   self.get_link_iso(k)[0:3, 3],
                   R.from_matrix(self.get_link_iso(k)[0:3, 0:3]).as_quat(),
                   self.get_link_vel(k)[3:6],
-                  self.get_link_vel(k)[0:3])
+                  self.get_link_vel(k)[0:3], jac_times_qdot[3:6],
+                  jac_times_qdot[0:3])

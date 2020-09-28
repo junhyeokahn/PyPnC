@@ -95,3 +95,15 @@ def get_alpha_from_frequency(hz, dt):
     alpha = (omega * dt) / (1. + (omega * dt))
 
     return np.clip(alpha, 0., 1.)
+
+
+def adjoint(T):
+    R, p = T[0:3, 0:3], T[0:3, 3]
+    so3 = [[0, -p[2], p[1]], [p[2], 0, -p[0]], [-p[1], p[0], 0]]
+    return np.r_[np.c_[R, np.zeros((3, 3))], np.c_[np.dot(so3, R), R]]
+
+
+def iso_inv(T):
+    R, p = T[0:3, 0:3], T[0:3, 3]
+    Rt = np.array(R).T
+    return np.r_[np.c_[Rt, -np.dot(Rt, p)], [[0, 0, 0, 1]]]
