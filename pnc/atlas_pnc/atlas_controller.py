@@ -1,5 +1,6 @@
 import numpy as np
 
+from util import util
 from config.atlas_config import PnCConfig, WBCConfig
 from pnc.wbc.wbc import WBC
 from pnc.wbc.joint_integrator import JointIntegrator
@@ -28,7 +29,13 @@ class AtlasController(object):
         self._joint_integrator.joint_pos_limit = self._robot.joint_pos_limit
         self._joint_integrator.joint_vel_limit = self._robot.joint_vel_limit
 
+        self._b_first_visit = True
+
     def get_command(self):
+
+        if self._b_first_visit:
+            self.first_visit()
+
         # Dynamics properties
         mass_matrix = self._robot.get_mass_matrix()
         mass_matrix_inv = np.linalg.inv(mass_matrix)
@@ -47,7 +54,8 @@ class AtlasController(object):
             contact.update_contact()
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
-            self._tf_container.task_list, self._tf_container.contact_list)
+            self._tf_container.task_list, self._tf_container.contact_list,
+            True)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,
@@ -60,7 +68,8 @@ class AtlasController(object):
         return command
 
     def first_visit(self):
-        joint_pos_ini = self._robot.get_q()[self._robot.n_virtual:self._robot.
-                                            n_a]
-        self._joint_integrator.intialize(np.zeros(self._robot.n_a),
-                                         joint_pos_ini)
+        joint_pos_ini = self._robot.get_q()[self._robot.n_virtual:]
+        self._joint_integrator.initialize_states(np.zeros(self._robot.n_a),
+                                                 joint_pos_ini)
+
+        self._b_first_visit = False

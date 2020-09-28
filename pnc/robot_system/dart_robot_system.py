@@ -143,6 +143,7 @@ class DartRobotSystem(RobotSystem):
             # Assume the joints have 1 dof
             self._joint_id[p_k].setPosition(0, p_v)
             self._joint_id[v_k].setVelocity(0, v_v)
+        self._skel.computeForwardKinematics()
 
     def get_q(self):
         return self._skel.getPositions()
@@ -154,7 +155,13 @@ class DartRobotSystem(RobotSystem):
         return self._skel.getMassMatrix()
 
     def get_gravity(self):
-        return self._skel.getGravityForces()
+        """
+        Get gravity in generalized coordinate
+        Dart 6.9 has a bug on this API
+        """
+        # return self._skel.getGravityForces()
+        return self._skel.getCoriolisAndGravityForces(
+        ) - self._skel.getCoriolisForces()
 
     def get_coriolis(self):
         return self._skel.getCoriolisForces()

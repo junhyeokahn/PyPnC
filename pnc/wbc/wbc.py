@@ -1,4 +1,5 @@
 import numpy as np
+np.set_printoptions(precision=4)
 from scipy.linalg import block_diag
 from qpsolvers import solve_qp
 
@@ -18,7 +19,7 @@ class WBC(object):
         # Selection matrix
         self._sa = np.zeros((self._n_active, self._n_q_dot))
         self._sv = np.zeros((self._n_passive, self._n_q_dot))
-        j = k = 0
+        j, k = 0, 0
         for i in range(self._n_q_dot):
             if act_list[i]:
                 self._sa[j, i] = 1.
@@ -75,7 +76,7 @@ class WBC(object):
         self._coriolis = np.copy(coriolis)
         self._gravity = np.copy(gravity)
 
-    def solve(self, task_list, contact_list):
+    def solve(self, task_list, contact_list, verbose=False):
         """
         Parameters
         ----------
@@ -83,6 +84,8 @@ class WBC(object):
             Task list
         contact_list (list of Contact):
             Contact list
+        verbose (bool):
+            Printing option
 
         Returns
         -------
@@ -101,10 +104,16 @@ class WBC(object):
         cost_t_mat = np.zeros((self._n_q_dot, self._n_q_dot))
         cost_t_vec = np.zeros(self._n_q_dot)
 
+        if verbose:
+            print("-" * 80)
+            print("Task Cmds")
+            print("-" * 80)
         for i, task in enumerate(task_list):
             j = task.jacobian
             j_dot_q_dot = task.jacobian_dot_q_dot
             x_ddot = task.op_cmd
+            if verbose:
+                print(i, x_ddot)
 
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(
@@ -222,5 +231,13 @@ class WBC(object):
                 self._gravity)
 
         joint_acc_cmd = np.dot(self._sa, sol_q_ddot)
+
+        if verbose:
+            print("-" * 80)
+            print("WBC Output")
+            print("-" * 80)
+            print("joint_trq_cmd: ", joint_trq_cmd)
+            print("joint_acc_cmd: ", joint_acc_cmd)
+            print("sol_rf: ", sol_rf)
 
         return joint_trq_cmd, joint_acc_cmd, sol_rf

@@ -43,7 +43,8 @@ class FloatingBaseTrajectoryManager(object):
         ##
 
     def update_floating_base_desired(self, current_time):
-        com_pos_des = com_vel_des = com_acc_des = np.zeros(3)
+        com_pos_des, com_vel_des, com_acc_des = np.zeros(3), np.zeros(
+            3), np.zeros(3)
         for i in range(3):
             com_pos_des[i] = util.smooth_changing(
                 self._ini_com_pos[i], self._target_com_pos[i], self._duration,

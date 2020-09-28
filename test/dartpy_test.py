@@ -4,6 +4,7 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
 import numpy as np
+np.set_printoptions(precision=4)
 import dartpy as dart
 
 

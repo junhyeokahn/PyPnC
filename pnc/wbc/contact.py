@@ -36,6 +36,8 @@ class Contact(abc.ABC):
 
     @rf_z_max.setter
     def rf_z_max(self, value):
+        if value <= 0.:
+            value = 1e-3
         self._rf_z_max = value
 
     @property

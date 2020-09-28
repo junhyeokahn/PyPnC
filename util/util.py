@@ -107,3 +107,8 @@ def iso_inv(T):
     R, p = T[0:3, 0:3], T[0:3, 3]
     Rt = np.array(R).T
     return np.r_[np.c_[Rt, -np.dot(Rt, p)], [[0, 0, 0, 1]]]
+
+
+def print_attrs(ob):
+    attr = vars(ob)
+    print(", \n".join("%s: %s" % item for item in attr.items()))

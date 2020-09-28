@@ -77,8 +77,20 @@ def set_motor_trq(robot, joint_id, command):
         joint_pos, joint_vel = joint_state[0], joint_state[1]
         trq_applied = trq_des + SimConfig.KP * (
             pos_des - joint_pos) + SimConfig.KD * (vel_des - joint_vel)
+        print(joint_name, trq_applied, pos_des, joint_pos, vel_des, joint_vel)
         p.setJointMotorControl2(robot, joint_id[joint_name], p.TORQUE_CONTROL,
                                 trq_applied)
+
+
+def set_motor_pos(robot, joint_id, command):
+    assert len(joint_id) == len(command['joint_pos'])
+
+    for joint_name, pos_des in command['joint_pos'].items():
+        joint_state = p.getJointState(robot, joint_id[joint_name])
+        joint_pos, joint_vel = joint_state[0], joint_state[1]
+        print(joint_name, pos_des, joint_pos)
+        p.setJointMotorControl2(robot, joint_id[joint_name],
+                                p.POSITION_CONTROL, pos_des)
 
 
 def debug(robot, joint_id, link_id):
@@ -183,7 +195,7 @@ if __name__ == "__main__":
     set_initial_config(robot, joint_id)
 
     # Joint Friction
-    set_joint_friction(robot, joint_id, 1)
+    # set_joint_friction(robot, joint_id, 1)
 
     #camera intrinsic parameter
     fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10
@@ -205,8 +217,9 @@ if __name__ == "__main__":
         sensor_data = get_sensor_data(robot, joint_id)
         # debug(robot, joint_id, link_id)
         command = interface.get_command(sensor_data)
-
-        set_motor_trq(robot, joint_id, command)
+        # __import__('ipdb').set_trace()
+        # set_motor_trq(robot, joint_id, command)
+        set_motor_pos(robot, joint_id, command)
 
         p.stepSimulation()
 
