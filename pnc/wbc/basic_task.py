@@ -4,14 +4,19 @@ from scipy.spatial.transform import Slerp
 
 from util import util
 from pnc.wbc.task import Task
+from pnc.data_saver import DataSaver
 
 
 class BasicTask(Task):
-    def __init__(self, robot, task_type, dim, target_id=None):
+    def __init__(self, robot, task_type, dim, target_id=None, data_save=False):
         super(BasicTask, self).__init__(robot, dim)
 
         self._target_id = target_id
         self._task_type = task_type
+        self._b_data_save = data_save
+
+        if self._b_data_save:
+            self._data_saver = DataSaver()
 
     @property
     def target_id(self):
@@ -20,17 +25,38 @@ class BasicTask(Task):
     def update_cmd(self):
 
         if self._task_type is "JOINT":
-            pos_err = self._pos_des - self._robot.get_q()[-self._dim:]
+            pos = self._robot.get_q()[-self._dim:]
+            pos_err = self._pos_des - pos
             vel_act = self._robot.get_q_dot()[-self._dim:]
+            if self._b_data_save:
+                self._data_saver.add('joint_pos_des', self._pos_des.copy())
+                self._data_saver.add('joint_vel_des', self._vel_des.copy())
+                self._data_saver.add('joint_pos', pos.copy())
+                self._data_saver.add('joint_vel', vel_act.copy())
+                self._data_saver.add('w_joint', self._w_hierarchy)
         elif self._task_type is "SELECTED_JOINT":
-            pos_err = self._pos_des - self._robot.get_q()[
-                self._robot.get_q_idx(self._target_id)]
+            pos = self._robot.get_q()[self._robot.get_q_idx(self._target_id)]
+            pos_err = self._pos_des - pos
             vel_act = self._robot.get_q_dot()[self._robot.get_q_idx(
                 self._target_id)]
+            if self._b_data_save:
+                self._data_saver.add('joint_pos_des', self._pos_des.copy())
+                self._data_saver.add('joint_vel_des', self._vel_des.copy())
+                self._data_saver.add('joint_pos', pos.copy())
+                self._data_saver.add('joint_vel', vel_act.copy())
+                self._data_saver.add('w_joint', self._w_hierarchy)
         elif self._task_type is "LINK_XYZ":
-            pos_err = self._pos_des - self._robot.get_link_iso(
-                self._target_id)[0:3, 3]
+            pos = self._robot.get_link_iso(self._target_id)[0:3, 3]
+            pos_err = self._pos_des - pos
             vel_act = self._robot.get_link_vel(self._target_id)[3:6]
+            if self._b_data_save:
+                self._data_saver.add(self._target_id + '_pos_des',
+                                     self._pos_des.copy())
+                self._data_saver.add(self._target_id + '_vel_des',
+                                     self._vel_des.copy())
+                self._data_saver.add(self._target_id + '_pos', pos.copy())
+                self._data_saver.add(self._target_id + '_vel', vel_act.copy())
+                self._data_saver.add('w_' + self._target_id, self._w_hierarchy)
         elif self._task_type is "LINK_ORI":
             quat_des = R.from_quat(self._pos_des)
             quat_act = R.from_matrix(
@@ -38,9 +64,29 @@ class BasicTask(Task):
             quat_err = (quat_des * quat_act.inv()).as_quat()
             pos_err = util.quat_to_exp(quat_err)
             vel_act = self._robot.get_link_vel(self._target_id)[0:3]
+            if self._b_data_save:
+                self._data_saver.add(self._target_id + '_quat_des',
+                                     quat_des.as_quat())
+                self._data_saver.add(self._target_id + '_ang_vel_des',
+                                     self._vel_des.copy())
+                self._data_saver.add(self._target_id + '_quat',
+                                     quat_act.as_quat())
+                self._data_saver.add(self._target_id + '_ang_vel',
+                                     vel_act.copy())
+                self._data_saver.add('w_' + self._target_id + "_ori",
+                                     self._w_hierarchy)
         elif self._task_type is "COM":
-            pos_err = self._pos_des - self._robot.get_com_pos()
+            pos = self._robot.get_com_pos()
+            pos_err = self._pos_des - pos
             vel_act = self._robot.get_com_lin_vel()
+            if self._b_data_save:
+                self._data_saver.add(self._target_id + '_pos_des',
+                                     self._pos_des.copy())
+                self._data_saver.add(self._target_id + '_vel_des',
+                                     self._vel_des.copy())
+                self._data_saver.add(self._target_id + '_pos', pos.copy())
+                self._data_saver.add(self._target_id + '_vel', vel_act.copy())
+                self._data_saver.add('w_' + self._target_id, self._w_hierarchy)
         else:
             raise ValueError
 

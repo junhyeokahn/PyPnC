@@ -17,7 +17,7 @@ class DoubleSupportStand(StateMachine):
         self._rf_z_max_time = 0.
         self._com_height_des = 0.
         self._start_time = 0.
-        self._sp = ValkyrieStateProvider()
+        self._sp = ValkyrieStateProvider(self._robot)
 
     @property
     def end_time(self):

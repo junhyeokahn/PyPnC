@@ -4,6 +4,7 @@ np.set_printoptions(precision=6, threshold=sys.maxsize)
 from scipy.linalg import block_diag
 from qpsolvers import solve_qp
 
+from pnc.data_saver import DataSaver
 
 class WBC(object):
     """
@@ -12,7 +13,7 @@ class WBC(object):
     Usage:
         update_setting --> solve
     """
-    def __init__(self, act_list):
+    def __init__(self, act_list, data_save=False):
         self._n_q_dot = len(act_list)
         self._n_active = np.count_nonzero(np.array(act_list))
         self._n_passive = self._n_q_dot - self._n_active
@@ -37,6 +38,11 @@ class WBC(object):
         self._lambda_q_ddot = 0.
         self._lambda_rf = 0.
         self._w_hierarchy = 0.
+
+        self._b_data_save = data_save
+        if self._b_data_save:
+            self._data_saver = DataSaver()
+
 
     @property
     def trq_limit(self):
@@ -112,8 +118,6 @@ class WBC(object):
             if verbose:
                 print(i, " th task")
                 task.debug()
-            print(i, " th task")
-            task.debug()
 
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(
@@ -257,5 +261,10 @@ class WBC(object):
             print("joint_trq_cmd: ", joint_trq_cmd)
             print("sol_q_ddot: ", sol_q_ddot)
             print("sol_rf: ", sol_rf)
+
+        if self._b_data_save:
+            self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
+            self._data_saver.add('joint_acc_cmd', joint_acc_cmd)
+            self._data_saver.add('rf_cmd', sol_rf)
 
         return joint_trq_cmd, joint_acc_cmd, sol_rf

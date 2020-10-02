@@ -17,30 +17,21 @@ class MetaSingleton(type):
 class DataSaver(metaclass=MetaSingleton):
     """
     Data Saver:
-        create --> add topics --> advance
+        add topics --> advance
     """
     def __init__(self):
         self._history = dict()
-        self._max_size = 1e5
-        self._idx = 0
         if not os.path.exists('data'):
             os.makedirs('data')
         for f in os.listdir('data'):
             os.remove('data/' + f)
-
-    def create(self, key, size):
-        self._history[key] = np.zeros([self._max_size, size])
+        self._file = open('data/history.pkl', 'ab')
 
     def add(self, key, value):
-        self._history[key][self._idx] = value
+        self._history[key] = value
 
     def advance(self):
-        if self._idx == (self._max_size - 1):
-            self.save()
-            self._idx = 0
-        else:
-            self._idx += 1
+        pickle.dump(self._history, self._file)
 
-    def save(self):
-        for (k, v) in self._history.items():
-            np.save('data/' + k + '.npy', v, 'ab')
+    def close(self):
+        self._file.close()

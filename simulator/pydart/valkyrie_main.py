@@ -66,12 +66,10 @@ class ValkyrieWorldNode(dart.gui.osg.RealTimeWorldNode):
             sensor_data['joint_pos'][k] = self._joint_id[k].getPosition(0)
             sensor_data['joint_vel'][k] = self._joint_id[k].getVelocity(0)
 
-        print("- " * 30, self._count, " -" * 30)
         command = self.interface.get_command(sensor_data)
 
         forces = np.zeros(self._n_a + 6)
         forces[6:] = np.array([v for v in command['joint_trq'].values()])
-        # print(self._count, ": ", forces)
         self.robot.setForces(forces)
         self._count += 1
 

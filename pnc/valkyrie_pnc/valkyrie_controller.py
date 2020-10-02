@@ -13,7 +13,7 @@ class ValkyrieController(object):
 
         # Initialize WBC
         act_list = [False] * robot.n_virtual + [True] * robot.n_a
-        self._wbc = WBC(act_list)
+        self._wbc = WBC(act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
         else:
@@ -28,6 +28,7 @@ class ValkyrieController(object):
         self._joint_integrator.max_pos_err = WBCConfig.MAX_POS_ERR
         self._joint_integrator.joint_pos_limit = self._robot.joint_pos_limit
         self._joint_integrator.joint_vel_limit = self._robot.joint_vel_limit
+
 
         self._b_first_visit = True
 
@@ -57,6 +58,7 @@ class ValkyrieController(object):
             self._tf_container.task_list,
             self._tf_container.contact_list,
             verbose=False)
+
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,
