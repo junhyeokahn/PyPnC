@@ -12,6 +12,7 @@ from pnc.interface import Interface
 from config.valkyrie_config import SimConfig, PnCConfig
 from pnc.valkyrie_pnc.valkyrie_state_provider import ValkyrieStateProvider
 from pnc.valkyrie_pnc.valkyrie_control_architecture import ValkyrieControlArchitecture
+from pnc.data_saver import DataSaver
 
 
 class ValkyrieInterface(Interface):
@@ -26,10 +27,13 @@ class ValkyrieInterface(Interface):
                 ['rootJoint'])
         else:
             raise ValueError
-        self._sp = ValkyrieStateProvider(self._robot)
         self._control_architecture = ValkyrieControlArchitecture(self._robot)
+        self._sp = ValkyrieStateProvider(self._robot)
+        self._data_saver = DataSaver()
+        self._data_saver.create('time', 1)
 
     def get_command(self, sensor_data):
+        self._data_saver.add('time', self._running_time)
 
         if self._count == 0:
             self._sp.nominal_joint_pos = sensor_data["joint_pos"]
@@ -52,6 +56,8 @@ class ValkyrieInterface(Interface):
         self._running_time += PnCConfig.CONTROLLER_DT
         self._sp.curr_time = self._running_time
         self._sp.state = self._control_architecture.state
+
+        self._data_saver.advance()
 
         return command
 

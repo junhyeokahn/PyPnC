@@ -15,6 +15,10 @@ class MetaSingleton(type):
 
 
 class DataSaver(metaclass=MetaSingleton):
+    """
+    Data Saver:
+        create --> add topics --> advance
+    """
     def __init__(self):
         self._history = dict()
         self._max_size = 1e5
