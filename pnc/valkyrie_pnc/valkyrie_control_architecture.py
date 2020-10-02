@@ -1,28 +1,29 @@
 import numpy as np
 
-from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
+from config.valkyrie_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
-from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
-from pnc.atlas_pnc.atlas_controller import AtlasController
+from pnc.valkyrie_pnc.valkyrie_task_force_container import ValkyrieTaskForceContainer
+from pnc.valkyrie_pnc.valkyrie_controller import ValkyrieController
 from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
 from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
 from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
 from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
-from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
-from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
-from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
+from pnc.valkyrie_pnc.valkyrie_state_machine.double_support_stand import DoubleSupportStand
+from pnc.valkyrie_pnc.valkyrie_state_machine.double_support_balance import DoubleSupportBalance
+from pnc.valkyrie_pnc.valkyrie_state_provider import ValkyrieStateProvider
 
 
-class AtlasControlArchitecture(ControlArchitecture):
+class ValkyrieControlArchitecture(ControlArchitecture):
     def __init__(self, robot):
-        super(AtlasControlArchitecture, self).__init__(robot)
+        super(ValkyrieControlArchitecture, self).__init__(robot)
 
         # Initialize Task Force Container
-        self._taf_container = AtlasTaskForceContainer(robot)
+        self._taf_container = ValkyrieTaskForceContainer(robot)
 
         # Initialize Controller
-        self._atlas_controller = AtlasController(self._taf_container, robot)
+        self._valkyrie_controller = ValkyrieController(self._taf_container,
+                                                       robot)
 
         # Initialize Planner
         # self._dcm_planner = DCMPlanner()
@@ -106,7 +107,7 @@ class AtlasControlArchitecture(ControlArchitecture):
             self._b_state_first_visit = False
 
         self._state_machine[self._state].one_step()
-        command = self._atlas_controller.get_command()
+        command = self._valkyrie_controller.get_command()
 
         if self._state_machine[self._state].end_of_state():
             self._state_machine[self._state].last_visit()

@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self, filepath, floating_joint_list, fixed_joint_list):
+    def __init__(self, filepath, floating_joint_list):
         """
         Base RobotSystem Class
 
@@ -28,7 +28,7 @@ class RobotSystem(abc.ABC):
         self._floating_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        self.config_robot(filepath, floating_joint_list, fixed_joint_list)
+        self.config_robot(filepath, floating_joint_list)
 
     @property
     def n_virtual(self):

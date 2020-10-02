@@ -17,11 +17,10 @@ from util import util as util
 
 
 class DartRobotSystem(RobotSystem):
-    def __init__(self, filepath, floating_joint_list, fixed_joint_list):
-        super(DartRobotSystem, self).__init__(filepath, floating_joint_list,
-                                              fixed_joint_list)
+    def __init__(self, filepath, floating_joint_list):
+        super(DartRobotSystem, self).__init__(filepath, floating_joint_list)
 
-    def config_robot(self, filepath, floating_joint_list, fixed_joint_list):
+    def config_robot(self, filepath, floating_joint_list):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
 
         for i in range(self._skel.getNumJoints()):
@@ -29,7 +28,7 @@ class DartRobotSystem(RobotSystem):
             if j.getName() in floating_joint_list:
                 self._n_virtual += j.getNumDofs()
                 self._floating_id[j.getName()] = j
-            elif j.getName() not in fixed_joint_list:
+            elif j.getType() != "WeldJoint":
                 self._joint_id[j.getName()] = j
             else:
                 pass
@@ -59,20 +58,20 @@ class DartRobotSystem(RobotSystem):
         ],
                                          axis=1)[self._n_virtual:, :]
 
-        # print("=" * 80)
-        # print("DartRobotSystem")
-        # print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ", self._n_a,
-        # ", nvirtual: ", self._n_virtual)
-        # print("+" * 80)
-        # print("Joint Infos")
-        # util.pretty_print([*self._joint_id.keys()])
-        # print("+" * 80)
-        # print("Floating Joint Infos")
-        # util.pretty_print([*self._floating_id.keys()])
-        # print("+" * 80)
-        # print("Link Infos")
-        # util.pretty_print([*self._link_id.keys()])
-        # print("=" * 80)
+        print("=" * 80)
+        print("DartRobotSystem")
+        print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ", self._n_a,
+              ", nvirtual: ", self._n_virtual)
+        print("+" * 80)
+        print("Joint Infos")
+        util.pretty_print([*self._joint_id.keys()])
+        print("+" * 80)
+        print("Floating Joint Infos")
+        util.pretty_print([*self._floating_id.keys()])
+        print("+" * 80)
+        print("Link Infos")
+        util.pretty_print([*self._link_id.keys()])
+        print("=" * 80)
 
     def get_q_idx(self, joint_id):
         if type(joint_id) is list:
@@ -143,6 +142,12 @@ class DartRobotSystem(RobotSystem):
             # Assume the joints have 1 dof
             self._joint_id[p_k].setPosition(0, p_v)
             self._joint_id[v_k].setVelocity(0, v_v)
+        self._skel.computeForwardKinematics()
+
+    def debug_update_system(self, q, qdot):
+        assert q.shape[0] == self._n_q_dot
+        self._skel.setPositions(q)
+        self._skel.setVelocities(qdot)
         self._skel.computeForwardKinematics()
 
     def get_q(self):

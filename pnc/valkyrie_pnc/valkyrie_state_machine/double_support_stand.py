@@ -2,9 +2,9 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
-from config.atlas_config import WalkingState
+from config.valkyrie_config import WalkingState
 from pnc.state_machine import StateMachine
-from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
+from pnc.valkyrie_pnc.valkyrie_state_provider import ValkyrieStateProvider
 
 
 class DoubleSupportStand(StateMachine):
@@ -17,7 +17,7 @@ class DoubleSupportStand(StateMachine):
         self._rf_z_max_time = 0.
         self._com_height_des = 0.
         self._start_time = 0.
-        self._sp = AtlasStateProvider()
+        self._sp = ValkyrieStateProvider()
 
     @property
     def end_time(self):
@@ -48,13 +48,17 @@ class DoubleSupportStand(StateMachine):
         self._start_time = self._sp.curr_time
 
         # Initialize CoM Trajectory
-        lfoot_iso = self._robot.get_link_iso("l_sole")
-        rfoot_iso = self._robot.get_link_iso("r_sole")
+        lfoot_iso = self._robot.get_link_iso("leftCOP_Frame")
+        rfoot_iso = self._robot.get_link_iso("rightCOP_Frame")
         com_pos_des = (lfoot_iso[0:3, 3] + rfoot_iso[0:3, 3]) / 2.0
         com_pos_des[2] = self._com_height_des
         base_quat_slerp = Slerp(
             [0, 1], R.from_matrix([lfoot_iso[0:3, 0:3], rfoot_iso[0:3, 0:3]]))
         base_quat_des = base_quat_slerp(0.5).as_quat()
+        # TODO
+        base_quat_des = R.from_matrix(
+            self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
+
         self._trajectory_managers[
             "floating_base"].initialize_floating_base_trajectory(
                 self._sp.curr_time, self._end_time, com_pos_des, base_quat_des)

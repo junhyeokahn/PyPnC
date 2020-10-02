@@ -8,8 +8,8 @@ from collections import OrderedDict
 import pybullet as p
 import numpy as np
 
-from config.atlas_config import SimConfig
-from pnc.atlas_pnc.atlas_interface import AtlasInterface
+from config.valkyrie_config import SimConfig
+from pnc.valkyrie_pnc.valkyrie_interface import ValkyrieInterface
 from util import util
 
 
@@ -27,38 +27,38 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
 
-    # print("=" * 80)
-    # print("SimulationRobot")
-    # print("nq: ", nq, ", nv: ", nv, ", na: ", na)
-    # print("+" * 80)
-    # print("Joint Infos")
-    # util.pretty_print(joint_id)
-    # print("+" * 80)
-    # print("Link Infos")
-    # util.pretty_print(link_id)
+    print("=" * 80)
+    print("SimulationRobot")
+    print("nq: ", nq, ", nv: ", nv, ", na: ", na)
+    print("+" * 80)
+    print("Joint Infos")
+    util.pretty_print(joint_id)
+    print("+" * 80)
+    print("Link Infos")
+    util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
 
 def set_initial_config(robot, joint_id):
-    # shoulder_x
-    p.resetJointState(robot, joint_id["l_arm_shx"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_arm_shx"], np.pi / 4, 0.)
-    # elbow_y
-    p.resetJointState(robot, joint_id["l_arm_ely"], -np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_arm_ely"], np.pi / 2, 0.)
-    # elbow_x
-    p.resetJointState(robot, joint_id["l_arm_elx"], -np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_arm_elx"], -np.pi / 2, 0.)
+    # shoulder
+    p.resetJointState(robot, joint_id["leftShoulderPitch"], 0.2, 0.)
+    p.resetJointState(robot, joint_id["rightShoulderPitch"], 0.2, 0.)
+    p.resetJointState(robot, joint_id["leftShoulderRoll"], -1.1, 0.)
+    p.resetJointState(robot, joint_id["rightShoulderRoll"], 1.1, 0.)
+    p.resetJointState(robot, joint_id["leftElbowPitch"], -0.4, 0.)
+    p.resetJointState(robot, joint_id["rightElbowPitch"], 0.4, 0.)
+    p.resetJointState(robot, joint_id["leftForearmYaw"], 1.5, 0.)
+    p.resetJointState(robot, joint_id["rightForearmYaw"], 1.5, 0.)
     # hip_y
-    p.resetJointState(robot, joint_id["l_leg_hpy"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_leg_hpy"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["leftHipPitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["rightHipPitch"], -0.6, 0.)
     # knee
-    p.resetJointState(robot, joint_id["l_leg_kny"], np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_leg_kny"], np.pi / 2, 0.)
+    p.resetJointState(robot, joint_id["leftKneePitch"], 1.2, 0.)
+    p.resetJointState(robot, joint_id["rightKneePitch"], 1.2, 0.)
     # ankle
-    p.resetJointState(robot, joint_id["l_leg_aky"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["leftAnklePitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["rightAnklePitch"], -0.6, 0.)
 
 
 def set_joint_friction(robot, joint_id, max_force=0):
@@ -77,7 +77,8 @@ def set_motor_trq(robot, joint_id, command):
         joint_pos, joint_vel = joint_state[0], joint_state[1]
         trq_applied = trq_des + SimConfig.KP * (
             pos_des - joint_pos) + SimConfig.KD * (vel_des - joint_vel)
-        print(joint_name, trq_applied, pos_des, joint_pos, vel_des, joint_vel)
+        # print(joint_name, trq_applied, pos_des, joint_pos, vel_des, joint_vel)
+        print(joint_name, trq_applied)
         p.setJointMotorControl2(robot, joint_id[joint_name], p.TORQUE_CONTROL,
                                 trq_applied)
 
@@ -88,7 +89,7 @@ def set_motor_pos(robot, joint_id, command):
     for joint_name, pos_des in command['joint_pos'].items():
         joint_state = p.getJointState(robot, joint_id[joint_name])
         joint_pos, joint_vel = joint_state[0], joint_state[1]
-        print(joint_name, pos_des, joint_pos)
+        # print(joint_name, pos_des, joint_pos)
         p.setJointMotorControl2(robot, joint_id[joint_name],
                                 p.POSITION_CONTROL, pos_des)
 
@@ -184,8 +185,10 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        [0, 0, 1.5 - 0.761])
+        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        cwd + "/../PnC/RobotModel/Robot/Valkyrie/ValkyrieSim_PyPnC.urdf",
+        [0.497149, 0.494299, 1.0214],
+        p.getQuaternionFromEuler([0., 0., np.pi / 6.0]))
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -195,7 +198,7 @@ if __name__ == "__main__":
     set_initial_config(robot, joint_id)
 
     # Joint Friction
-    set_joint_friction(robot, joint_id, 1)
+    set_joint_friction(robot, joint_id, 0)
 
     #camera intrinsic parameter
     fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10
@@ -203,7 +206,7 @@ if __name__ == "__main__":
                                                      farval)
 
     # Construct Interface
-    interface = AtlasInterface()
+    interface = ValkyrieInterface()
 
     # Run Sim
     t = 0
@@ -212,14 +215,15 @@ if __name__ == "__main__":
     while (1):
 
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
-            camera_img = get_camera_image(robot, link_id, projection_matrix)
+            # camera_img = get_camera_image(robot, link_id, projection_matrix)
+            pass
 
         sensor_data = get_sensor_data(robot, joint_id)
         # debug(robot, joint_id, link_id)
         command = interface.get_command(sensor_data)
-        # __import__('ipdb').set_trace()
         set_motor_trq(robot, joint_id, command)
         # set_motor_pos(robot, joint_id, command)
+        # __import__('ipdb').set_trace()
 
         p.stepSimulation()
 

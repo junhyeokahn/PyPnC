@@ -36,7 +36,6 @@ class BasicTask(Task):
             quat_act = R.from_matrix(
                 self._robot.get_link_iso(self._target_id)[0:3, 0:3])
             quat_err = (quat_des * quat_act.inv()).as_quat()
-
             pos_err = util.quat_to_exp(quat_err)
             vel_act = self._robot.get_link_vel(self._target_id)[0:3]
         elif self._task_type is "COM":

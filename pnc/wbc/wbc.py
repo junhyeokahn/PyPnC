@@ -1,5 +1,6 @@
+import sys
 import numpy as np
-np.set_printoptions(precision=4)
+np.set_printoptions(precision=6, threshold=sys.maxsize)
 from scipy.linalg import block_diag
 from qpsolvers import solve_qp
 
@@ -104,16 +105,15 @@ class WBC(object):
         cost_t_mat = np.zeros((self._n_q_dot, self._n_q_dot))
         cost_t_vec = np.zeros(self._n_q_dot)
 
-        if verbose:
-            print("-" * 80)
-            print("Task Cmds")
-            print("-" * 80)
         for i, task in enumerate(task_list):
             j = task.jacobian
             j_dot_q_dot = task.jacobian_dot_q_dot
             x_ddot = task.op_cmd
             if verbose:
-                print(i, x_ddot)
+                print(i, " th task")
+                task.debug()
+            print(i, " th task")
+            task.debug()
 
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(
@@ -136,16 +136,26 @@ class WBC(object):
             dim_cone_constraint, dim_contacts = uf_mat.shape
 
             cost_rf_mat = self._lambda_rf * np.eye(dim_contacts)
-            v_f = np.zeros(dim_contacts)
+            cost_rf_vec = np.zeros(dim_contacts)
 
             cost_mat = np.array(block_diag(
                 cost_t_mat, cost_rf_mat))  # (nqdot+nc, nqdot+nc)
-            cost_vec = np.concatenate([cost_t_vec, v_f])  # (nqdot+nc,)
+            cost_vec = np.concatenate([cost_t_vec, cost_rf_vec])  # (nqdot+nc,)
 
         else:
             dim_contacts = dim_cone_constraint = 0
             cost_mat = np.copy(cost_t_mat)
             cost_vec = np.copy(cost_t_vec)
+
+        if verbose:
+            print("cost_t_mat")
+            print(cost_t_mat)
+            print("cost_t_vec")
+            print(cost_t_vec)
+            print("cost_rf_mat")
+            print(cost_rf_mat)
+            print("cost_rf_vec")
+            print(cost_rf_vec)
 
         # ======================================================================
         # Equality Constraint
@@ -205,6 +215,17 @@ class WBC(object):
                      -np.dot(self._sa, self._coriolis + self._gravity) +
                      self._trq_limit[:, 1]))
 
+        if verbose:
+            print("eq_mat")
+            print(eq_mat)
+            print("eq_vec")
+            print(eq_vec)
+
+            print("ineq_mat")
+            print(ineq_mat)
+            print("ineq_vec")
+            print(ineq_vec)
+
         sol = solve_qp(cost_mat,
                        cost_vec,
                        ineq_mat,
@@ -233,11 +254,8 @@ class WBC(object):
         joint_acc_cmd = np.dot(self._sa, sol_q_ddot)
 
         if verbose:
-            print("-" * 80)
-            print("WBC Output")
-            print("-" * 80)
             print("joint_trq_cmd: ", joint_trq_cmd)
-            print("joint_acc_cmd: ", joint_acc_cmd)
+            print("sol_q_ddot: ", sol_q_ddot)
             print("sol_rf: ", sol_rf)
 
         return joint_trq_cmd, joint_acc_cmd, sol_rf

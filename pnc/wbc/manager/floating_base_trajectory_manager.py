@@ -14,8 +14,8 @@ class FloatingBaseTrajectoryManager(object):
 
         self._start_time = 0.
         self._duration = 0.
-        self._ini_com_pos = self._target_com_pos = np.zeros(3)
-        self._ini_base_quat = self._target_base_quat = np.zeros(4)
+        self._ini_com_pos, self._target_com_pos = np.zeros(3), np.zeros(3)
+        self._ini_base_quat, self._target_base_quat = np.zeros(4), np.zeros(4)
 
     def initialize_floating_base_trajectory(self, start_time, duration,
                                             target_com_pos, target_base_quat):
@@ -78,5 +78,8 @@ class FloatingBaseTrajectoryManager(object):
         base_angvel_des = self._exp_error * scaled_tdot
         base_angacc_des = self._exp_error * scaled_tddot
 
-        self._base_ori_task.update_desired(base_quat_des, base_angvel_des,
-                                           base_angacc_des)
+        # self._base_ori_task.update_desired(base_quat_des, base_angvel_des,
+        # base_angacc_des)
+        ## TODO
+        self._base_ori_task.update_desired(self._target_base_quat, np.zeros(3),
+                                           np.zeros(3))

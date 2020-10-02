@@ -2,10 +2,10 @@ import numpy as np
 
 
 class SimConfig(object):
-    CONTROLLER_DT = 0.005
+    CONTROLLER_DT = 0.001
     CAMERA_DT = 0.05
-    KP = 100.
-    KD = 10.
+    KP = 0.
+    KD = 0.
 
 
 class PnCConfig(object):
@@ -15,7 +15,7 @@ class PnCConfig(object):
 
 class WBCConfig(object):
     # Max normal force per contact
-    RF_Z_MAX = 2000.0
+    RF_Z_MAX = 1500.
 
     # Task Hierarchy Weights
     W_COM = 10.0
@@ -54,7 +54,7 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 1.02
+    COM_HEIGHT = 1.015
 
     SWING_HEIGHT = 0.05  #cm
 
