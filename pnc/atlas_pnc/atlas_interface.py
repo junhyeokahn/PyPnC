@@ -10,6 +10,7 @@ from pnc.interface import Interface
 from config.atlas_config import SimConfig, PnCConfig
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 from pnc.atlas_pnc.atlas_control_architecture import AtlasControlArchitecture
+from pnc.data_saver import DataSaver
 
 
 class AtlasInterface(Interface):

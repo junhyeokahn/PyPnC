@@ -13,7 +13,7 @@ class AtlasController(object):
 
         # Initialize WBC
         act_list = [False] * robot.n_virtual + [True] * robot.n_a
-        self._wbc = WBC(act_list)
+        self._wbc = WBC(act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
         else:
