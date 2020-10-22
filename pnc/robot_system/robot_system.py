@@ -13,8 +13,6 @@ class RobotSystem(abc.ABC):
             urdf path
         floating_joint_list (list of str):
             list of floating joint name
-        floating_fixed_list (list of str):
-            list of fixed joint name
         """
         self._n_virtual = 0
         self._n_q = 0

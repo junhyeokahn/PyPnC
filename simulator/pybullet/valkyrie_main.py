@@ -69,18 +69,20 @@ def set_joint_friction(robot, joint_id, max_force=0):
 
 def set_motor_trq(robot, joint_id, command):
     assert len(joint_id) == len(command['joint_trq'])
-
+    trq_applied = OrderedDict()
     for (joint_name, pos_des), (_, vel_des), (_, trq_des) in zip(
             command['joint_pos'].items(), command['joint_vel'].items(),
             command['joint_trq'].items()):
         joint_state = p.getJointState(robot, joint_id[joint_name])
         joint_pos, joint_vel = joint_state[0], joint_state[1]
-        trq_applied = trq_des + SimConfig.KP * (
-            pos_des - joint_pos) + SimConfig.KD * (vel_des - joint_vel)
-        # print(joint_name, trq_applied, pos_des, joint_pos, vel_des, joint_vel)
-        print(joint_name, trq_applied)
-        p.setJointMotorControl2(robot, joint_id[joint_name], p.TORQUE_CONTROL,
-                                trq_applied)
+        trq_applied[joint_id[joint_name]] = (trq_des + SimConfig.KP *
+                                             (pos_des - joint_pos) +
+                                             SimConfig.KD *
+                                             (vel_des - joint_vel))
+    p.setJointMotorControlArray(robot,
+                                trq_applied.keys(),
+                                controlMode=p.TORQUE_CONTROL,
+                                forces=trq_applied.values())
 
 
 def set_motor_pos(robot, joint_id, command):
@@ -185,12 +187,13 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
-        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
         cwd + "/../PnC/RobotModel/Robot/Valkyrie/ValkyrieSim_PyPnC.urdf",
-        [0.497149, 0.494299, 1.0214],
-        p.getQuaternionFromEuler([0., 0., np.pi / 6.0]))
+        [0., 0., 2.5 - 1.365 - 0.11], p.getQuaternionFromEuler([0., 0., 0.]))
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
+    # p.loadURDF(cwd + "/../PnC/RobotModel/Ground/ground_terrain.urdf",
+    # [0, 0, 0])
+
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id = get_robot_config(robot)
 

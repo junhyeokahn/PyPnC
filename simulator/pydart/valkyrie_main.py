@@ -10,6 +10,7 @@ import dartpy as dart
 from config.valkyrie_config import SimConfig
 from pnc.valkyrie_pnc.valkyrie_interface import ValkyrieInterface
 from scipy.spatial.transform import Rotation as R
+from util import util
 
 
 class ValkyrieWorldNode(dart.gui.osg.RealTimeWorldNode):
@@ -67,6 +68,9 @@ class ValkyrieWorldNode(dart.gui.osg.RealTimeWorldNode):
             sensor_data['joint_vel'][k] = self._joint_id[k].getVelocity(0)
 
         command = self.interface.get_command(sensor_data)
+        # util.pretty_print(sensor_data['joint_pos'])
+        # print(sensor_data['base_pos'])
+        # print(sensor_data['base_quat'])
 
         forces = np.zeros(self._n_a + 6)
         forces[6:] = np.array([v for v in command['joint_trq'].values()])
@@ -90,7 +94,6 @@ def set_initial_config(robot):
     leftShoulderRoll = robot.getDof("leftShoulderRoll").getIndexInSkeleton()
     leftElbowPitch = robot.getDof("leftElbowPitch").getIndexInSkeleton()
     leftForearmYaw = robot.getDof("leftForearmYaw").getIndexInSkeleton()
-    rightHipYaw = robot.getDof("rightHipYaw").getIndexInSkeleton()
     q = robot.getPositions()
     q[2] = 2.5 - 1.365 - 0.11
     q[leftHipPitch] = -0.6
@@ -99,10 +102,6 @@ def set_initial_config(robot):
     q[rightKneePitch] = 1.2
     q[leftAnklePitch] = -0.6
     q[rightAnklePitch] = -0.6
-    # q[0] = 0.5
-    # q[1] = 0.5
-    # q[3] = 3.14159 / 6.0
-    # q[rightHipYaw] = -3.14159 / 12.0
     q[rightShoulderPitch] = 0.2
     q[rightShoulderRoll] = 1.1
     q[rightElbowPitch] = 0.4
@@ -123,6 +122,8 @@ def main():
     set_initial_config(robot)
     ground = urdfParser.parseSkeleton(
         cwd + "/../PnC/RobotModel/Ground/ground_terrain.urdf")
+    # ground = urdfParser.parseSkeleton(
+    # cwd + "/robot_model/ground/plane.urdf")
     world.addSkeleton(robot)
     world.addSkeleton(ground)
     world.setGravity([0, 0, -9.81])
