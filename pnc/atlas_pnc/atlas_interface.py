@@ -25,8 +25,12 @@ class AtlasInterface(Interface):
             raise ValueError
         self._sp = AtlasStateProvider(self._robot)
         self._control_architecture = AtlasControlArchitecture(self._robot)
+        if PnCConfig.SAVE_DATA:
+            self._data_saver = DataSaver()
 
     def get_command(self, sensor_data):
+        if PnCConfig.SAVE_DATA:
+            self._data_saver.add('time', self._running_time)
 
         if self._count == 0:
             self._sp.nominal_joint_pos = sensor_data["joint_pos"]
@@ -38,9 +42,11 @@ class AtlasInterface(Interface):
                                   sensor_data["base_ang_vel"],
                                   sensor_data["joint_pos"],
                                   sensor_data["joint_vel"])
-        # self._robot.debug_print_link_info()
         # Compute Cmd
         command = self._control_architecture.get_command()
+
+        if PnCConfig.SAVE_DATA and (self._count % PnCConfig.SAVE_FREQ == 0):
+            self._data_saver.advance()
 
         # Increase time variables
         self._count += 1

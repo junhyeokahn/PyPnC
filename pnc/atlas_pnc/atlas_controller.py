@@ -55,7 +55,7 @@ class AtlasController(object):
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
             self._tf_container.task_list, self._tf_container.contact_list,
-            True)
+            False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,

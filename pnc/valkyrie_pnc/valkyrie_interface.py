@@ -35,7 +35,6 @@ class ValkyrieInterface(Interface):
     def get_command(self, sensor_data):
         if PnCConfig.SAVE_DATA:
             self._data_saver.add('time', self._running_time)
-
         if self._count == 0:
             self._sp.nominal_joint_pos = sensor_data["joint_pos"]
 
@@ -46,7 +45,6 @@ class ValkyrieInterface(Interface):
                                   sensor_data["base_ang_vel"],
                                   sensor_data["joint_pos"],
                                   sensor_data["joint_vel"])
-        # self._robot.debug_print_link_info()
         # Compute Cmd
         command = self._control_architecture.get_command()
 

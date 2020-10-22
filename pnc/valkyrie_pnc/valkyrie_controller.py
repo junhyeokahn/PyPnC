@@ -29,7 +29,6 @@ class ValkyrieController(object):
         self._joint_integrator.joint_pos_limit = self._robot.joint_pos_limit
         self._joint_integrator.joint_vel_limit = self._robot.joint_vel_limit
 
-
         self._b_first_visit = True
 
     def get_command(self):
@@ -55,10 +54,8 @@ class ValkyrieController(object):
             contact.update_contact()
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
-            self._tf_container.task_list,
-            self._tf_container.contact_list,
-            verbose=False)
-
+            self._tf_container.task_list, self._tf_container.contact_list,
+            False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,

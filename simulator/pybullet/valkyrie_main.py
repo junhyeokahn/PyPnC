@@ -85,28 +85,6 @@ def set_motor_trq(robot, joint_id, command):
                                 forces=trq_applied.values())
 
 
-def set_motor_pos(robot, joint_id, command):
-    assert len(joint_id) == len(command['joint_pos'])
-
-    for joint_name, pos_des in command['joint_pos'].items():
-        joint_state = p.getJointState(robot, joint_id[joint_name])
-        joint_pos, joint_vel = joint_state[0], joint_state[1]
-        # print(joint_name, pos_des, joint_pos)
-        p.setJointMotorControl2(robot, joint_id[joint_name],
-                                p.POSITION_CONTROL, pos_des)
-
-
-def debug(robot, joint_id, link_id):
-    print("-" * 80)
-    print("Sim")
-    print("-" * 80)
-    for (k, v) in link_id.items():
-        if k != "pelvis":
-            link_info = p.getLinkState(robot, v, 1, 1)
-            print(k, np.asarray(link_info[0]), np.asarray(link_info[1]),
-                  np.asarray(link_info[6]), np.asarray(link_info[7]))
-
-
 def get_sensor_data(robot, joint_id):
     """
     Parameters
@@ -182,7 +160,7 @@ if __name__ == "__main__":
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
-                                numSubSteps=1)
+                                numSubSteps=SimConfig.N_SUBSTEP)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -191,8 +169,6 @@ if __name__ == "__main__":
         [0., 0., 2.5 - 1.365 - 0.11], p.getQuaternionFromEuler([0., 0., 0.]))
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
-    # p.loadURDF(cwd + "/../PnC/RobotModel/Ground/ground_terrain.urdf",
-    # [0, 0, 0])
 
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id = get_robot_config(robot)
@@ -201,7 +177,7 @@ if __name__ == "__main__":
     set_initial_config(robot, joint_id)
 
     # Joint Friction
-    set_joint_friction(robot, joint_id, 0)
+    set_joint_friction(robot, joint_id, 1)
 
     #camera intrinsic parameter
     fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10
@@ -222,11 +198,8 @@ if __name__ == "__main__":
             pass
 
         sensor_data = get_sensor_data(robot, joint_id)
-        # debug(robot, joint_id, link_id)
         command = interface.get_command(sensor_data)
         set_motor_trq(robot, joint_id, command)
-        # set_motor_pos(robot, joint_id, command)
-        # __import__('ipdb').set_trace()
 
         p.stepSimulation()
 

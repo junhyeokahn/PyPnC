@@ -122,12 +122,10 @@ def main():
     set_initial_config(robot)
     ground = urdfParser.parseSkeleton(
         cwd + "/../PnC/RobotModel/Ground/ground_terrain.urdf")
-    # ground = urdfParser.parseSkeleton(
-    # cwd + "/robot_model/ground/plane.urdf")
     world.addSkeleton(robot)
     world.addSkeleton(ground)
     world.setGravity([0, 0, -9.81])
-    world.setTimeStep(SimConfig.CONTROLLER_DT)
+    world.setTimeStep(SimConfig.CONTROLLER_DT / SimConfig.N_SUBSTEP)
 
     node = ValkyrieWorldNode(world, robot)
 

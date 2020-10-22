@@ -33,7 +33,6 @@ class DoubleSupportBalance(StateMachine):
         print("[WalkingState] BALANCE")
         self._b_state_switch_trigger = False
         self._start_time = self._sp.curr_time
-        pass
 
     def last_visit(self):
         pass

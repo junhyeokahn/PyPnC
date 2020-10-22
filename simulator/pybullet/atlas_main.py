@@ -27,15 +27,15 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
 
-    # print("=" * 80)
-    # print("SimulationRobot")
-    # print("nq: ", nq, ", nv: ", nv, ", na: ", na)
-    # print("+" * 80)
-    # print("Joint Infos")
-    # util.pretty_print(joint_id)
-    # print("+" * 80)
-    # print("Link Infos")
-    # util.pretty_print(link_id)
+    print("=" * 80)
+    print("SimulationRobot")
+    print("nq: ", nq, ", nv: ", nv, ", na: ", na)
+    print("+" * 80)
+    print("Joint Infos")
+    util.pretty_print(joint_id)
+    print("+" * 80)
+    print("Link Infos")
+    util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -69,39 +69,20 @@ def set_joint_friction(robot, joint_id, max_force=0):
 
 def set_motor_trq(robot, joint_id, command):
     assert len(joint_id) == len(command['joint_trq'])
-
+    trq_applied = OrderedDict()
     for (joint_name, pos_des), (_, vel_des), (_, trq_des) in zip(
             command['joint_pos'].items(), command['joint_vel'].items(),
             command['joint_trq'].items()):
         joint_state = p.getJointState(robot, joint_id[joint_name])
         joint_pos, joint_vel = joint_state[0], joint_state[1]
-        trq_applied = trq_des + SimConfig.KP * (
-            pos_des - joint_pos) + SimConfig.KD * (vel_des - joint_vel)
-        print(joint_name, trq_applied, pos_des, joint_pos, vel_des, joint_vel)
-        p.setJointMotorControl2(robot, joint_id[joint_name], p.TORQUE_CONTROL,
-                                trq_applied)
-
-
-def set_motor_pos(robot, joint_id, command):
-    assert len(joint_id) == len(command['joint_pos'])
-
-    for joint_name, pos_des in command['joint_pos'].items():
-        joint_state = p.getJointState(robot, joint_id[joint_name])
-        joint_pos, joint_vel = joint_state[0], joint_state[1]
-        print(joint_name, pos_des, joint_pos)
-        p.setJointMotorControl2(robot, joint_id[joint_name],
-                                p.POSITION_CONTROL, pos_des)
-
-
-def debug(robot, joint_id, link_id):
-    print("-" * 80)
-    print("Sim")
-    print("-" * 80)
-    for (k, v) in link_id.items():
-        if k != "pelvis":
-            link_info = p.getLinkState(robot, v, 1, 1)
-            print(k, np.asarray(link_info[0]), np.asarray(link_info[1]),
-                  np.asarray(link_info[6]), np.asarray(link_info[7]))
+        trq_applied[joint_id[joint_name]] = (trq_des + SimConfig.KP *
+                                             (pos_des - joint_pos) +
+                                             SimConfig.KD *
+                                             (vel_des - joint_vel))
+    p.setJointMotorControlArray(robot,
+                                trq_applied.keys(),
+                                controlMode=p.TORQUE_CONTROL,
+                                forces=trq_applied.values())
 
 
 def get_sensor_data(robot, joint_id):
@@ -179,7 +160,7 @@ if __name__ == "__main__":
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
-                                numSubSteps=1)
+                                numSubSteps=SimConfig.N_SUBSTEP)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -215,11 +196,11 @@ if __name__ == "__main__":
             camera_img = get_camera_image(robot, link_id, projection_matrix)
 
         sensor_data = get_sensor_data(robot, joint_id)
-        # debug(robot, joint_id, link_id)
+        # start_time = time.time()
         command = interface.get_command(sensor_data)
-        # __import__('ipdb').set_trace()
+        # end_time = time.time()
+        # print("computation time: ", end_time - start_time)
         set_motor_trq(robot, joint_id, command)
-        # set_motor_pos(robot, joint_id, command)
 
         p.stepSimulation()
 

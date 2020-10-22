@@ -55,9 +55,6 @@ class DoubleSupportStand(StateMachine):
         base_quat_slerp = Slerp(
             [0, 1], R.from_matrix([lfoot_iso[0:3, 0:3], rfoot_iso[0:3, 0:3]]))
         base_quat_des = base_quat_slerp(0.5).as_quat()
-        # TODO
-        base_quat_des = R.from_matrix(
-            self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
 
         self._trajectory_managers[
             "floating_base"].initialize_floating_base_trajectory(
