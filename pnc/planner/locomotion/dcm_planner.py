@@ -100,6 +100,52 @@ class DCMPlanner(object):
 
         self._compute_dcm_trajectory()
 
+    def compute_reference_com_pos(self, t):
+        time = np.clip(t - self._t_start, 0., self._t_end)
+        idx = int(time / self._dt)
+        return self._ref_com_pos[idx]
+
+    def compute_reference_com_vel(self, t):
+        if (t < self._t_start):
+            return np.zeros(3)
+        time = np.clip(t - self._t_start, 0., self._t_end)
+        idx = int(time / self._dt)
+        return self._ref_com_vel[idx]
+
+    def compute_reference_base_ori(self, t):
+        time = np.clip(t - self._t_start, 0., self._t_end)
+        step_idx = self._compute_step_idx(time)
+        t_traj_start = self._compute_t_step_start(step_idx)
+        t_traj_end = self._compute_t_step(step_idx)
+        traj_duration = t_traj_end - t_traj_start
+        time_query = np.clip(time, t_traj_start, t_traj_end)
+        s = (time_query - t_traj_start) / traj_duration
+
+        b_swinging, t_swing_start, t_swing_end = self._compute_t_swing_start_end(
+            step_idx)
+        if b_swinging:
+            time_query = np.clip(time, t_swing_start, t_swing_end)
+            traj_duration = t_swing_end - t_swing_start
+            s = (time_query - t_swing_start) / traj_duration
+
+        des_quat = self._base_quat_curves[step_idx].evaluate(s)
+        des_ang_vel = self._base_quat_curves[step_idx].evaluate_ang_vel(s)
+        des_ang_acc = self._base_quat_curves[step_idx].evaluate_ang_acc(s)
+
+        return des_quat, des_ang_vel, des_ang_acc
+
+    def _compute_t_swing_start_end(self, step_idx):
+        if self._vrp_type_list[
+                step_idx] == VRPType.LF_SWING or self._vrp_type_list[
+                    step_idx] == VRPType.RF_SWING:
+            swing_start_time = self._compute_t_step_start(
+                step_idx) + self._t_ds * (1. - self._alpha_ds)
+            swing_end_time = self._compute_t_step_end(step_idx) - (
+                self._alpha_ds * self._t_ds)
+            return True, swing_start_time, swing_end_time
+        else:
+            return False, None, None
+
     def _compute_dcm_trajectory(self):
         self._dcm_ini_list = [None] * len(self._vrp_list)
         self._dcm_eos_list = [None] * len(self._vrp_list)
@@ -163,10 +209,10 @@ class DCMPlanner(object):
             # self._dcm_vel_end_ds_list[i], self._dcm_acc_end_ds_list[i], ts)
 
         self._compute_total_trajectory_time()
-        self._compute_reference_com()
-        self._compute_reference_base_ori()
+        self._compute_reference_com_trajectory()
+        self._compute_reference_base_ori_trajectory()
 
-    def _compute_reference_base_ori(self):
+    def _compute_reference_base_ori_trajectory(self):
         self._base_quat_curves = []
 
         prev_lf_stance = self._ini_lf_stance
@@ -197,6 +243,7 @@ class DCMPlanner(object):
                 curr_base_quat = np.copy(mid_foot_stance.quat)
                 step_counter += 1
             else:
+                # TODO : Initiate angular velocity with curr angular velocity
                 mid_foot_stance = interpolate(prev_left_stance,
                                               prev_right_stance, 0.5)
                 curr_base_quat = mid_foot_stance.quat
@@ -204,7 +251,7 @@ class DCMPlanner(object):
                     HermiteCurveQuat(curr_base_quat, np.zeros(3),
                                      curr_base_quat, np.zeros(3)))
 
-    def _compute_reference_com(self):
+    def _compute_reference_com_trajectory(self):
         self._compute_total_trajectory_time()
         t_local = self._t_start
         t_local_end = self._t_start + self._t_end
@@ -285,7 +332,7 @@ class DCMPlanner(object):
 
         return len(self._vrp_list) - 1
 
-    def _compute_settling_time(self):
+    def compute_settling_time(self):
         return -self._b * np.log(1. - self._percentage_settle)
 
     def _compute_total_trajectory_time(self):
@@ -293,7 +340,7 @@ class DCMPlanner(object):
         for i in range(len(self._vrp_list)):
             self._t_end += self._compute_t_step(i)
 
-        self._t_end += self._compute_settling_time()
+        self._t_end += self.compute_settling_time()
 
     def _compute_polynomial_matrix(self, ts, dcm_ini, dcm_vel_ini, dcm_end,
                                    dcm_vel_end):
