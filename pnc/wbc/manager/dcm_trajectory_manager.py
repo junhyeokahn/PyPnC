@@ -75,7 +75,9 @@ class DCMTrajectoryManager(object):
 
     def _update_starting_stance(self):
         self._lf_stance.iso = self._robot.get_link_iso(self._lfoot_id)
+        self._lf_stance.side = Footstep.LEFT_SIDE
         self._rf_stance.iso = self._robot.get_link_iso(self._rfoot_id)
+        self._rf_stance.side = Footstep.RIGHT_SIDE
         self._mf_stance.iso = interpolate(self._lf_stance, self._rf_stance,
                                           0.5)
 
@@ -172,6 +174,7 @@ class DCMTrajectoryManager(object):
                     mf_stance.ori,
                     np.array([0., self._nominal_footwidth / 2., 0.]))
                 lf_stance.ori = np.copy(mf_stance.ori)
+                # lf_stance.side = Footstep.LEFT_SIDE # TODO : Do I need this?
                 self._footstep_list.append(lf_stance)
                 robot_side = Footstep.RIGHT_SIDE
 
@@ -179,9 +182,120 @@ class DCMTrajectoryManager(object):
                 rf_stance.pos = mf_stance.pos + np.dot(
                     mf_stance.ori,
                     np.array([0., -self._nominal_footwidth / 2., 0.]))
-                rf_stance_ori = np.copy(mf_stance.ori)
+                rf_stance.ori = np.copy(mf_stance.ori)
+                # rf_stance.side = Footstep.RIGHT_SIDE # TODO : Do I need this?
                 self._footstep_list.append(rf_stance)
                 robot_side = Footstep.LEFT_SIDE
+
+    def _populate_walk_forward(self, num_step, forward_distance):
+        self._update_starting_stance()
+
+        new_stance = Footstep()
+        mf_stance = copy.deepcopy(self._mf_stance)
+
+        robot_side = Footstep.LEFT_SIDE
+        for i in range(num_step):
+            if robot_side == Footstep.LEFT_SIDE:
+                translate = np.array([(i + 1) * forward_distance,
+                                      self._nominal_footwidth / 2., 0.])
+                new_stance.pos = mf_stance.pos + np.dot(
+                    mf_stance.ori, translate)
+                new_stance.ori = np.copy(mf_stance.ori)
+                new_stance.side = Footstep.LEFT_SIDE
+                robot_side = Footstep.RIGHT_SIDE
+            else:
+                translate = np.array([(i + 1) * forward_distance,
+                                      -self._nominal_footwidth / 2., 0.])
+                new_stance.pos = mf_stance.pos + np.dot(
+                    mf_stance.ori, translate)
+                new_stance.ori = np.copy(mf_stance.ori)
+                new_stance.side = Footstep.RIGHT_SIDE
+                robot_side = Footstep.RIGHT_SIDE
+            self._footstep_list.append(copy.deepcopy(new_stance))
+
+        # Add additional step forward to square the feet
+        if robot_side == Footstep.LEFT_SIDE:
+            translate = np.array([
+                num_steps * forward_distance, self._nominal_footwidth / 2., 0.
+            ])
+            new_stance.pos = mf_stance.pos + np.dot(mf_stance.ori, translate)
+            new_stance.ori = mf_stance.ori
+            new_stance.side = Footstep.LEFT_SIDE
+        else:
+            translate = np.array([
+                num_steps * forward_distance, -self._nominal_footwidth / 2., 0.
+            ])
+            new_stance.pos = mf_stance.pos + np.dot(mf_stance.ori, translate)
+            new_stance.ori = mf_stance.ori
+            new_stance.side = Footstep.RIGHT_SIDE
+        self._footstep_list.append(copy.deepcopy(new_stance))
+
+    def _populate_turn(self, num_times, turn_radians_per_step):
+        self._update_starting_stance()
+
+        foot_rotate = R.from_rotvec([0., 0., turn_radians_per_step])
+
+        lf_stance = Footstep()
+        rf_stance = Footstep()
+        mf_stance = copy.deepcopy(self._mf_stance)
+        mf_stance_rotated = copy.deepcopy(self._mf_stance)
+
+        for i in range(num_times):
+            mf_stance_rotated.pos = mf_stance.pos
+            mf_stance_rotated.ori = np.dot(foot_rotation.to_matrix(),
+                                           mf_stance.ori)
+            lf_stance.pos = mf_stance_rotated.pos + np.dot(
+                mf_stance.ori, np.array([0., self._nominal_footwidth / 2., 0.
+                                         ]))
+            lf_stance.ori = mf_stance_rotated.ori
+            lf_stance.side = Footstep.LEFT_SIDE
+
+            rf_stance.pos = mf_stance_rotated.pos + np.dot(
+                mf_stance.ori, np.array(
+                    [0., -self._nominal_footwidth / 2., 0.]))
+            rf_stance.ori = mf_stance_rotated.ori
+            rf_stance.side = Footstep.RIGHT_SIDE
+
+            if turn_radians_per_step > 0.:
+                self._footstep_list.append(lf_stance)
+                self._footstep_list.append(rf_stance)
+            else:
+                self._footstep_list.append(rf_stance)
+                self._footstep_list.append(lf_stance)
+            mf_stance = copy.deepcopy(mf_stance_rotated)
+
+    def _populate_strafe(self, num_times, strafe_distance):
+        self._update_starting_stance()
+
+        lf_stance = Footstep()
+        rf_stance = Footstep()
+        mf_stance = copy.deepcopy(self._mf_stance)
+        mf_stance_translated = copy.deepcopy(self._mf_stance)
+
+        for i in range(num_times):
+            mf_stance_translated.pos = mf_stance.pos + np.dot(
+                mf_stance.ori, np.array([0., strafe_distance, 0.]))
+            mf_stance_translated.ori = mf_stance.ori
+
+            lf_stance.pos = mf_stance_translated.pos + np.dot(
+                mf_stance_translated.ori,
+                np.array([0., self._nominal_footwidth / 2., 0.]))
+            lf_stance.ori = mf_stance_translated.ori
+            lf_stance.side = Footstep.LEFT_SIDE
+
+            rf_stance.pos = mf_stance_translated.pos + np.dot(
+                mf_stance_translated.ori,
+                np.array([0., -self._nominal_footwidth / 2., 0.]))
+            rf_stance.ori = mf_stance_translated.ori
+            rf_stance.side = Footstep.RIGHT_SIDE
+
+            if strafe_distance > 0:
+                self._footstep_list.append(lf_stance)
+                self._footstep_list.append(rf_stance)
+            else:
+                self._footstep_list.append(rf_stance)
+                self._footstep_list.append(lf_stance)
+            mf_stance = copy.deepcopy(mf_stance_translated)
 
     def _alternate_leg(self):
         if self._robot_side == Footstep.LEFT_SIDE:
