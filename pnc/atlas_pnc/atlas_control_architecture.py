@@ -2,13 +2,15 @@ import numpy as np
 
 from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
-from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
-from pnc.atlas_pnc.atlas_controller import AtlasController
+from pnc.planner.locomotion import DCMPlanner
+from pnc.wbc.manager.dcm_trajectory_manager import DCMTrajectoryManager
 from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
 from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
 from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
 from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
+from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
+from pnc.atlas_pnc.atlas_controller import AtlasController
 from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
 from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
@@ -25,10 +27,9 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._atlas_controller = AtlasController(self._taf_container, robot)
 
         # Initialize Planner
-        # self._dcm_planner = DCMPlanner()
-        # setting dcm parameters...
+        self._dcm_planner = DCMPlanner()
 
-        # Initialize Task Manager
+        # In___itialize Task Manager
         self._rfoot_tm = FootTrajectoryManager(
             self._taf_container.rfoot_pos_task,
             self._taf_container.rfoot_ori_task, robot)
@@ -42,13 +43,29 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._floating_base_tm = FloatingBaseTrajectoryManager(
             self._taf_container.com_task, self._taf_container.pelvis_ori_task,
             robot)
+
+        self._dcm_tm = DCMTrajectoryManager(
+            self._dcm_planner, self._taf_container.com_task,
+            self._taf_container.pelvis_ori_task, "l_sole", "r_sole")
+        self._dcm_tm.nominal_com_height = WalkingConfig.COM_HEIGHT
+        self._dcm_tm.t_additional_init_transfer = WalkingConfig.T_ADDITIONAL_INI_TRANS
+        self._dcm_tm.t_contact_transition = WalkingConfig.T_CONTACT_TRANS
+        self._dcm_tm.t_swing = WalkingConfig.T_SWING
+        self._dcm_tm.percentage_settle = WalkingConfig.PERCENTAGE_SETTLE
+        self._dcm_tm.alpha_ds = WalkingConfig.ALPHA_DS
+        self._dcm_tm.nominal_footwidth = WalkingConfig.NOMINAL_FOOTWIDTH
+        self._dcm_tm.nominal_forward_step = WalkingConfig.NOMINAL_FORWARD_STEP
+        self._dcm_tm.nominal_backward_step = WalkingConfig.NOMINAL_BACKWARD_STEP
+        self._dcm_tm.nominal_turn_randians = WalkingConfig.NOMINAL_TURN_RADIANS
+        self._dcm_tm.nominal_strafe_distance = WalkingConfig.NOMINAL_STRAFE_DISTANCE
+
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
             "lfoot": self._lfoot_tm,
             "upper_body": self._upper_body_tm,
-            "floating_base": self._floating_base_tm
+            "floating_base": self._floating_base_tm,
+            "dcm": self._dcm_tm
         }
-        # self._dcm_tm = DCMTrajectoryManager(self._dcm_planner, self._taf_container.com_task, self._taf_container.pelvis_ori_task, "l_sole", "r_sole")
 
         # Initialize Hierarchy Manager
         self._rfoot_pos_hm = TaskHierarchyManager(
