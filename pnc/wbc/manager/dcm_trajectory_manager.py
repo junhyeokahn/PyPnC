@@ -431,3 +431,7 @@ class DCMTrajectoryManager(object):
     @nominal_strafe_distance.setter
     def nominal_strafe_distance(self, value):
         self._nominal_strafe_distance = value
+
+    @property
+    def footstep_list(self):
+        return self._footstep_list

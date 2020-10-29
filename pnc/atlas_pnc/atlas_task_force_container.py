@@ -76,11 +76,11 @@ class AtlasTaskForceContainer(TaskForceContainer):
         # Rfoot Contact
         self._rfoot_contact = SurfaceContact(robot, "r_sole", 0.11, 0.065, 0.7,
                                              PnCConfig.SAVE_DATA)
-        self._rfoot_contact.rf_z_max = WBCConfig.RF_Z_MAX
+        self._rfoot_contact.rf_z_max = 1e-3  # Initial rf_z_max
         # Lfoot Contact
         self._lfoot_contact = SurfaceContact(robot, "l_sole", 0.11, 0.065, 0.7,
                                              PnCConfig.SAVE_DATA)
-        self._lfoot_contact.rf_z_max = WBCConfig.RF_Z_MAX
+        self._lfoot_contact.rf_z_max = 1e-3  # Initial rf_z_max
 
         self._contact_list = [self._rfoot_contact, self._lfoot_contact]
 

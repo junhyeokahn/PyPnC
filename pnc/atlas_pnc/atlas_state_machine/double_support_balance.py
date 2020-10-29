@@ -38,9 +38,19 @@ class DoubleSupportBalance(StateMachine):
         pass
 
     def end_of_state(self):
-        ## TODO
+        if (self._b_state_switch_trigger) and (
+                len(self._trajectory_managers["dcm"].footstep_list) > 0
+        ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
+            return True
         return False
 
     def get_next_state(self):
-        ## TODO
-        pass
+        b_valid_step, robot_side = self._trajectory_managers[
+            "dcm"].next_step_side()
+        if b_valid_step:
+            if robot_side == Footstep.LEFT_SIDE:
+                return WalkingState.LF_CONTACT_TRANS_START
+            elif robot_side == Footstep.RIGHT_SIDE:
+                return WalkingState.RF_CONTACT_TRANS_START
+            else:
+                raise ValueError, "Wrong Footstep Side"

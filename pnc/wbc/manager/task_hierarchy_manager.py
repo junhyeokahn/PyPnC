@@ -6,6 +6,7 @@ class TaskHierarchyManager(object):
         self._task = task
         self._w_max = w_max
         self._w_min = w_min
+        self._w_starting = self._task.w_hierarchy
         self._robot = robot
         self._start_time = 0.
         self._duration = 0.
@@ -13,21 +14,23 @@ class TaskHierarchyManager(object):
     def initialize_ramp_to_min(self, start_time, duration):
         self._start_time = start_time
         self._duration = duration
+        self._w_starting = self._task.w_hierarchy
 
     def initialize_ramp_to_max(self, start_time, duration):
         self._start_time = start_time
         self._duration = duration
+        self._w_starting = self._task.w_hierarchy
 
-    def update_ramp_to_zero(self, current_time):
+    def update_ramp_to_min(self, current_time):
         t = np.clip(current_time, self._start_time,
                     self._start_time + self._duration)
-        w = (self._w_min -
-             self._w_max) / duration * (t - self._start_time) + self._w_max
-        self._task.w_hierarchy = w
+        self._task.w_hierarchy = (self._w_min -
+                                  self._w_starting) / duration * (
+                                      t - self._start_time) + self._w_starting
 
     def update_ramp_to_max(self, current_time):
         t = np.clip(current_time, self._start_time,
                     self._start_time + self._duration)
-        w = (self._w_max -
-             self._w_min) / duration * (t - self._start_time) + self._w_min
-        self._task.w_hierarchy = w
+        self._task.w_hierarchy = (self._w_max -
+                                  self._w_starting) / duration * (
+                                      t - self._start_time) + self._w_starting
