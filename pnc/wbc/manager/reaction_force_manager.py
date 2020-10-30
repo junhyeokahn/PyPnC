@@ -19,7 +19,7 @@ class ReactionForceManager(object):
     def initialize_ramp_to_max(self, start_time, duration):
         self._start_time = start_time
         self._duration = duration
-        self._starting_rf_z_max = self._contact_rf_z_max
+        self._starting_rf_z_max = self._contact.rf_z_max
 
     def update_ramp_to_min(self, current_time):
         t = np.clip(current_time, self._start_time,

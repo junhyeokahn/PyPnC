@@ -101,7 +101,7 @@ class DCMTrajectoryManager(object):
         elif transfer_type == DCMTransferType.MID:
             self._dcm_planner.t_transfer = self._t_transfer_mid
         else:
-            raise ValueError, "Wrong DCMTransferType"
+            raise ValueError("Wrong DCMTransferType")
 
         self._dcm_planner.initialize(self._footstep_preview_list,
                                      self._lf_stance, self._rf_stance,

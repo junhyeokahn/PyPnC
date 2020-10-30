@@ -37,7 +37,7 @@ class AtlasInterface(Interface):
 
         # Update State Estimator
         if self._count == 0:
-            self._se.initialize(senssor_data)
+            self._se.initialize(sensor_data)
         self._se.update(sensor_data)
 
         # Compute Cmd

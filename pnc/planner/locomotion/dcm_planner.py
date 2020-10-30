@@ -477,7 +477,7 @@ class DCMPlanner(object):
         elif self._vrp_type_list[step_idx] == VRPType.END:
             return self._t_ds * (1 - self._alpha_ds)
         else:
-            raise ValueError, "vrp type is not set properly"
+            raise ValueError("vrp type is not set properly")
 
     def _compute_dcm_ini(self, vrp_d_i, t_step, dcm_eos_i):
         return vrp_d_i + np.exp(-t_step / self._b) * (dcm_eos_i - vrp_d_i)

@@ -2,7 +2,7 @@ import numpy as np
 
 from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
-from pnc.planner.locomotion import DCMPlanner
+from pnc.planner.locomotion.dcm_planner import DCMPlanner
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTrajectoryManager
 from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
 from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
@@ -46,7 +46,8 @@ class AtlasControlArchitecture(ControlArchitecture):
 
         self._dcm_tm = DCMTrajectoryManager(
             self._dcm_planner, self._taf_container.com_task,
-            self._taf_container.pelvis_ori_task, "l_sole", "r_sole")
+            self._taf_container.pelvis_ori_task, self._robot, "l_sole",
+            "r_sole")
         self._dcm_tm.nominal_com_height = WalkingConfig.COM_HEIGHT
         self._dcm_tm.t_additional_init_transfer = WalkingConfig.T_ADDITIONAL_INI_TRANS
         self._dcm_tm.t_contact_transition = WalkingConfig.T_CONTACT_TRANS

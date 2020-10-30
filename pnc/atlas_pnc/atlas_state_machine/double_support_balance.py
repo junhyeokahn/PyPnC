@@ -53,4 +53,4 @@ class DoubleSupportBalance(StateMachine):
             elif robot_side == Footstep.RIGHT_SIDE:
                 return WalkingState.RF_CONTACT_TRANS_START
             else:
-                raise ValueError, "Wrong Footstep Side"
+                raise ValueError("Wrong Footstep Side")
