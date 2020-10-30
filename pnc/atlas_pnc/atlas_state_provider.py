@@ -18,7 +18,11 @@ class AtlasStateProvider(metaclass=MetaSingleton):
         self._robot = robot
         self._nominal_joint_pos = OrderedDict()
         self._state = 0
+        self._prev_state = 0
         self._curr_time = 0.
+        self._dcm = np.zeros(3)
+        self._prev_dcm = np.zeros(3)
+        self._dcm_vel = np.zeros(3)
 
     @property
     def nominal_joint_pos(self):
@@ -27,6 +31,38 @@ class AtlasStateProvider(metaclass=MetaSingleton):
     @property
     def state(self):
         return self._state
+
+    @property
+    def prev_state(self):
+        return self._prev_state
+
+    @property
+    def dcm(self):
+        return self._dcm
+
+    @dcm.setter
+    def dcm(self, value):
+        self._dcm = value
+
+    @property
+    def prev_dcm(self):
+        return self._prev_dcm
+
+    @prev_dcm.setter
+    def prev_dcm(self, value):
+        self._prev_dcm = value
+
+    @property
+    def dcm_vel(self):
+        return self._dcm_vel
+
+    @dcm_vel.setter
+    def dcm_vel(self, value):
+        self._dcm_vel = value
+
+    @prev_state.setter
+    def prev_state(self, value):
+        self._prev_state = value
 
     @property
     def curr_time(self):

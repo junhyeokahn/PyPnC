@@ -9,6 +9,7 @@ import pybullet as p
 from pnc.interface import Interface
 from config.atlas_config import SimConfig, PnCConfig
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
+from pnc.atlas_pnc.atlas_state_estimator import AtlasStateEstimator
 from pnc.atlas_pnc.atlas_control_architecture import AtlasControlArchitecture
 from pnc.data_saver import DataSaver
 
@@ -25,6 +26,7 @@ class AtlasInterface(Interface):
         else:
             raise ValueError
         self._sp = AtlasStateProvider(self._robot)
+        self._se = AtlasStateEstimator(self._robot)
         self._control_architecture = AtlasControlArchitecture(self._robot)
         if PnCConfig.SAVE_DATA:
             self._data_saver = DataSaver()
@@ -33,16 +35,11 @@ class AtlasInterface(Interface):
         if PnCConfig.SAVE_DATA:
             self._data_saver.add('time', self._running_time)
 
+        # Update State Estimator
         if self._count == 0:
-            self._sp.nominal_joint_pos = sensor_data["joint_pos"]
+            self._se.initialize(senssor_data)
+        self._se.update(sensor_data)
 
-        # Update RobotSystem
-        self._robot.update_system(sensor_data["base_pos"],
-                                  sensor_data["base_quat"],
-                                  sensor_data["base_lin_vel"],
-                                  sensor_data["base_ang_vel"],
-                                  sensor_data["joint_pos"],
-                                  sensor_data["joint_vel"])
         # Compute Cmd
         command = self._control_architecture.get_command()
 
@@ -53,6 +50,7 @@ class AtlasInterface(Interface):
         self._count += 1
         self._running_time += PnCConfig.CONTROLLER_DT
         self._sp.curr_time = self._running_time
+        self._sp.prev_state = self._control_architecture.prev_state
         self._sp.state = self._control_architecture.state
 
         return command

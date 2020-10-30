@@ -208,7 +208,7 @@ class DCMPlanner(object):
             # self._dcm_acc_ini_ds_list[i], self._dcm_end_ds_list[i],
             # self._dcm_vel_end_ds_list[i], self._dcm_acc_end_ds_list[i], ts)
 
-        self._compute_total_trajectory_time()
+        self.compute_total_trajectory_time()
         self._compute_reference_com_trajectory()
         self._compute_reference_base_ori_trajectory()
 
@@ -252,7 +252,7 @@ class DCMPlanner(object):
                                      curr_base_quat, np.zeros(3)))
 
     def _compute_reference_com_trajectory(self):
-        self._compute_total_trajectory_time()
+        self.compute_total_trajectory_time()
         t_local = self._t_start
         t_local_end = self._t_start + self._t_end
 
@@ -335,7 +335,7 @@ class DCMPlanner(object):
     def compute_settling_time(self):
         return -self._b * np.log(1. - self._percentage_settle)
 
-    def _compute_total_trajectory_time(self):
+    def compute_total_trajectory_time(self):
         self._t_end = 0.
         for i in range(len(self._vrp_list)):
             self._t_end += self._compute_t_step(i)
