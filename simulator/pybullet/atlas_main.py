@@ -150,6 +150,13 @@ def get_camera_image(robot, link_id, projection_matrix):
     return width, height, rgb_img, depth_img, seg_img
 
 
+def is_key_triggered(keys, key):
+    o = ord(key)
+    if o in keys:
+        return keys[ord(key)] & p.KEY_WAS_TRIGGERED
+    return False
+
+
 if __name__ == "__main__":
 
     # Environment Setup
@@ -192,14 +199,25 @@ if __name__ == "__main__":
     count = 0
     while (1):
 
+        # Get SensorData
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             camera_img = get_camera_image(robot, link_id, projection_matrix)
-
         sensor_data = get_sensor_data(robot, joint_id)
-        # start_time = time.time()
+
+        # Get Keyboard Event
+        keys = p.getKeyboardEvents()
+        if is_key_triggered(keys, '8'):
+            interface.interrupt_logic.b_interrupt_button_eight = True
+
+        # Compute Command
+        if SimConfig.B_PRINT_TIME:
+            start_time = time.time()
         command = interface.get_command(sensor_data)
-        # end_time = time.time()
-        # print("computation time: ", end_time - start_time)
+        if SimConfig.B_PRINT_TIME:
+            end_time = time.time()
+            print("ctrl computation time: ", end_time - start_time)
+
+        # Apply Trq
         set_motor_trq(robot, joint_id, command)
 
         p.stepSimulation()

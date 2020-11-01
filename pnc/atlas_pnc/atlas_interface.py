@@ -8,6 +8,7 @@ import pybullet as p
 
 from pnc.interface import Interface
 from config.atlas_config import SimConfig, PnCConfig
+from pnc.atlas_pnc.atlas_interrupt_logic import AtlasInterruptLogic
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 from pnc.atlas_pnc.atlas_state_estimator import AtlasStateEstimator
 from pnc.atlas_pnc.atlas_control_architecture import AtlasControlArchitecture
@@ -28,6 +29,7 @@ class AtlasInterface(Interface):
         self._sp = AtlasStateProvider(self._robot)
         self._se = AtlasStateEstimator(self._robot)
         self._control_architecture = AtlasControlArchitecture(self._robot)
+        self._interrupt_logic = AtlasInterruptLogic(self._control_architecture)
         if PnCConfig.SAVE_DATA:
             self._data_saver = DataSaver()
 
@@ -39,6 +41,9 @@ class AtlasInterface(Interface):
         if self._count == 0:
             self._se.initialize(sensor_data)
         self._se.update(sensor_data)
+
+        # Process Interrupt Logic
+        self._interrupt_logic.process_interrupts()
 
         # Compute Cmd
         command = self._control_architecture.get_command()
@@ -54,3 +59,7 @@ class AtlasInterface(Interface):
         self._sp.state = self._control_architecture.state
 
         return command
+
+    @property
+    def interrupt_logic(self):
+        return self._interrupt_logic

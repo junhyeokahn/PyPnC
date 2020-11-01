@@ -3,6 +3,7 @@ import numpy as np
 from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
 from pnc.planner.locomotion.dcm_planner import DCMPlanner
+from pnc.planner.locomotion.footstep import Footstep
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTrajectoryManager
 from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
 from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
@@ -13,6 +14,7 @@ from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
 from pnc.atlas_pnc.atlas_controller import AtlasController
 from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
 from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
+from pnc.atlas_pnc.atlas_state_machine.contact_transition_start import ContactTransitionStart
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 
@@ -113,6 +115,11 @@ class AtlasControlArchitecture(ControlArchitecture):
             1, self._trajectory_managers, self._hierarchy_managers,
             self._reaction_force_managers, robot)
 
+        self._state_machine[
+            WalkingState.LF_CONTACT_TRANS_START] = ContactTransitionStart(
+                2, self._trajectory_managers, self._hierarchy_managers,
+                self._reaction_force_managers, Footstep.LEFT_SIDE, self._robot)
+
         # Set Starting State
         self._state = WalkingState.STAND
         self._prev_state = WalkingState.STAND
@@ -133,3 +140,11 @@ class AtlasControlArchitecture(ControlArchitecture):
             self._b_state_first_visit = True
 
         return command
+
+    @property
+    def dcm_tm(self):
+        return self._dcm_tm
+
+    @property
+    def state_machine(self):
+        return self._state_machine

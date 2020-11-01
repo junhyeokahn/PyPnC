@@ -1,15 +1,15 @@
 import numpy as np
 
 from config.atlas_config import WalkingConfig
-from pnc.planner.locomotion import Footstep
+from pnc.planner.locomotion.footstep import Footstep
 from pnc.state_machine import StateMachine
-from pnc.wbc.manager.dcm_trajectory_manger import DCMTransferType
+from pnc.wbc.manager.dcm_trajectory_manager import DCMTransferType
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 
 class ContactTransitionStart(StateMachine):
     def __init__(self, id, tm, hm, fm, leg_side, robot):
-        super(ContactTransitionStart, self).__init__()
+        super(ContactTransitionStart, self).__init__(id, robot)
         self._trajectory_managers = tm
         self._hierarchy_managers = hm
         self._force_managers = fm
@@ -17,11 +17,6 @@ class ContactTransitionStart(StateMachine):
         self._sp = AtlasStateProvider()
         self._start_time = 0.
         self._planning_id = 0
-
-    def one_step(self):
-        self._state_machine_time = self._sp.curr_time - self._start_time
-
-        # Update Task
 
     def first_visit(self):
         if self._leg_side == Footstep.RIGHT_SIDE:
@@ -64,6 +59,8 @@ class ContactTransitionStart(StateMachine):
                 self._sp.dcm_vel)
             self._trajectory_managers["dcm"].save_trajectory(self._planning_id)
             self._planning_id += 1
+
+            exit()
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time

@@ -7,6 +7,7 @@ class SimConfig(object):
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.
+    B_PRINT_TIME = False
 
 
 class PnCConfig(object):
