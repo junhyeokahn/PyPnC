@@ -82,8 +82,7 @@ class DCMTrajectoryManager(object):
         self._lf_stance.side = Footstep.LEFT_SIDE
         self._rf_stance.iso = self._robot.get_link_iso(self._rfoot_id)
         self._rf_stance.side = Footstep.RIGHT_SIDE
-        self._mf_stance.iso = interpolate(self._lf_stance, self._rf_stance,
-                                          0.5)
+        self._mf_stance = interpolate(self._lf_stance, self._rf_stance, 0.5)
 
     # TODO : Put initial angular velocity
     def initialize(self, t_start, transfer_type, quat_start, dcm_pos_start,
