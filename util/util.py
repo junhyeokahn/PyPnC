@@ -177,19 +177,19 @@ class HermiteCurveQuat(object):
         # Initialize Data Structures
         self._q0 = R.from_quat(quat_start)
 
-        if np.norm(ang_vel_start) < 1e-6:
+        if np.linalg.norm(ang_vel_start) < 1e-6:
             self._q1 = R.from_quat(quat_start) * R.from_quat([0., 0., 0., 1.])
         else:
             self._q1 = R.from_quat(quat_start) * R.from_rotvec(
-                (np.norm(ang_vel_start) / 3.0) *
-                (ang_vel_start / np.norm(ang_vel_start)))
+                (np.linalg.norm(ang_vel_start) / 3.0) *
+                (ang_vel_start / np.linalg.norm(ang_vel_start)))
 
-        if np.norm(ang_vel_end) < 1e-6:
+        if np.linalg.norm(ang_vel_end) < 1e-6:
             self._q2 = R.from_quat(quat_end) * R.from_quat([0., 0., 0., 1.])
         else:
             self._q2 = R.from_quat(quat_end) * R.from_rotvec(
-                (np.norm(ang_vel_end) / 3.0) *
-                (ang_vel_end / np.norm(ang_vel_end)))
+                (np.linalg.norm(ang_vel_end) / 3.0) *
+                (ang_vel_end / np.linalg.norm(ang_vel_end)))
 
         self._q3 = R.from_quat(quat_end)
 
@@ -197,9 +197,9 @@ class HermiteCurveQuat(object):
         self._omega_2aa = self._q2 * self._q1.inv()
         self._omega_3aa = self._q3 * self._q2.inv()
 
-        self._omega_1 = self._omega_1aa.to_rotvec()
-        self._omega_2 = self._omega_2aa.to_rotvec()
-        self._omega_3 = self._omega_3aa.to_rotvec()
+        self._omega_1 = self._omega_1aa.as_rotvec()
+        self._omega_2 = self._omega_2aa.as_rotvec()
+        self._omega_3 = self._omega_3aa.as_rotvec()
 
     def _compute_basis(self, s_in):
         s = np.clip(s_in, 0., 1.)
@@ -218,14 +218,26 @@ class HermiteCurveQuat(object):
         s = np.clip(s_in, 0., 1.)
         self._compute_basis(s)
 
-        qtmp1 = R.from_rotvec((np.norm(self._omega_1) * self._b1) *
-                              (self._omega_1 / np.norm(self._omega_1)))
-        qtmp2 = R.from_rotvec((np.norm(self._omega_2) * self._b2) *
-                              (self._omega_2 / np.norm(self._omega_2)))
-        qtmp3 = R.from_rotvec((np.norm(self._omega_3) * self._b3) *
-                              (self._omega_3 / np.norm(self._omega_3)))
+        if np.linalg.norm(self._omega_1) > 1e-5:
+            qtmp1 = R.from_rotvec(
+                (np.linalg.norm(self._omega_1) * self._b1) *
+                (self._omega_1 / np.linalg.norm(self._omega_1)))
+        else:
+            qtmp1 = R.from_quat([0., 0., 0., 1.])
+        if np.linalg.norm(self._omega_2) > 1e-5:
+            qtmp2 = R.from_rotvec(
+                (np.linalg.norm(self._omega_2) * self._b2) *
+                (self._omega_2 / np.linalg.norm(self._omega_2)))
+        else:
+            qtmp2 = R.from_quat([0., 0., 0., 1.])
+        if np.linalg.norm(self._omega_3) > 1e-5:
+            qtmp3 = R.from_rotvec(
+                (np.linalg.norm(self._omega_3) * self._b3) *
+                (self._omega_3 / np.linalg.norm(self._omega_3)))
+        else:
+            qtmp3 = R.from_quat([0., 0., 0., 1.])
 
-        return (qtmp3 * qtmp2 * qtmp1 * self._q0).to_quat()
+        return (qtmp3 * qtmp2 * qtmp1 * self._q0).as_quat()
 
     def evaluate_ang_vel(self, s_in):
         s = np.clip(s_in, 0., 1.)

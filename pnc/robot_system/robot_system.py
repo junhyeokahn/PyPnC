@@ -3,7 +3,10 @@ from collections import OrderedDict
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self, filepath, floating_joint_list):
+    def __init__(self,
+                 filepath,
+                 floating_joint_list,
+                 b_print_robot_info=False):
         """
         Base RobotSystem Class
 
@@ -14,6 +17,9 @@ class RobotSystem(abc.ABC):
         floating_joint_list (list of str):
             list of floating joint name
         """
+
+        self._b_print_robot_info = b_print_robot_info
+
         self._n_virtual = 0
         self._n_q = 0
         self._n_q_dot = 0

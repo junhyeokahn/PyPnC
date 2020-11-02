@@ -27,15 +27,16 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
 
-    print("=" * 80)
-    print("SimulationRobot")
-    print("nq: ", nq, ", nv: ", nv, ", na: ", na)
-    print("+" * 80)
-    print("Joint Infos")
-    util.pretty_print(joint_id)
-    print("+" * 80)
-    print("Link Infos")
-    util.pretty_print(link_id)
+    if SimConfig.PRINT_ROBOT_INFO:
+        print("=" * 80)
+        print("SimulationRobot")
+        print("nq: ", nq, ", nv: ", nv, ", na: ", na)
+        print("+" * 80)
+        print("Joint Infos")
+        util.pretty_print(joint_id)
+        print("+" * 80)
+        print("Link Infos")
+        util.pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -210,10 +211,10 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_eight = True
 
         # Compute Command
-        if SimConfig.B_PRINT_TIME:
+        if SimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(sensor_data)
-        if SimConfig.B_PRINT_TIME:
+        if SimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
 

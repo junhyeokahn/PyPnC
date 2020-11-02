@@ -56,6 +56,7 @@ class Footstep(object):
 
     @iso.setter
     def iso(self, value):
+        self._pos = np.copy(value[0:3, 3])
         self._quat = R.from_matrix(value[0:3, 0:3]).as_quat()
         self._rot = np.copy(value[0:3, 0:3])
         self._iso = np.copy(value)

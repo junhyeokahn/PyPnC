@@ -1,8 +1,10 @@
 import pickle
 import math
 import os
+import copy
 
 import numpy as np
+import yaml
 
 from pnc.planner.locomotion.footstep import Footstep
 from pnc.planner.locomotion.footstep import interpolate
@@ -107,14 +109,15 @@ class DCMTrajectoryManager(object):
                                      dcm_pos_start, dcm_vel_start)
 
     def save_trajectory(self, file_name):
-        t_start = self._dcm.t_start
-        t_end = t_start + self._dcm_planner.compute_total_trajectory_time()
+        t_start = self._dcm_planner.t_start
+        t_end = t_start + self._dcm_planner.t_end
         t_step = 0.01
         n_eval = math.floor((t_end - t_start) / t_step)
 
         data = dict()
 
         # Temporal Infos
+        data["temporal_parameters"] = dict()
         data["temporal_parameters"]["initial_time"] = t_start
         data["temporal_parameters"]["final_time"] = t_end
         data["temporal_parameters"]["time_step"] = t_step
@@ -124,6 +127,11 @@ class DCMTrajectoryManager(object):
             "t_transfer"] = self._dcm_planner.t_transfer
 
         # Contact Infos
+        data["contact"] = dict()
+        data["contact"]["curr_right_foot"] = dict()
+        data["contact"]["curr_left_foot"] = dict()
+        data["contact"]["right_foot"] = dict()
+        data["contact"]["left_foot"] = dict()
         data["contact"]["curr_right_foot"]["pos"] = np.copy(
             self._rf_stance.pos)
         data["contact"]["curr_right_foot"]["ori"] = np.copy(
@@ -154,12 +162,13 @@ class DCMTrajectoryManager(object):
         t = t_start
         for i in range(n_eval):
             t_traj[i, 0] = t
-            com_pos[i, :] = self._dcm_planner.compute_reference_com_pos(t)
-            com_pos[i, :] = self._dcm_planner.compute_reference_com_vel(t)
+            com_pos_ref[i, :] = self._dcm_planner.compute_reference_com_pos(t)
+            com_vel_ref[i, :] = self._dcm_planner.compute_reference_com_vel(t)
             base_ori_ref[
                 i, :], _, _ = self._dcm_planner.compute_reference_base_ori(t)
             t += t_step
 
+        data["reference"] = dict()
         data["reference"]["com_pos"] = com_pos_ref
         data["reference"]["com_vel"] = com_vel_ref
         data["reference"]["base_ori"] = base_ori_ref
@@ -167,7 +176,11 @@ class DCMTrajectoryManager(object):
 
         if not os.path.exists('data'):
             os.makedirs('data')
-        file = open("{}_th_dcm_planning.pkl".format(planning_id), 'ab')
+
+        # with open("data/{}_th_dcm_planning.yaml".format(file_name), 'w') as file:
+        # yaml.dump(data, file)
+
+        file = open("data/{}_th_dcm_planning.pkl".format(file_name), 'ab')
         pickle.dump(data, file)
         file.close()
 
@@ -239,46 +252,46 @@ class DCMTrajectoryManager(object):
         for i in range(num_step):
             if robot_side == Footstep.LEFT_SIDE:
                 lf_stance.pos = mf_stance.pos + np.dot(
-                    mf_stance.ori,
+                    mf_stance.rot,
                     np.array([0., self._nominal_footwidth / 2., 0.]))
-                lf_stance.ori = np.copy(mf_stance.ori)
+                lf_stance.rot = np.copy(mf_stance.rot)
                 # lf_stance.side = Footstep.LEFT_SIDE # TODO : Do I need this?
                 self._footstep_list.append(lf_stance)
                 robot_side = Footstep.RIGHT_SIDE
 
             else:
                 rf_stance.pos = mf_stance.pos + np.dot(
-                    mf_stance.ori,
+                    mf_stance.rot,
                     np.array([0., -self._nominal_footwidth / 2., 0.]))
-                rf_stance.ori = np.copy(mf_stance.ori)
+                rf_stance.rot = np.copy(mf_stance.rot)
                 # rf_stance.side = Footstep.RIGHT_SIDE # TODO : Do I need this?
                 self._footstep_list.append(rf_stance)
                 robot_side = Footstep.LEFT_SIDE
 
-    def _populate_walk_forward(self, num_step, forward_distance):
+    def _populate_walk_forward(self, num_steps, forward_distance):
         self._update_starting_stance()
 
         new_stance = Footstep()
         mf_stance = copy.deepcopy(self._mf_stance)
 
         robot_side = Footstep.LEFT_SIDE
-        for i in range(num_step):
+        for i in range(num_steps):
             if robot_side == Footstep.LEFT_SIDE:
                 translate = np.array([(i + 1) * forward_distance,
                                       self._nominal_footwidth / 2., 0.])
                 new_stance.pos = mf_stance.pos + np.dot(
-                    mf_stance.ori, translate)
-                new_stance.ori = np.copy(mf_stance.ori)
+                    mf_stance.rot, translate)
+                new_stance.rot = np.copy(mf_stance.rot)
                 new_stance.side = Footstep.LEFT_SIDE
                 robot_side = Footstep.RIGHT_SIDE
             else:
                 translate = np.array([(i + 1) * forward_distance,
                                       -self._nominal_footwidth / 2., 0.])
                 new_stance.pos = mf_stance.pos + np.dot(
-                    mf_stance.ori, translate)
-                new_stance.ori = np.copy(mf_stance.ori)
+                    mf_stance.rot, translate)
+                new_stance.rot = np.copy(mf_stance.rot)
                 new_stance.side = Footstep.RIGHT_SIDE
-                robot_side = Footstep.RIGHT_SIDE
+                robot_side = Footstep.LEFT_SIDE
             self._footstep_list.append(copy.deepcopy(new_stance))
 
         # Add additional step forward to square the feet
@@ -286,15 +299,15 @@ class DCMTrajectoryManager(object):
             translate = np.array([
                 num_steps * forward_distance, self._nominal_footwidth / 2., 0.
             ])
-            new_stance.pos = mf_stance.pos + np.dot(mf_stance.ori, translate)
-            new_stance.ori = mf_stance.ori
+            new_stance.pos = mf_stance.pos + np.dot(mf_stance.rot, translate)
+            new_stance.rot = mf_stance.rot
             new_stance.side = Footstep.LEFT_SIDE
         else:
             translate = np.array([
                 num_steps * forward_distance, -self._nominal_footwidth / 2., 0.
             ])
-            new_stance.pos = mf_stance.pos + np.dot(mf_stance.ori, translate)
-            new_stance.ori = mf_stance.ori
+            new_stance.pos = mf_stance.pos + np.dot(mf_stance.rot, translate)
+            new_stance.rot = mf_stance.rot
             new_stance.side = Footstep.RIGHT_SIDE
         self._footstep_list.append(copy.deepcopy(new_stance))
 
@@ -310,18 +323,18 @@ class DCMTrajectoryManager(object):
 
         for i in range(num_times):
             mf_stance_rotated.pos = mf_stance.pos
-            mf_stance_rotated.ori = np.dot(foot_rotation.to_matrix(),
-                                           mf_stance.ori)
+            mf_stance_rotated.rot = np.dot(foot_rotation.to_matrix(),
+                                           mf_stance.rot)
             lf_stance.pos = mf_stance_rotated.pos + np.dot(
-                mf_stance.ori, np.array([0., self._nominal_footwidth / 2., 0.
+                mf_stance.rot, np.array([0., self._nominal_footwidth / 2., 0.
                                          ]))
-            lf_stance.ori = mf_stance_rotated.ori
+            lf_stance.rot = mf_stance_rotated.rot
             lf_stance.side = Footstep.LEFT_SIDE
 
             rf_stance.pos = mf_stance_rotated.pos + np.dot(
-                mf_stance.ori, np.array(
+                mf_stance.rot, np.array(
                     [0., -self._nominal_footwidth / 2., 0.]))
-            rf_stance.ori = mf_stance_rotated.ori
+            rf_stance.rot = mf_stance_rotated.rot
             rf_stance.side = Footstep.RIGHT_SIDE
 
             if turn_radians_per_step > 0.:
@@ -342,19 +355,19 @@ class DCMTrajectoryManager(object):
 
         for i in range(num_times):
             mf_stance_translated.pos = mf_stance.pos + np.dot(
-                mf_stance.ori, np.array([0., strafe_distance, 0.]))
-            mf_stance_translated.ori = mf_stance.ori
+                mf_stance.rot, np.array([0., strafe_distance, 0.]))
+            mf_stance_translated.rot = mf_stance.rot
 
             lf_stance.pos = mf_stance_translated.pos + np.dot(
-                mf_stance_translated.ori,
+                mf_stance_translated.rot,
                 np.array([0., self._nominal_footwidth / 2., 0.]))
-            lf_stance.ori = mf_stance_translated.ori
+            lf_stance.rot = mf_stance_translated.rot
             lf_stance.side = Footstep.LEFT_SIDE
 
             rf_stance.pos = mf_stance_translated.pos + np.dot(
-                mf_stance_translated.ori,
+                mf_stance_translated.rot,
                 np.array([0., -self._nominal_footwidth / 2., 0.]))
-            rf_stance.ori = mf_stance_translated.ori
+            rf_stance.rot = mf_stance_translated.rot
             rf_stance.side = Footstep.RIGHT_SIDE
 
             if strafe_distance > 0:
@@ -378,7 +391,7 @@ class DCMTrajectoryManager(object):
     def _update_footstep_preview(self, max_footsteps_to_preview=40):
         self._footstep_preview_list = []
         for i in range(max_footsteps_to_preview):
-            if (i + self._current_footstep_idx) < len(self._footstep_list):
+            if (i + self._curr_footstep_idx) < len(self._footstep_list):
                 self._footstep_preview_list.append(
                     self._footstep_list[i + self._curr_footstep_idx])
             else:

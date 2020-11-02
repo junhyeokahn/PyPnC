@@ -1,6 +1,7 @@
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
-from config.atlas_config import WalkingConfig
+from config.atlas_config import WalkingConfig, WalkingState
 from pnc.planner.locomotion.footstep import Footstep
 from pnc.state_machine import StateMachine
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTransferType
@@ -60,6 +61,7 @@ class ContactTransitionStart(StateMachine):
             self._trajectory_managers["dcm"].save_trajectory(self._planning_id)
             self._planning_id += 1
 
+            print("Done")
             exit()
 
     def one_step(self):

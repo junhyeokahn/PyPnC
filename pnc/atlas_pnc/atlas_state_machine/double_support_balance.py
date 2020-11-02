@@ -1,6 +1,8 @@
 import numpy as np
 
+from config.atlas_config import WalkingState
 from pnc.state_machine import StateMachine
+from pnc.planner.locomotion.footstep import Footstep
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 

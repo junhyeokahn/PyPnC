@@ -9,7 +9,6 @@ xyz_label = ['x', 'y', 'z']
 quat_label = ['x', ' y', ' z', 'w']
 markers = ['*', '+', 'h', 'x', 'o', 'v', 'd']
 
-
 def plot_task(time, pos_des, pos, vel_des, vel, suptitle):
     if pos_des.shape[1] == 3:
 

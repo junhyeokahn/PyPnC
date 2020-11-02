@@ -23,7 +23,7 @@ class AtlasInterface(Interface):
             from pnc.robot_system.dart_robot_system import DartRobotSystem
             self._robot = DartRobotSystem(
                 cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-                ['rootJoint'])
+                ['rootJoint'], PnCConfig.PRINT_ROBOT_INFO)
         else:
             raise ValueError
         self._sp = AtlasStateProvider(self._robot)

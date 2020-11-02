@@ -7,7 +7,9 @@ class SimConfig(object):
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.
-    B_PRINT_TIME = False
+
+    PRINT_TIME = False
+    PRINT_ROBOT_INFO = False
 
 
 class PnCConfig(object):
@@ -15,6 +17,8 @@ class PnCConfig(object):
     CONTROLLER_DT = SimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 10
+
+    PRINT_ROBOT_INFO = SimConfig.PRINT_ROBOT_INFO
 
 
 class WBCConfig(object):
