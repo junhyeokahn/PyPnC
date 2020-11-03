@@ -11,7 +11,7 @@ class VRPType(object):
     RF_SWING = 0
     LF_SWING = 1
     TRANSFER = 2
-    END = 4
+    END = 3
 
 
 class DCMPlanner(object):
@@ -188,13 +188,13 @@ class DCMPlanner(object):
 
         # Recompute first DS polynomial boundary conditions again
         self._dcm_end_ds_list[0] = self._compute_dcm_end_ds(
-            0, self._t_transfer + self._alpha_ds + self._t_ds)
+            0, self._t_transfer + self._alpha_ds * self._t_ds)
         self._dcm_vel_end_ds_list[0] = self._compute_dcm_vel_end_ds(
-            0, self._t_transfer + self._alpha_ds + self._t_ds)
+            0, self._t_transfer + self._alpha_ds * self._t_ds)
         self._dcm_acc_end_ds_list[0] = self._compute_dcm_acc_end_ds(
-            0, self._t_transfer + self._alpha_ds + self._t_ds)
+            0, self._t_transfer + self._alpha_ds * self._t_ds)
 
-        self._print_boundary_conditions()
+        # self._print_boundary_conditions()
 
         # Compute polynomial interpolator matrix
         for i in range(len(self._vrp_list)):
@@ -396,8 +396,7 @@ class DCMPlanner(object):
 
     def _compute_t_step_end(self, step_idx):
         idx = np.clip(step_idx, 0, len(self._vrp_list) - 1)
-        return self._compute_t_step_start(
-            step_idx) + self._compute_t_step_start(idx)
+        return self._compute_t_step_start(step_idx) + self._compute_t_step(idx)
 
     def _compute_ds_t_start(self, step_idx):
         idx = np.clip(step_idx, 0, len(self._vrp_list) - 1)
@@ -454,9 +453,9 @@ class DCMPlanner(object):
         if step_idx == len(self._vrp_list) - 1:
             return np.zeros(3)
         elif step_idx == 0:
-            return self._dcm_end_ds_list[step_idx + 1]
+            return self._dcm_vel_end_ds_list[step_idx + 1]
         else:
-            return self._vrp_list[step_idx] + np.exp(t_ds_end / self._b) * (
+            return (1.0 / self._b) * np.exp(t_ds_end / self._b) * (
                 self._dcm_ini_list[step_idx] - self._vrp_list[step_idx])
 
     def _compute_dcm_acc_end_ds(self, step_idx, t_ds_end):

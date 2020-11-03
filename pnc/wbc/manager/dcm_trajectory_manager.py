@@ -116,7 +116,7 @@ class DCMTrajectoryManager(object):
 
         data = dict()
 
-        # Temporal Infos
+        # Temporal Info
         data["temporal_parameters"] = dict()
         data["temporal_parameters"]["initial_time"] = t_start
         data["temporal_parameters"]["final_time"] = t_end
@@ -126,7 +126,7 @@ class DCMTrajectoryManager(object):
         data["temporal_parameters"][
             "t_transfer"] = self._dcm_planner.t_transfer
 
-        # Contact Infos
+        # Contact Info
         data["contact"] = dict()
         data["contact"]["curr_right_foot"] = dict()
         data["contact"]["curr_left_foot"] = dict()
