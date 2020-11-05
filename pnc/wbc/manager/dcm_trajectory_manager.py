@@ -196,7 +196,7 @@ class DCMTrajectoryManager(object):
         self._com_task.update_desired(self._des_com_pos, self._des_com_vel,
                                       self._des_com_acc)
         self._base_ori_task.update_desired(self._des_quat, self._des_ang_vel,
-                                           self_des_ang_acc)
+                                           self._des_ang_acc)
 
     def next_step_side(self):
         if len(self._footstep_list) > 0 and self._curr_footstep_idx < len(
@@ -210,6 +210,9 @@ class DCMTrajectoryManager(object):
             return True
         else:
             return False
+
+    def increment_step_idx(self):
+        self._curr_footstep_idx += 1
 
     def walk_in_place(self):
         self._reset_idx_and_clear_footstep_list()
@@ -400,9 +403,6 @@ class DCMTrajectoryManager(object):
     def _reset_step_idx(self):
         self._curr_footstep_idx = 0
 
-    def _increment_step_idx(self):
-        self._curr_footstep_idx += 1
-
     def _set_temporal_params(self):
         self._t_ds = self._t_contact_transition
         self._t_ss = self._t_swing
@@ -516,3 +516,7 @@ class DCMTrajectoryManager(object):
     @property
     def footstep_list(self):
         return self._footstep_list
+
+    @property
+    def curr_footstep_idx(self):
+        return self._curr_footstep_idx

@@ -15,6 +15,8 @@ from pnc.atlas_pnc.atlas_controller import AtlasController
 from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
 from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
 from pnc.atlas_pnc.atlas_state_machine.contact_transition_start import ContactTransitionStart
+from pnc.atlas_pnc.atlas_state_machine.contact_transition_end import ContactTransitionEnd
+from pnc.atlas_pnc.atlas_state_machine.single_support_swing import SingleSupportSwing
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 
 
@@ -102,8 +104,8 @@ class AtlasControlArchitecture(ControlArchitecture):
 
         # Initialize State Machines
         self._state_machine[WalkingState.STAND] = DoubleSupportStand(
-            0, self._trajectory_managers, self._hierarchy_managers,
-            self._reaction_force_managers, robot)
+            WalkingState.STAND, self._trajectory_managers,
+            self._hierarchy_managers, self._reaction_force_managers, robot)
         self._state_machine[
             WalkingState.STAND].end_time = WalkingConfig.INIT_STAND_DUR
         self._state_machine[
@@ -112,25 +114,55 @@ class AtlasControlArchitecture(ControlArchitecture):
             WalkingState.STAND].com_height_des = WalkingConfig.COM_HEIGHT
 
         self._state_machine[WalkingState.BALANCE] = DoubleSupportBalance(
-            1, self._trajectory_managers, self._hierarchy_managers,
-            self._reaction_force_managers, robot)
+            WalkingState.BALANCE, self._trajectory_managers,
+            self._hierarchy_managers, self._reaction_force_managers, robot)
 
         self._state_machine[
             WalkingState.LF_CONTACT_TRANS_START] = ContactTransitionStart(
-                2, self._trajectory_managers, self._hierarchy_managers,
-                self._reaction_force_managers, Footstep.LEFT_SIDE, self._robot)
+                WalkingState.LF_CONTACT_TRANS_START, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                Footstep.LEFT_SIDE, self._robot)
+        self._state_machine[
+            WalkingState.LF_CONTACT_TRANS_END] = ContactTransitionEnd(
+                WalkingState.LF_CONTACT_TRANS_END, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                Footstep.LEFT_SIDE, self._robot)
+        self._state_machine[WalkingState.LF_SWING] = SingleSupportSwing(
+            WalkingState.LF_SWING, self._trajectory_managers,
+            Footstep.LEFT_SIDE, self._robot)
+
+        self._state_machine[
+            WalkingState.RF_CONTACT_TRANS_START] = ContactTransitionStart(
+                WalkingState.RF_CONTACT_TRANS_START, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                Footstep.RIGHT_SIDE, self._robot)
+        self._state_machine[
+            WalkingState.RF_CONTACT_TRANS_END] = ContactTransitionEnd(
+                WalkingState.RF_CONTACT_TRANS_END, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                Footstep.RIGHT_SIDE, self._robot)
+        self._state_machine[WalkingState.RF_SWING] = SingleSupportSwing(
+            WalkingState.RF_SWING, self._trajectory_managers,
+            Footstep.RIGHT_SIDE, self._robot)
 
         # Set Starting State
         self._state = WalkingState.STAND
         self._prev_state = WalkingState.STAND
         self._b_state_first_visit = True
 
+        self._sp = AtlasStateProvider()
+
     def get_command(self):
         if self._b_state_first_visit:
             self._state_machine[self._state].first_visit()
             self._b_state_first_visit = False
 
+        # Update State Machine
         self._state_machine[self._state].one_step()
+        # Update State Machine Independent Trajectories
+        self._upper_body_tm.use_nominal_upper_body_joint_pos(
+            self._sp.nominal_joint_pos)
+        # Get Whole Body Control Commands
         command = self._atlas_controller.get_command()
 
         if self._state_machine[self._state].end_of_state():

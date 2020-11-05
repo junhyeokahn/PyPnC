@@ -53,16 +53,14 @@ class ContactTransitionStart(StateMachine):
                     ) - self._trajectory_managers[
                         "dcm"].compute_rf_z_ramp_down_time()
 
-            pelvis_quat = R.from_matrix(
-                self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
-            self._trajectory_managers["dcm"].initialize(
-                self._sp.curr_time, transfer_type, pelvis_quat, self._sp.dcm,
-                self._sp.dcm_vel)
-            self._trajectory_managers["dcm"].save_trajectory(self._planning_id)
-            self._planning_id += 1
-
-            print("Done")
-            exit()
+                pelvis_quat = R.from_matrix(
+                    self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
+                self._trajectory_managers["dcm"].initialize(
+                    self._sp.curr_time, transfer_type, pelvis_quat,
+                    self._sp.dcm, self._sp.dcm_vel)
+                self._trajectory_managers["dcm"].save_trajectory(
+                    self._planning_id)
+                self._planning_id += 1
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -99,4 +97,4 @@ class ContactTransitionStart(StateMachine):
             if self._leg_side == Footstep.LEFT_SIDE:  # TODO CHECK THIS OUT
                 return WalkingState.LF_CONTACT_TRANS_END
             elif self._leg_side == Footstep.RIGHT_SIDE:
-                return WalkingSTate.RF_CONTACT_TRANS_END
+                return WalkingState.RF_CONTACT_TRANS_END

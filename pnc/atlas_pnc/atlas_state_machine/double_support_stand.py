@@ -44,6 +44,9 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = val
 
     def first_visit(self):
+        print("=" * 80)
+        print("Start")
+        print("=" * 80)
         print("[WalkingState] STAND")
         self._start_time = self._sp.curr_time
 
@@ -69,10 +72,6 @@ class DoubleSupportStand(StateMachine):
         # Update Floating Base Task
         self._trajectory_managers[
             "floating_base"].update_floating_base_desired(self._sp.curr_time)
-        # Update UpperBodyJoint Task
-        self._trajectory_managers[
-            "upper_body"].use_nominal_upper_body_joint_pos(
-                self._sp.nominal_joint_pos)
         # Update Foot Task
         self._trajectory_managers["lfoot"].use_current()
         self._trajectory_managers["rfoot"].use_current()

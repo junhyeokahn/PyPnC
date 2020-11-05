@@ -86,7 +86,7 @@ def set_motor_trq(robot, joint_id, command):
                                 forces=trq_applied.values())
 
 
-def get_sensor_data(robot, joint_id):
+def get_sensor_data(robot, joint_id, link_id):
     """
     Parameters
     ----------
@@ -103,6 +103,10 @@ def get_sensor_data(robot, joint_id):
             Joint pos
         joint_vel (dict):
             Joint vel
+        b_rf_contact (bool):
+            Right Foot Contact Switch
+        b_lf_contact (bool):
+            Left Foot Contact Switch
     """
     sensor_data = OrderedDict()
 
@@ -120,6 +124,20 @@ def get_sensor_data(robot, joint_id):
         js = p.getJointState(robot, v)
         sensor_data['joint_pos'][k] = js[0]
         sensor_data['joint_vel'][k] = js[1]
+
+    rf_info = p.getLinkState(robot, link_id["r_sole"])
+    rf_pos = rf_info[0]
+    if rf_pos[2] <= 0.01:
+        sensor_data["b_rf_contact"] = True
+    else:
+        sensor_data["b_rf_contact"] = False
+
+    lf_info = p.getLinkState(robot, link_id["l_sole"])
+    lf_pos = lf_info[0]
+    if lf_pos[2] <= 0.01:
+        sensor_data["b_lf_contact"] = True
+    else:
+        sensor_data["b_lf_contact"] = False
 
     # util.pretty_print(sensor_data['joint_pos'])
     # print(sensor_data['base_pos'])
@@ -203,7 +221,7 @@ if __name__ == "__main__":
         # Get SensorData
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             camera_img = get_camera_image(robot, link_id, projection_matrix)
-        sensor_data = get_sensor_data(robot, joint_id)
+        sensor_data = get_sensor_data(robot, joint_id, link_id)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()

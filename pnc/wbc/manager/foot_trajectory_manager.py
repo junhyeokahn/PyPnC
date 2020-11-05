@@ -66,7 +66,7 @@ class FootTrajectoryManager(object):
         # compute midfoot boundary conditions
         mid_swing_local_foot_pos = np.array([0., 0., self._swing_height])
         mid_swing_pos = self._swing_mid_foot.pos + np.dot(
-            self._swing_mid_foot.R, mid_swing_local_foot_pos)
+            self._swing_mid_foot.rot, mid_swing_local_foot_pos)
         mid_swing_vel = (self._swing_land_foot.pos -
                          self._swing_init_foot.pos) / self._swing_duration
 
@@ -104,10 +104,9 @@ class FootTrajectoryManager(object):
         foot_ang_vel_des = self._quat_hermite_curve.evaluate_ang_vel(s)
         foot_ang_acc_des = self._quat_hermite_curve.evaluate_ang_acc(s)
 
-        self._foot_pos_task.update_desired(foot_pos_des, foot_vel_des,
-                                           foot_acc_des)
-        self._foot_ori_task.update_desired(foot_quat_des, foot_ang_vel_des,
-                                           foot_acc_des)
+        self._pos_task.update_desired(foot_pos_des, foot_vel_des, foot_acc_des)
+        self._ori_task.update_desired(foot_quat_des, foot_ang_vel_des,
+                                      foot_acc_des)
 
     @property
     def swing_height(self):

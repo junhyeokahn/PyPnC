@@ -23,6 +23,8 @@ class AtlasStateProvider(metaclass=MetaSingleton):
         self._dcm = np.zeros(3)
         self._prev_dcm = np.zeros(3)
         self._dcm_vel = np.zeros(3)
+        self._b_rf_contact = True
+        self._b_lf_contact = True
 
     @property
     def nominal_joint_pos(self):
@@ -80,3 +82,19 @@ class AtlasStateProvider(metaclass=MetaSingleton):
     @curr_time.setter
     def curr_time(self, val):
         self._curr_time = val
+
+    @property
+    def b_rf_contact(self):
+        return self._b_rf_contact
+
+    @b_rf_contact.setter
+    def b_rf_contact(self, value):
+        self._b_rf_contact = value
+
+    @property
+    def b_lf_contact(self):
+        return self._b_lf_contact
+
+    @b_lf_contact.setter
+    def b_lf_contact(self, value):
+        self._b_lf_contact = value

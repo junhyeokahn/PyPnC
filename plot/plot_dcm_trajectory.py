@@ -46,7 +46,7 @@ def set_axes_equal(ax):
 
 def quat2mat(quat):
     quat = np.squeeze(np.asarray(quat))
-    w, x, y, z = quat
+    x, y, z, w = quat
     return np.matrix([[
         1 - 2 * y * y - 2 * z * z, 2 * x * y - 2 * z * w, 2 * x * z + 2 * y * w
     ], [
@@ -54,6 +54,15 @@ def quat2mat(quat):
     ], [
         2 * x * z - 2 * y * w, 2 * y * z + 2 * x * w, 1 - 2 * x * x - 2 * y * y
     ]])
+
+
+def compute_arrow_vec(quats):
+    n_points = quats.shape[0]
+    arrow_ends = np.zeros([n_points, 3])
+    for i in range(n_points):
+        R = quat2mat(quats[i])
+        arrow_ends[i] = np.dot(R, np.array([1., 0., 0.]))
+    return arrow_ends
 
 
 def plot_foot(ax, pos, ori, color, text):
@@ -108,6 +117,7 @@ def main(args):
             except EOFError:
                 break
 
+    arrow_ends = compute_arrow_vec(base_ori_ref)
     line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
     colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
     line_colors = {
@@ -138,6 +148,16 @@ def main(args):
                     zs=com_pos_ref[:, 2],
                     linewidth=comref_linewidth,
                     color=comref_linecolor)
+    num_interval = 50
+    com_motion.quiver(com_pos_ref[::num_interval, 0],
+                      com_pos_ref[::num_interval, 1],
+                      com_pos_ref[::num_interval, 2],
+                      arrow_ends[::num_interval, 0],
+                      arrow_ends[::num_interval, 1],
+                      arrow_ends[::num_interval, 2],
+                      length=0.1,
+                      linewidth=comref_linewidth,
+                      color='red')
     # plot foot
     plot_foot(com_motion, np.squeeze(curr_rfoot_contact_pos),
               np.squeeze(curr_rfoot_contact_ori), colors[0], "InitRF")
