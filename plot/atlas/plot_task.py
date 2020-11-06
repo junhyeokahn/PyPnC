@@ -26,6 +26,8 @@ rf_z = ['rf_z_max_r_sole', 'rf_z_max_l_sole']
 
 time = []
 
+phase = []
+
 rf_cmd = []
 
 joint_trq_cmd = []
@@ -48,6 +50,7 @@ with open('data/history.pkl', 'rb') as file:
         try:
             d = pickle.load(file)
             time.append(d['time'])
+            phase.append(d['phase'])
             for topic in tasks:
                 des[topic].append(d[topic + '_des'])
                 act[topic].append(d[topic])
@@ -64,45 +67,43 @@ for k, v in des.items():
 for k, v in act.items():
     act[k] = np.stack(v, axis=0)
 rf_cmd = np.stack(rf_cmd, axis=0)
+phase = np.stack(phase, axis=0)
 
 ## =============================================================================
 ## Plot Task
 ## =============================================================================
 
 plot_task(time, des['com_pos'], act['com_pos'], des['com_vel'], act['com_vel'],
-          'com lin')
+          phase, 'com lin')
 
 plot_task(time, des['pelvis_quat'], act['pelvis_quat'], des['pelvis_ang_vel'],
-          act['pelvis_ang_vel'], 'pelvis ori')
+          act['pelvis_ang_vel'], phase, 'pelvis ori')
 
 plot_task(time, des['joint_pos'], act['joint_pos'], des['joint_vel'],
-          act['joint_vel'], 'upperbody joint')
+          act['joint_vel'], phase, 'upperbody joint')
 
-# plot_task(time, des['leftCOP_Frame_pos'], act['leftCOP_Frame_pos'],
-# des['leftCOP_Frame_vel'], act['leftCOP_Frame_vel'], 'left foot lin')
+plot_task(time, des['l_sole_pos'], act['l_sole_pos'], des['l_sole_vel'],
+          act['l_sole_vel'], phase, 'left foot lin')
 
-# plot_task(time, des['leftCOP_Frame_quat'], act['leftCOP_Frame_quat'],
-# des['leftCOP_Frame_ang_vel'], act['leftCOP_Frame_ang_vel'],
-# 'left foot ori')
+plot_task(time, des['l_sole_quat'], act['l_sole_quat'], des['l_sole_ang_vel'],
+          act['l_sole_ang_vel'], phase, 'left foot ori')
 
-# plot_task(time, des['rightCOP_Frame_pos'], act['rightCOP_Frame_pos'],
-# des['rightCOP_Frame_vel'], act['rightCOP_Frame_vel'],
-# 'right foot lin')
+plot_task(time, des['r_sole_pos'], act['r_sole_pos'], des['r_sole_vel'],
+          act['r_sole_vel'], phase, 'right foot lin')
 
-# plot_task(time, des['rightCOP_Frame_quat'], act['rightCOP_Frame_quat'],
-# des['rightCOP_Frame_ang_vel'], act['rightCOP_Frame_ang_vel'],
-# 'right foot ori')
+plot_task(time, des['r_sole_quat'], act['r_sole_quat'], des['r_sole_ang_vel'],
+          act['r_sole_ang_vel'], phase, 'right foot ori')
 
 ## =============================================================================
 ## Plot Weights and Max Reaction Force Z
 ## =============================================================================
-# plot_weights(time, w)
+plot_weights(time, w, phase)
 
-# plot_rf_z_max(time, rf_z_max)
+plot_rf_z_max(time, rf_z_max, phase)
 
 ## =============================================================================
 ## Plot WBC Solutions
 ## =============================================================================
-plot_rf(time, rf_cmd)
+plot_rf(time, rf_cmd, phase)
 
 plt.show()

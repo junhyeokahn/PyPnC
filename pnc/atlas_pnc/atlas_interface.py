@@ -36,6 +36,7 @@ class AtlasInterface(Interface):
     def get_command(self, sensor_data):
         if PnCConfig.SAVE_DATA:
             self._data_saver.add('time', self._running_time)
+            self._data_saver.add('phase', self._control_architecture.state)
 
         # Update State Estimator
         if self._count == 0:

@@ -53,6 +53,7 @@ class ContactTransitionStart(StateMachine):
                     ) - self._trajectory_managers[
                         "dcm"].compute_rf_z_ramp_down_time()
 
+                # TODO: Replanning
                 pelvis_quat = R.from_matrix(
                     self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
                 self._trajectory_managers["dcm"].initialize(
@@ -94,7 +95,7 @@ class ContactTransitionStart(StateMachine):
         if self._trajectory_managers["dcm"].no_reaming_steps():
             return WalkingState.BALANCE
         else:
-            if self._leg_side == Footstep.LEFT_SIDE:  # TODO CHECK THIS OUT
+            if self._leg_side == Footstep.LEFT_SIDE:
                 return WalkingState.LF_CONTACT_TRANS_END
             elif self._leg_side == Footstep.RIGHT_SIDE:
                 return WalkingState.RF_CONTACT_TRANS_END
