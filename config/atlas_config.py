@@ -29,8 +29,8 @@ class WBCConfig(object):
     W_COM = 10.0
     W_PELVIS = 20.0
     W_UPPER_BODY = 20.0
-    W_CONTACT_FOOT = 40.0
-    W_SWING_FOOT = 20.0
+    W_CONTACT_FOOT = 60.0
+    W_SWING_FOOT = 40.0
 
     # Task Gains
     KP_COM = np.array([100., 100., 100])
@@ -42,10 +42,10 @@ class WBCConfig(object):
     KP_UPPER_BODY = 100.
     KD_UPPER_BODY = 10.
 
-    KP_FOOT_POS = np.array([100., 100., 100.])
-    KD_FOOT_POS = np.array([10., 10., 10.])
-    KP_FOOT_ORI = np.array([100., 100., 100.])
-    KD_FOOT_ORI = np.array([10., 10., 10.])
+    KP_FOOT_POS = np.array([400., 400., 400.])
+    KD_FOOT_POS = np.array([40., 40., 40.])
+    KP_FOOT_ORI = np.array([400., 400., 400.])
+    KD_FOOT_ORI = np.array([40., 40., 40.])
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
@@ -74,7 +74,7 @@ class WalkingConfig(object):
     ALPHA_DS = 0.5
 
     NOMINAL_FOOTWIDTH = 0.25
-    NOMINAL_FORWARD_STEP = 0.2
+    NOMINAL_FORWARD_STEP = 0.
     NOMINAL_BACKWARD_STEP = -0.2
     NOMINAL_TURN_RADIANS = 0.78539
     NOMINAL_STRAFE_DISTANCE = 0.125
