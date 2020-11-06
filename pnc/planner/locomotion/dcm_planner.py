@@ -42,6 +42,10 @@ class DCMPlanner(object):
 
     def initialize(self, input_footstep_list, left_footstance,
                    right_footstance, ini_dcm, ini_dcm_vel):
+
+        self._vrp_list = []
+        self._vrp_type_list = []
+
         self._ini_lf_stance = left_footstance
         self._ini_rf_stance = right_footstance
         self._ini_dcm_pos = ini_dcm

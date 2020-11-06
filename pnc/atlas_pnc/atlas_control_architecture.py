@@ -61,7 +61,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._dcm_tm.nominal_footwidth = WalkingConfig.NOMINAL_FOOTWIDTH
         self._dcm_tm.nominal_forward_step = WalkingConfig.NOMINAL_FORWARD_STEP
         self._dcm_tm.nominal_backward_step = WalkingConfig.NOMINAL_BACKWARD_STEP
-        self._dcm_tm.nominal_turn_randians = WalkingConfig.NOMINAL_TURN_RADIANS
+        self._dcm_tm.nominal_turn_radians = WalkingConfig.NOMINAL_TURN_RADIANS
         self._dcm_tm.nominal_strafe_distance = WalkingConfig.NOMINAL_STRAFE_DISTANCE
 
         self._trajectory_managers = {

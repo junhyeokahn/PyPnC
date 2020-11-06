@@ -40,6 +40,9 @@ class AtlasInterface(Interface):
 
         # Update State Estimator
         if self._count == 0:
+            print("=" * 80)
+            print("Initialize")
+            print("=" * 80)
             self._se.initialize(sensor_data)
         self._se.update(sensor_data)
 

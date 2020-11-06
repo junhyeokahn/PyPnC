@@ -61,8 +61,9 @@ class BasicTask(Task):
             quat_des = R.from_quat(self._pos_des)
             quat_act = R.from_matrix(
                 self._robot.get_link_iso(self._target_id)[0:3, 0:3])
-            quat_err = R.from_matrix(np.dot(quat_des.as_matrix(),
-                quat_act.as_matrix().transpose())).as_quat()
+            quat_err = R.from_matrix(
+                np.dot(quat_des.as_matrix(),
+                       quat_act.as_matrix().transpose())).as_quat()
             pos_err = util.quat_to_exp(quat_err)
             vel_act = self._robot.get_link_vel(self._target_id)[0:3]
             if self._b_data_save:

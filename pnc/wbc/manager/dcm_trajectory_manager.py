@@ -3,6 +3,7 @@ import math
 import os
 import copy
 
+from scipy.spatial.transform import Rotation as R
 import numpy as np
 import yaml
 
@@ -55,7 +56,7 @@ class DCMTrajectoryManager(object):
         self._nominal_footwidth = 0.27
         self._nominal_forward_step = 0.25
         self._nominal_backward_step = -0.25
-        self._nominal_turn_randians = np.pi / 4.
+        self._nominal_turn_radians = np.pi / 4.
         self._nominal_strafe_distance = 0.125
 
         self._set_temporal_params()
@@ -231,19 +232,19 @@ class DCMTrajectoryManager(object):
 
     def strafe_left(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_strafe(2, self._nominal_strafe_distance)
+        self._populate_strafe(3, self._nominal_strafe_distance)
 
     def strafe_right(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_strafe(2, -self._nominal_strafe_distance)
+        self._populate_strafe(3, -self._nominal_strafe_distance)
 
     def turn_left(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_turn(2, self._nominal_turn_randians)
+        self._populate_turn(3, self._nominal_turn_radians)
 
     def turn_right(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_turn(2, -self._nominal_turn_randians)
+        self._populate_turn(3, -self._nominal_turn_radians)
 
     def _populate_step_in_place(self, num_step, robot_side_first):
         self._update_starting_stance()
@@ -259,7 +260,7 @@ class DCMTrajectoryManager(object):
                     np.array([0., self._nominal_footwidth / 2., 0.]))
                 lf_stance.rot = np.copy(mf_stance.rot)
                 # lf_stance.side = Footstep.LEFT_SIDE # TODO : Do I need this?
-                self._footstep_list.append(lf_stance)
+                self._footstep_list.append(copy.deepcopy(lf_stance))
                 robot_side = Footstep.RIGHT_SIDE
 
             else:
@@ -268,7 +269,7 @@ class DCMTrajectoryManager(object):
                     np.array([0., -self._nominal_footwidth / 2., 0.]))
                 rf_stance.rot = np.copy(mf_stance.rot)
                 # rf_stance.side = Footstep.RIGHT_SIDE # TODO : Do I need this?
-                self._footstep_list.append(rf_stance)
+                self._footstep_list.append(copy.deepcopy(rf_stance))
                 robot_side = Footstep.LEFT_SIDE
 
     def _populate_walk_forward(self, num_steps, forward_distance):
@@ -317,7 +318,8 @@ class DCMTrajectoryManager(object):
     def _populate_turn(self, num_times, turn_radians_per_step):
         self._update_starting_stance()
 
-        foot_rotate = R.from_rotvec([0., 0., turn_radians_per_step])
+        foot_rotation = R.from_rotvec([0., 0.,
+                                       turn_radians_per_step]).as_matrix()
 
         lf_stance = Footstep()
         rf_stance = Footstep()
@@ -325,27 +327,27 @@ class DCMTrajectoryManager(object):
         mf_stance_rotated = copy.deepcopy(self._mf_stance)
 
         for i in range(num_times):
-            mf_stance_rotated.pos = mf_stance.pos
-            mf_stance_rotated.rot = np.dot(foot_rotation.to_matrix(),
-                                           mf_stance.rot)
+            mf_stance_rotated.pos = np.copy(mf_stance.pos)
+            mf_stance_rotated.rot = np.dot(foot_rotation, mf_stance.rot)
+
             lf_stance.pos = mf_stance_rotated.pos + np.dot(
-                mf_stance.rot, np.array([0., self._nominal_footwidth / 2., 0.
-                                         ]))
-            lf_stance.rot = mf_stance_rotated.rot
+                mf_stance_rotated.rot,
+                np.array([0., self._nominal_footwidth / 2., 0.]))
+            lf_stance.rot = np.copy(mf_stance_rotated.rot)
             lf_stance.side = Footstep.LEFT_SIDE
 
             rf_stance.pos = mf_stance_rotated.pos + np.dot(
-                mf_stance.rot, np.array(
-                    [0., -self._nominal_footwidth / 2., 0.]))
-            rf_stance.rot = mf_stance_rotated.rot
+                mf_stance_rotated.rot,
+                np.array([0., -self._nominal_footwidth / 2., 0.]))
+            rf_stance.rot = np.copy(mf_stance_rotated.rot)
             rf_stance.side = Footstep.RIGHT_SIDE
 
             if turn_radians_per_step > 0.:
-                self._footstep_list.append(lf_stance)
-                self._footstep_list.append(rf_stance)
+                self._footstep_list.append(copy.deepcopy(lf_stance))
+                self._footstep_list.append(copy.deepcopy(rf_stance))
             else:
-                self._footstep_list.append(rf_stance)
-                self._footstep_list.append(lf_stance)
+                self._footstep_list.append(copy.deepcopy(rf_stance))
+                self._footstep_list.append(copy.deepcopy(lf_stance))
             mf_stance = copy.deepcopy(mf_stance_rotated)
 
     def _populate_strafe(self, num_times, strafe_distance):
@@ -374,11 +376,11 @@ class DCMTrajectoryManager(object):
             rf_stance.side = Footstep.RIGHT_SIDE
 
             if strafe_distance > 0:
-                self._footstep_list.append(lf_stance)
-                self._footstep_list.append(rf_stance)
+                self._footstep_list.append(copy.deepcopy(lf_stance))
+                self._footstep_list.append(copy.deepcopy(rf_stance))
             else:
-                self._footstep_list.append(rf_stance)
-                self._footstep_list.append(lf_stance)
+                self._footstep_list.append(copy.deepcopy(rf_stance))
+                self._footstep_list.append(copy.deepcopy(lf_stance))
             mf_stance = copy.deepcopy(mf_stance_translated)
 
     def _alternate_leg(self):
@@ -512,6 +514,14 @@ class DCMTrajectoryManager(object):
     @nominal_strafe_distance.setter
     def nominal_strafe_distance(self, value):
         self._nominal_strafe_distance = value
+
+    @property
+    def nominal_turn_radians(self):
+        return self._nominal_turn_radians
+
+    @nominal_turn_radians.setter
+    def nominal_turn_radians(self, value):
+        self._nominal_turn_radians = value
 
     @property
     def footstep_list(self):

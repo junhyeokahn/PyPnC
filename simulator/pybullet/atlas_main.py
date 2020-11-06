@@ -187,6 +187,12 @@ if __name__ == "__main__":
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
                                 numSubSteps=SimConfig.N_SUBSTEP)
+    if SimConfig.VIDEO_RECORD:
+        if not os.path.exists('video'):
+            os.makedirs('video')
+        for f in os.listdir('video'):
+            os.remove('video/' + f)
+        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas.mp4")
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -227,6 +233,18 @@ if __name__ == "__main__":
         keys = p.getKeyboardEvents()
         if is_key_triggered(keys, '8'):
             interface.interrupt_logic.b_interrupt_button_eight = True
+        elif is_key_triggered(keys, '5'):
+            interface.interrupt_logic.b_interrupt_button_five = True
+        elif is_key_triggered(keys, '4'):
+            interface.interrupt_logic.b_interrupt_button_four = True
+        elif is_key_triggered(keys, '2'):
+            interface.interrupt_logic.b_interrupt_button_two = True
+        elif is_key_triggered(keys, '6'):
+            interface.interrupt_logic.b_interrupt_button_six = True
+        elif is_key_triggered(keys, '7'):
+            interface.interrupt_logic.b_interrupt_button_seven = True
+        elif is_key_triggered(keys, '9'):
+            interface.interrupt_logic.b_interrupt_button_nine = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:
@@ -241,6 +259,6 @@ if __name__ == "__main__":
 
         p.stepSimulation()
 
-        time.sleep(dt)
+        # time.sleep(dt)
         t += dt
         count += 1

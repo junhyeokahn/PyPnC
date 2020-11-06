@@ -10,6 +10,7 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = False
+    VIDEO_RECORD = False
 
 
 class PnCConfig(object):
@@ -49,7 +50,7 @@ class WBCConfig(object):
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
-    LAMBDA_RF = 1e-8
+    LAMBDA_RF = 1e-7
 
     B_TRQ_LIMIT = True
 
@@ -74,10 +75,10 @@ class WalkingConfig(object):
     ALPHA_DS = 0.5
 
     NOMINAL_FOOTWIDTH = 0.25
-    NOMINAL_FORWARD_STEP = 0.
-    NOMINAL_BACKWARD_STEP = -0.2
-    NOMINAL_TURN_RADIANS = 0.78539
-    NOMINAL_STRAFE_DISTANCE = 0.125
+    NOMINAL_FORWARD_STEP = 0.15
+    NOMINAL_BACKWARD_STEP = -0.15
+    NOMINAL_TURN_RADIANS = np.pi / 6
+    NOMINAL_STRAFE_DISTANCE = 0.05
 
 
 class WalkingState(object):

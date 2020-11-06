@@ -44,9 +44,6 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = val
 
     def first_visit(self):
-        print("=" * 80)
-        print("Start")
-        print("=" * 80)
         print("[WalkingState] STAND")
         self._start_time = self._sp.curr_time
 
