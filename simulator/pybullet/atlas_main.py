@@ -202,7 +202,7 @@ if __name__ == "__main__":
     set_initial_config(robot, joint_id)
 
     # Joint Friction
-    set_joint_friction(robot, joint_id, 1)
+    set_joint_friction(robot, joint_id, 2)
 
     #camera intrinsic parameter
     fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10

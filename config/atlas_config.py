@@ -16,7 +16,7 @@ class PnCConfig(object):
     DYN_LIB = "dart"
     CONTROLLER_DT = SimConfig.CONTROLLER_DT
     SAVE_DATA = True
-    SAVE_FREQ = 10
+    SAVE_FREQ = 1
 
     PRINT_ROBOT_INFO = SimConfig.PRINT_ROBOT_INFO
 
@@ -42,8 +42,10 @@ class WBCConfig(object):
     KP_UPPER_BODY = 100.
     KD_UPPER_BODY = 10.
 
-    KP_FOOT = np.array([400., 400., 400.])
-    KD_FOOT = np.array([40., 40., 40.])
+    KP_FOOT_POS = np.array([100., 100., 100.])
+    KD_FOOT_POS = np.array([10., 10., 10.])
+    KP_FOOT_ORI = np.array([100., 100., 100.])
+    KD_FOOT_ORI = np.array([10., 10., 10.])
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
@@ -71,9 +73,9 @@ class WalkingConfig(object):
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.27
-    NOMINAL_FORWARD_STEP = 0.25
-    NOMINAL_BACKWARD_STEP = -0.25
+    NOMINAL_FOOTWIDTH = 0.25
+    NOMINAL_FORWARD_STEP = 0.2
+    NOMINAL_BACKWARD_STEP = -0.2
     NOMINAL_TURN_RADIANS = 0.78539
     NOMINAL_STRAFE_DISTANCE = 0.125
 

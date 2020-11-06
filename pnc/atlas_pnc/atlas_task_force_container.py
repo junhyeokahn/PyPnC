@@ -42,26 +42,26 @@ class AtlasTaskForceContainer(TaskForceContainer):
         # Rfoot Pos Task
         self._rfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "r_sole",
                                          PnCConfig.SAVE_DATA)
-        self._rfoot_pos_task.kp = WBCConfig.KP_FOOT
-        self._rfoot_pos_task.kd = WBCConfig.KD_FOOT
+        self._rfoot_pos_task.kp = WBCConfig.KP_FOOT_POS
+        self._rfoot_pos_task.kd = WBCConfig.KD_FOOT_POS
         self._rfoot_pos_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
         # Lfoot Pos Task
         self._lfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3, "l_sole",
                                          PnCConfig.SAVE_DATA)
-        self._lfoot_pos_task.kp = WBCConfig.KP_FOOT
-        self._lfoot_pos_task.kd = WBCConfig.KD_FOOT
+        self._lfoot_pos_task.kp = WBCConfig.KP_FOOT_POS
+        self._lfoot_pos_task.kd = WBCConfig.KD_FOOT_POS
         self._lfoot_pos_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
         # Rfoot Ori Task
         self._rfoot_ori_task = BasicTask(robot, "LINK_ORI", 3, "r_sole",
                                          PnCConfig.SAVE_DATA)
-        self._rfoot_ori_task.kp = WBCConfig.KP_FOOT
-        self._rfoot_ori_task.kd = WBCConfig.KD_FOOT
+        self._rfoot_ori_task.kp = WBCConfig.KP_FOOT_ORI
+        self._rfoot_ori_task.kd = WBCConfig.KD_FOOT_ORI
         self._rfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
         # Lfoot Ori Task
         self._lfoot_ori_task = BasicTask(robot, "LINK_ORI", 3, "l_sole",
                                          PnCConfig.SAVE_DATA)
-        self._lfoot_ori_task.kp = WBCConfig.KP_FOOT
-        self._lfoot_ori_task.kd = WBCConfig.KD_FOOT
+        self._lfoot_ori_task.kp = WBCConfig.KP_FOOT_ORI
+        self._lfoot_ori_task.kd = WBCConfig.KD_FOOT_ORI
         self._lfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
 
         self._task_list = [
