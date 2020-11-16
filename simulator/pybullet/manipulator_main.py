@@ -131,10 +131,19 @@ if __name__ == "__main__":
         sensor_data = get_sensor_data(robot, joint_id, link_id)
 
         # Compute Command
-        command = interface.get_command(sensor_data)
+        ########################################################################
+        ## TODO (Cassie & Junhyeok)
+        ## We will make this function later
+        ## I haven't explain this much yet
+        ########################################################################
+        # command = interface.get_command(sensor_data)
 
         # Apply Trq
-        set_motor_trq(robot, joint_id, command)
+        ########################################################################
+        ## TODO (Cassie & Junhyeok)
+        ## We will comment this line back later once we compute commands.
+        ########################################################################
+        # set_motor_trq(robot, joint_id, command)
 
         p.stepSimulation()
 
