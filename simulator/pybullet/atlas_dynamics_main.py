@@ -8,7 +8,7 @@ from collections import OrderedDict
 import pybullet as p
 import numpy as np
 
-from config.atlas_config import SimConfig
+from config.atlas_config import DynSimConfig
 from pnc.atlas_pnc.atlas_interface import AtlasInterface
 from util import util
 
@@ -27,7 +27,7 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
 
-    if SimConfig.PRINT_ROBOT_INFO:
+    if DynSimConfig.PRINT_ROBOT_INFO:
         print("=" * 80)
         print("SimulationRobot")
         print("nq: ", nq, ", nv: ", nv, ", na: ", na)
@@ -76,9 +76,9 @@ def set_motor_trq(robot, joint_id, command):
             command['joint_trq'].items()):
         joint_state = p.getJointState(robot, joint_id[joint_name])
         joint_pos, joint_vel = joint_state[0], joint_state[1]
-        trq_applied[joint_id[joint_name]] = (trq_des + SimConfig.KP *
+        trq_applied[joint_id[joint_name]] = (trq_des + DynSimConfig.KP *
                                              (pos_des - joint_pos) +
-                                             SimConfig.KD *
+                                             DynSimConfig.KD *
                                              (vel_des - joint_vel))
     p.setJointMotorControlArray(robot,
                                 trq_applied.keys(),
@@ -185,9 +185,9 @@ if __name__ == "__main__":
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
-                                numSubSteps=SimConfig.N_SUBSTEP)
-    if SimConfig.VIDEO_RECORD:
+    p.setPhysicsEngineParameter(fixedTimeStep=DynSimConfig.CONTROLLER_DT,
+                                numSubSteps=DynSimConfig.N_SUBSTEP)
+    if DynSimConfig.VIDEO_RECORD:
         if not os.path.exists('video'):
             os.makedirs('video')
         for f in os.listdir('video'):
@@ -220,12 +220,12 @@ if __name__ == "__main__":
 
     # Run Sim
     t = 0
-    dt = SimConfig.CONTROLLER_DT
+    dt = DynSimConfig.CONTROLLER_DT
     count = 0
     while (1):
 
         # Get SensorData
-        if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
+        if count % (DynSimConfig.CAMERA_DT / DynSimConfig.CONTROLLER_DT) == 0:
             camera_img = get_camera_image(robot, link_id, projection_matrix)
         sensor_data = get_sensor_data(robot, joint_id, link_id)
 
@@ -247,10 +247,10 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_nine = True
 
         # Compute Command
-        if SimConfig.PRINT_TIME:
+        if DynSimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(sensor_data)
-        if SimConfig.PRINT_TIME:
+        if DynSimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
 

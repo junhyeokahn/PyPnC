@@ -1,7 +1,13 @@
 import numpy as np
 
+class KinSimConfig(object):
+    DT = 0.01
 
-class SimConfig(object):
+    PRINT_ROBOT_INFO = False
+    VIDEO_RECORD = False
+
+
+class DynSimConfig(object):
     CONTROLLER_DT = 0.01
     N_SUBSTEP = 10
     CAMERA_DT = 0.05
@@ -15,11 +21,11 @@ class SimConfig(object):
 
 class PnCConfig(object):
     DYN_LIB = "dart"
-    CONTROLLER_DT = SimConfig.CONTROLLER_DT
+    CONTROLLER_DT = DynSimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1
 
-    PRINT_ROBOT_INFO = SimConfig.PRINT_ROBOT_INFO
+    PRINT_ROBOT_INFO = DynSimConfig.PRINT_ROBOT_INFO
 
 
 class WBCConfig(object):
