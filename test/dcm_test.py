@@ -4,8 +4,8 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 import numpy as np
 
-from pnc.planner.locomotion.footstep import Footstep
-from pnc.planner.locomotion.dcm_planner import DCMPlanner
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep
+from pnc.planner.locomotion.dcm_planner.dcm_planner import DCMPlanner
 
 step_one = Footstep()
 step_one.pos = np.array([0.274672, 0.134096, -4.51381e-05])

@@ -7,8 +7,8 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 import yaml
 
-from pnc.planner.locomotion.footstep import Footstep
-from pnc.planner.locomotion.footstep import interpolate
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep
+from pnc.planner.locomotion.dcm_planner.footstep import interpolate
 from util import util
 
 

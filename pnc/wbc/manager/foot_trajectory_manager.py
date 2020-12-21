@@ -3,7 +3,7 @@ import copy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from pnc.planner.locomotion.footstep import Footstep, interpolate
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep, interpolate
 from util import util
 
 

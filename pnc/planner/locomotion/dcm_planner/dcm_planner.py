@@ -4,7 +4,7 @@ import numpy as np
 
 from util import util
 from util.util import HermiteCurveQuat
-from pnc.planner.locomotion.footstep import Footstep, interpolate
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep, interpolate
 
 
 class VRPType(object):

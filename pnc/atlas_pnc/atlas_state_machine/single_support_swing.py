@@ -1,7 +1,7 @@
 import numpy as np
 
 from config.atlas_config import WalkingConfig, WalkingState
-from pnc.planner.locomotion.footstep import Footstep
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.state_machine import StateMachine
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTransferType
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider

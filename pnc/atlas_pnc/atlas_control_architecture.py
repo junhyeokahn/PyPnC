@@ -2,8 +2,8 @@ import numpy as np
 
 from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
-from pnc.planner.locomotion.dcm_planner import DCMPlanner
-from pnc.planner.locomotion.footstep import Footstep
+from pnc.planner.locomotion.dcm_planner.dcm_planner import DCMPlanner
+from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTrajectoryManager
 from pnc.wbc.manager.task_hierarchy_manager import TaskHierarchyManager
 from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTrajectoryManager
