@@ -40,7 +40,8 @@ public:
 
   // Methods
   void from_yaml(const YAML::Node &node);
-  void from_one_hot_vector(const Eigen::VectorXd &one_hot_vec);
+  // void from_one_hot_vector(const Eigen::VectorXd &one_hot_vec);
+  void print_info();
 
 private:
   std::string name_;
