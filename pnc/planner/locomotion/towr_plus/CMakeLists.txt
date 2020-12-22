@@ -47,5 +47,5 @@ add_library(towr_plus SHARED
   src/locomotion_task.cc
 )
 
-target_link_libraries(towr_plus PUBLIC ifopt::ifopt_core)
+target_link_libraries(towr_plus PUBLIC ifopt::ifopt_core my_yaml)
 

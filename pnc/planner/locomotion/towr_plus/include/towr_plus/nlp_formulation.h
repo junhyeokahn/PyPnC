@@ -37,6 +37,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <ifopt/constraint_set.h>
 #include <ifopt/cost_term.h>
 #include <ifopt/variable_set.h>
+#include <towr_plus/locomotion_task.h>
 #include <towr_plus/models/robot_model.h>
 #include <towr_plus/parameters.h>
 #include <towr_plus/terrain/height_map.h>
@@ -106,6 +107,8 @@ public:
   RobotModel model_;
   HeightMap::Ptr terrain_;
   Parameters params_;
+
+  void from_locomotion_task(const LocomotionTask &task);
 
 private:
   // variables

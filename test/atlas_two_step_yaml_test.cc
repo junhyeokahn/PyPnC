@@ -1,3 +1,8 @@
+#include <cmath>
+#include <iostream>
+
+#include <ifopt/ipopt_solver.h>
+
 #include <configuration.h>
 #include <towr_plus/locomotion_task.h>
 #include <towr_plus/nlp_formulation.h>
@@ -7,27 +12,74 @@ int main() {
   YAML::Node cfg =
       YAML::LoadFile(THIS_COM "config/towr_plus/atlas_two_step.yaml");
   LocomotionTask task = LocomotionTask("atlas_two_step_yaml_test");
-  task.set_from_yaml(cfg["locomotion_task"]);
+  task.from_yaml(cfg["locomotion_task"]);
 
   // Construct NLP from locomotion task
   NlpFormulation formulation;
-  formulation.terrain_ = task.terrain;
-  formulation.model_ = task.robot_model;
+  formulation.from_locomotion_task(task);
 
-  formulation.initial_base_.ang.at(kPos) = task.initial_base_lin.segment(0, 3);
-  formulation.initial_base_.lin.at(kPos) = task.initial_base_lin.segment(3, 3);
-  formulation.initial_base_.ang.at(kVel) = task.initial_base_ang.segment(0, 3);
-  formulation.initial_base_.lin.at(kVel) = task.initial_base_ang.segment(3, 3);
+  ifopt::Problem nlp;
+  SplineHolder solution;
+  for (auto c : formulation.GetVariableSets(solution))
+    nlp.AddVariableSet(c);
+  for (auto c : formulation.GetConstraints(solution))
+    nlp.AddConstraintSet(c);
+  for (auto c : formulation.GetCosts())
+    nlp.AddCostSet(c);
 
-  formulation.initial_ee_W_ = task.initial_ee_motion_lin;
-  // TODO(JH): initial_ee_motion_ang
-  formulation.params_.ee_phase_durations_ = task.ee_phase_durations;
-  formulation.params_.ee_in_contact_at_start_ = task.ee_in_contact_at_start;
+  auto solver = std::make_shared<ifopt::IpoptSolver>();
+  solver->SetOption("jacobian_approximation",
+                    "exact"); // "finite difference-values"
+  solver->SetOption("max_cpu_time", 500.0);
+  solver->Solve(nlp);
 
-  formulation.final_base_.ang.at(kPos) = task.final_base_lin.segment(0, 3);
-  formulation.final_base_.lin.at(kPos) = task.final_base_lin.segment(3, 3);
-  formulation.final_base_.ang.at(kVel) = task.final_base_ang.segment(0, 3);
-  formulation.final_base_.lin.at(kVel) = task.final_base_ang.segment(3, 3);
+  using namespace std;
+  cout.precision(2);
+  nlp.PrintCurrent(); // view variable-set, constraint violations,
+
+  cout << fixed;
+  cout << "\n====================\nAtlas "
+          "trajectory:\n====================\n";
+
+  double t = 0.0;
+  while (t <= solution.base_linear_->GetTotalTime() + 1e-5) {
+    cout << "t=" << t << "\n";
+    cout << "Base linear position x,y,z:   \t";
+    cout << solution.base_linear_->GetPoint(t).p().transpose() << "\t[m]"
+         << endl;
+
+    cout << "Base Euler roll, pitch, yaw:   \t";
+    Eigen::Vector3d rad = solution.base_angular_->GetPoint(t).p();
+    cout << (rad / M_PI * 180).transpose() << "\t[deg]" << endl;
+
+    cout << "Left Foot position x,y,z:   \t";
+    cout << solution.ee_motion_.at(L)->GetPoint(t).p().transpose() << "\t[m]"
+         << endl;
+
+    cout << "Right Foot position x,y,z:   \t";
+    cout << solution.ee_motion_.at(R)->GetPoint(t).p().transpose() << "\t[m]"
+         << endl;
+
+    cout << "Left Foot Contact force x,y,z:   \t";
+    cout << solution.ee_force_.at(L)->GetPoint(t).p().transpose() << "\t[N]"
+         << endl;
+
+    cout << "Right Foot Contact force x,y,z:   \t";
+    cout << solution.ee_force_.at(R)->GetPoint(t).p().transpose() << "\t[N]"
+         << endl;
+
+    bool contact = solution.phase_durations_.at(L)->IsContactPhase(t);
+    std::string foot_in_contact = contact ? "yes" : "no";
+    cout << "Left Foot in contact:   \t" + foot_in_contact << endl;
+
+    contact = solution.phase_durations_.at(R)->IsContactPhase(t);
+    foot_in_contact = contact ? "yes" : "no";
+    cout << "Right Foot in contact:   \t" + foot_in_contact << endl;
+
+    cout << endl;
+
+    t += 0.2;
+  }
 
   return 0;
 }

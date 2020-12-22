@@ -39,8 +39,10 @@ public:
   RobotModel robot_model;
 
   // Methods
-  void set_from_yaml(const YAML::Node &node);
+  void from_yaml(const YAML::Node &node);
+  void from_one_hot_vector(const Eigen::VectorXd &one_hot_vec);
 
 private:
   std::string name_;
+  int num_leg_;
 };
