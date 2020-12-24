@@ -366,7 +366,6 @@ NlpFormulation::MakeEEMotionCost(double weight) const {
 
 void NlpFormulation::from_locomotion_task(const LocomotionTask &task) {
   terrain_ = task.terrain;
-  model_ = task.robot_model;
 
   initial_base_.lin.at(kPos) = task.initial_base_lin.segment(0, 3);
   initial_base_.lin.at(kVel) = task.initial_base_lin.segment(3, 3);
@@ -380,9 +379,6 @@ void NlpFormulation::from_locomotion_task(const LocomotionTask &task) {
   final_base_.lin.at(kVel) = task.final_base_lin.segment(3, 3);
   final_base_.ang.at(kPos) = task.final_base_ang.segment(0, 3);
   final_base_.ang.at(kVel) = task.final_base_ang.segment(3, 3);
-
-  params_.ee_phase_durations_ = task.ee_phase_durations;
-  params_.ee_in_contact_at_start_ = task.ee_in_contact_at_start;
 }
 
 } /* namespace towr_plus */

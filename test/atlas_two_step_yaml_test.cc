@@ -4,18 +4,27 @@
 #include <ifopt/ipopt_solver.h>
 
 #include <configuration.h>
+#include <towr_plus/locomotion_solution.h>
 #include <towr_plus/locomotion_task.h>
+#include <towr_plus/models/robot_model.h>
 #include <towr_plus/nlp_formulation.h>
 
 int main() {
-  // Locomotion Task
   YAML::Node cfg =
       YAML::LoadFile(THIS_COM "config/towr_plus/atlas_two_step.yaml");
+
+  // Locomotion Task
   LocomotionTask task = LocomotionTask("atlas_two_step_yaml_test");
   task.from_yaml(cfg["locomotion_task"]);
 
+  // Locomotion Solution
+  LocomotionSolution sol = LocomotionSolution("atlas_two_step_yaml_test");
+  sol.initialize(cfg["locomotion_param"]);
+
   // Construct NLP from locomotion task
   NlpFormulation formulation;
+  formulation.model_ = RobotModel(RobotModel::Atlas);
+  formulation.params_.from_yaml(cfg["locomotion_param"]);
   formulation.from_locomotion_task(task);
 
   // Solve
@@ -32,6 +41,9 @@ int main() {
   solver->SetOption("jacobian_approximation", "exact");
   solver->SetOption("max_cpu_time", 500.0);
   solver->Solve(nlp);
+
+  Eigen::VectorXd vars = nlp.GetVariableValues();
+  sol.from_one_hot_vector(vars);
 
   using namespace std;
   cout.precision(2);
@@ -80,7 +92,7 @@ int main() {
   // cout << endl;
 
   // t += 0.2;
-}
+  //}
 
-return 0;
+  return 0;
 }

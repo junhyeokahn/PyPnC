@@ -85,25 +85,48 @@ int main() {
     cout << "Base linear position x,y,z:   \t";
     cout << solution.base_linear_->GetPoint(t).p().transpose() << "\t[m]"
          << endl;
+    cout << "Base linear velocity x,y,z:   \t";
+    cout << solution.base_linear_->GetPoint(t).v().transpose() << "\t[m]"
+         << endl;
 
     cout << "Base Euler roll, pitch, yaw:   \t";
     Eigen::Vector3d rad = solution.base_angular_->GetPoint(t).p();
-    cout << (rad / M_PI * 180).transpose() << "\t[deg]" << endl;
+    cout << (rad).transpose() << "\t[deg]" << endl;
+
+    cout << "Base Euler dot roll, pitch, yaw:   \t";
+    rad = solution.base_angular_->GetPoint(t).v();
+    cout << (rad).transpose() << "\t[deg]" << endl;
 
     cout << "Left Foot position x,y,z:   \t";
     cout << solution.ee_motion_.at(L)->GetPoint(t).p().transpose() << "\t[m]"
+         << endl;
+
+    cout << "Left Foot velocity x,y,z:   \t";
+    cout << solution.ee_motion_.at(L)->GetPoint(t).v().transpose() << "\t[m]"
          << endl;
 
     cout << "Right Foot position x,y,z:   \t";
     cout << solution.ee_motion_.at(R)->GetPoint(t).p().transpose() << "\t[m]"
          << endl;
 
+    cout << "Right Foot velocity x,y,z:   \t";
+    cout << solution.ee_motion_.at(R)->GetPoint(t).v().transpose() << "\t[m]"
+         << endl;
+
     cout << "Left Foot Contact force x,y,z:   \t";
     cout << solution.ee_force_.at(L)->GetPoint(t).p().transpose() << "\t[N]"
          << endl;
 
+    cout << "Left Foot Contact force dot x,y,z:   \t";
+    cout << solution.ee_force_.at(L)->GetPoint(t).v().transpose() << "\t[N]"
+         << endl;
+
     cout << "Right Foot Contact force x,y,z:   \t";
     cout << solution.ee_force_.at(R)->GetPoint(t).p().transpose() << "\t[N]"
+         << endl;
+
+    cout << "Right Foot Contact force dot x,y,z:   \t";
+    cout << solution.ee_force_.at(R)->GetPoint(t).v().transpose() << "\t[N]"
          << endl;
 
     bool contact = solution.phase_durations_.at(L)->IsContactPhase(t);
@@ -116,6 +139,6 @@ int main() {
 
     cout << endl;
 
-    t += 0.2;
+    t += 0.1;
   }
 }

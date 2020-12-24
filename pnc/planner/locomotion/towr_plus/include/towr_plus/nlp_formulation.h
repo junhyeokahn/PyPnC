@@ -74,6 +74,8 @@ namespace towr_plus {
  * formulation. This formulation was used to generate the motions described
  * in this paper: https://ieeexplore.ieee.org/document/8283570/
  */
+
+// Usage : set model --> set params --> set task
 class NlpFormulation {
 public:
   using VariablePtrVec = std::vector<ifopt::VariableSet::Ptr>;

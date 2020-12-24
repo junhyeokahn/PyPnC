@@ -32,6 +32,8 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
 #include <math.h> // fabs
+
+#include <towr_plus/models/endeffector_mappings.h>
 #include <towr_plus/parameters.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 
@@ -85,6 +87,43 @@ Parameters::Parameters() {
 
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
+}
+
+void Parameters::from_yaml(const YAML::Node &node) {
+  int num_leg(2);
+  ee_phase_durations_.resize(num_leg);
+  ee_in_contact_at_start_.resize(num_leg);
+  Eigen::VectorXd tmp_vec;
+  bool tmp_bool;
+  try {
+    readParameter(node, "duration_base_polynomial", duration_base_polynomial_);
+    readParameter(node, "force_polynomials_per_stance_phase",
+                  force_polynomials_per_stance_phase_);
+    readParameter(node, "ee_polynomials_per_swing_phase",
+                  ee_polynomials_per_swing_phase_);
+    readParameter(node, "force_limit_in_normal_direction",
+                  force_limit_in_normal_direction_);
+    readParameter(node, "dt_constraint_range_of_motion",
+                  dt_constraint_range_of_motion_);
+    readParameter(node, "dt_constraint_dynamic", dt_constraint_dynamic_);
+    readParameter(node, "dt_constraint_base_motion",
+                  dt_constraint_base_motion_);
+    readParameter(node, "bound_phase_duration", tmp_vec);
+    bound_phase_duration_ = std::make_pair(tmp_vec(0), tmp_vec(1));
+    for (auto ee : {L, R}) {
+      readParameter(node["ee_phase_durations"], std::to_string(ee), tmp_vec);
+      for (int i = 0; i < tmp_vec.size(); ++i)
+        ee_phase_durations_.at(ee).push_back(tmp_vec(i));
+      readParameter(node["ee_in_contact_at_start"], std::to_string(ee),
+                    tmp_bool);
+      ee_in_contact_at_start_.at(ee) = tmp_bool;
+    }
+
+  } catch (std::runtime_error &e) {
+    std::cout << "Error reading parameter [" << e.what() << "] at file: ["
+              << __FILE__ << "]" << std::endl
+              << std::endl;
+  }
 }
 
 void Parameters::OptimizePhaseDurations() { constraints_.push_back(TotalTime); }

@@ -236,6 +236,9 @@ public:
 
   /// Total duration [s] of the motion.
   double GetTotalTime() const;
+
+  /// Set robot specific parameters from yaml.
+  void from_yaml(const YAML::Node &node);
 };
 
 } // namespace towr_plus

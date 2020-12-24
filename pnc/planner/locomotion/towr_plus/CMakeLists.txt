@@ -45,6 +45,7 @@ add_library(towr_plus SHARED
   src/phase_durations_observer.cc
   # high level interface
   src/locomotion_task.cc
+  src/locomotion_solution.cc
 )
 
 target_link_libraries(towr_plus PUBLIC ifopt::ifopt_core my_yaml)
