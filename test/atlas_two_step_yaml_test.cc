@@ -45,10 +45,7 @@ int main() {
   Eigen::VectorXd vars = nlp.GetVariableValues();
   sol.from_one_hot_vector(vars);
   sol.print_solution();
-
-  using namespace std;
-  cout.precision(2);
-  nlp.PrintCurrent();
+  sol.to_yaml();
 
   return 0;
 }

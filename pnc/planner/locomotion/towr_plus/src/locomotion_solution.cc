@@ -1,5 +1,8 @@
+#include <fstream>
 #include <numeric> // std::accumulate
 #include <vector>
+
+#include <configuration.h>
 
 #include <towr_plus/locomotion_solution.h>
 #include <towr_plus/models/endeffector_mappings.h>
@@ -436,4 +439,82 @@ Eigen::MatrixXd LocomotionSolution::_transpose(Eigen::MatrixXd mat,
     exit(0);
   }
   return ret;
-};
+}
+
+void LocomotionSolution::to_yaml(double dt) {
+  try {
+    int n = std::floor(_get_total_time() / dt);
+    Eigen::VectorXd time = Eigen::VectorXd::Zero(n);
+    Eigen::MatrixXd base_lin = Eigen::MatrixXd::Zero(n, 6);
+    Eigen::MatrixXd base_ang = Eigen::MatrixXd::Zero(n, 6);
+    std::vector<Eigen::MatrixXd> ee_motion_lin(2);
+    std::vector<Eigen::MatrixXd> ee_wrench_lin(2);
+    for (auto ee : {L, R}) {
+      ee_motion_lin.at(ee) = Eigen::MatrixXd::Zero(n, 6);
+      ee_wrench_lin.at(ee) = Eigen::MatrixXd::Zero(n, 6);
+    }
+
+    for (int i = 0; i < n; ++i) {
+      double t = i * dt;
+      time(i) = t;
+      base_lin.block(i, 0, 1, 3) =
+          spline_holder_.base_linear_->GetPoint(t).p().transpose();
+      base_lin.block(i, 3, 1, 3) =
+          spline_holder_.base_linear_->GetPoint(t).v().transpose();
+      base_ang.block(i, 0, 1, 3) =
+          spline_holder_.base_angular_->GetPoint(t).p().transpose();
+      base_ang.block(i, 3, 1, 3) =
+          spline_holder_.base_angular_->GetPoint(t).v().transpose();
+      for (auto ee : {L, R}) {
+        ee_motion_lin.at(ee).block(i, 0, 1, 3) =
+            spline_holder_.ee_motion_.at(ee)->GetPoint(t).p().transpose();
+        ee_motion_lin.at(ee).block(i, 3, 1, 3) =
+            spline_holder_.ee_motion_.at(ee)->GetPoint(t).v().transpose();
+        ee_wrench_lin.at(ee).block(i, 0, 1, 3) =
+            spline_holder_.ee_force_.at(ee)->GetPoint(t).p().transpose();
+        ee_wrench_lin.at(ee).block(i, 3, 1, 3) =
+            spline_holder_.ee_force_.at(ee)->GetPoint(t).v().transpose();
+      }
+    }
+
+    YAML::Node data;
+
+    data["trajectory"]["time"] = time;
+    data["trajectory"]["base_lin"] = base_lin;
+    data["trajectory"]["base_ang"] = base_ang;
+    for (auto ee : {L, R}) {
+      data["trajectory"]["ee_motion_lin"][std::to_string(ee)] =
+          ee_motion_lin.at(ee);
+      data["trajectory"]["ee_wrench_lin"][std::to_string(ee)] =
+          ee_wrench_lin.at(ee);
+    }
+
+    data["node"]["base_lin"] = base_lin_nodes_;
+    data["node"]["base_ang"] = base_ang_nodes_;
+    for (auto ee : {L, R}) {
+      data["node"]["ee_motion_lin"][std::to_string(ee)] =
+          ee_motion_lin_nodes_.at(ee);
+      data["node"]["ee_wrench_lin"][std::to_string(ee)] =
+          ee_wrench_lin_nodes_.at(ee);
+      Eigen::VectorXd tmp_vec(ee_schedules_.at(ee).size());
+      for (int i = 0; i < ee_schedules_.at(ee).size(); ++i)
+        tmp_vec(i) = ee_schedules_.at(ee)[i];
+      data["contact_schedule"][std::to_string(ee)] = tmp_vec;
+    }
+
+    data["parameter"]["force_polynomials_per_stance_phase"] =
+        force_polynomials_per_stance_phase_;
+    data["parameter"]["ee_polynomials_per_swing_phase"] =
+        ee_polynomials_per_swing_phase_;
+
+    std::string file_path =
+        THIS_COM + std::string("data/") + name_ + std::string(".yaml");
+    std::ofstream file_out(file_path);
+    file_out << data;
+
+    std::cout << "Locomotion Solution " << name_ << " is saved" << std::endl;
+
+  } catch (std::runtime_error &e) {
+    std::cout << e.what() << std::endl;
+  }
+}
