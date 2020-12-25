@@ -62,9 +62,15 @@ Eigen::VectorXd NodesVariables::GetValues() const {
 }
 
 void NodesVariables::SetVariables(const VectorXd &x) {
-  for (int idx = 0; idx < x.rows(); ++idx)
-    for (auto nvi : GetNodeValuesInfo(idx))
+  for (int idx = 0; idx < x.rows(); ++idx) {
+    for (auto nvi : GetNodeValuesInfo(idx)) {
+      // std::cout << "---------------------" << std::endl;
+      // std::cout << "variable idx: " << idx << std::endl;
+      // std::cout << "node idx: " << nvi.id_ << std::endl;
+      // std::cout << "value: " << x(idx) << std::endl;
       nodes_.at(nvi.id_).at(nvi.deriv_)(nvi.dim_) = x(idx);
+    }
+  }
 
   UpdateObservers();
 }

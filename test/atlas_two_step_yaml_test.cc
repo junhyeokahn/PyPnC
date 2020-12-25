@@ -44,55 +44,11 @@ int main() {
 
   Eigen::VectorXd vars = nlp.GetVariableValues();
   sol.from_one_hot_vector(vars);
+  sol.print_solution();
 
   using namespace std;
   cout.precision(2);
   nlp.PrintCurrent();
-
-  // Pring Solution Trajectories
-  // cout << fixed;
-  // cout << "\n====================\nAtlas "
-  //"trajectory:\n====================\n";
-
-  // double t = 0.0;
-  // while (t <= solution.base_linear_->GetTotalTime() + 1e-5) {
-  // cout << "t=" << t << "\n";
-  // cout << "Base linear position x,y,z:   \t";
-  // cout << solution.base_linear_->GetPoint(t).p().transpose() << "\t[m]"
-  //<< endl;
-
-  // cout << "Base Euler roll, pitch, yaw:   \t";
-  // Eigen::Vector3d rad = solution.base_angular_->GetPoint(t).p();
-  // cout << (rad / M_PI * 180).transpose() << "\t[deg]" << endl;
-
-  // cout << "Left Foot position x,y,z:   \t";
-  // cout << solution.ee_motion_.at(L)->GetPoint(t).p().transpose() << "\t[m]"
-  //<< endl;
-
-  // cout << "Right Foot position x,y,z:   \t";
-  // cout << solution.ee_motion_.at(R)->GetPoint(t).p().transpose() << "\t[m]"
-  //<< endl;
-
-  // cout << "Left Foot Contact force x,y,z:   \t";
-  // cout << solution.ee_force_.at(L)->GetPoint(t).p().transpose() << "\t[N]"
-  //<< endl;
-
-  // cout << "Right Foot Contact force x,y,z:   \t";
-  // cout << solution.ee_force_.at(R)->GetPoint(t).p().transpose() << "\t[N]"
-  //<< endl;
-
-  // bool contact = solution.phase_durations_.at(L)->IsContactPhase(t);
-  // std::string foot_in_contact = contact ? "yes" : "no";
-  // cout << "Left Foot in contact:   \t" + foot_in_contact << endl;
-
-  // contact = solution.phase_durations_.at(R)->IsContactPhase(t);
-  // foot_in_contact = contact ? "yes" : "no";
-  // cout << "Right Foot in contact:   \t" + foot_in_contact << endl;
-
-  // cout << endl;
-
-  // t += 0.2;
-  //}
 
   return 0;
 }

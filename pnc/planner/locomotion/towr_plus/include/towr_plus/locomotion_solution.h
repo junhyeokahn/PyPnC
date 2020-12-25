@@ -6,8 +6,14 @@
 
 #include <Eigen/Dense>
 
-#include <towr_plus/models/endeffector_mappings.h>
 #include <util/util.hpp>
+
+#include <towr_plus/models/endeffector_mappings.h>
+#include <towr_plus/variables/cartesian_dimensions.h>
+#include <towr_plus/variables/nodes_variables_all.h>
+#include <towr_plus/variables/phase_durations.h>
+#include <towr_plus/variables/spline_holder.h>
+#include <towr_plus/variables/variable_names.h>
 
 using namespace towr_plus;
 
@@ -25,6 +31,7 @@ public:
                                            // one hot vector
   void initialize(const YAML::Node &node); // Initialize variables
   void print_info();                       // Print solution information
+  void print_solution(double dt = 0.05);   // Print solution
   void to_yaml();                          // Save solution to yaml
 
 private:
@@ -35,8 +42,15 @@ private:
   int ee_polynomials_per_swing_phase_; // Assume this is always 2
   std::vector<std::vector<double>> ee_phase_durations_;
 
-  Eigen::VectorXd one_hot_vector_;
   int parsing_idx_;
+  Eigen::VectorXd one_hot_vector_;
+  Eigen::VectorXd one_hot_base_lin_;
+  Eigen::VectorXd one_hot_base_ang_;
+  std::vector<Eigen::VectorXd> one_hot_ee_motion_lin_;
+  std::vector<Eigen::VectorXd> one_hot_ee_motion_ang_;
+  std::vector<Eigen::VectorXd> one_hot_ee_wrench_lin_;
+  std::vector<Eigen::VectorXd> one_hot_ee_wrench_ang_;
+  std::vector<Eigen::VectorXd> one_hot_ee_contact_schedule_;
 
   int n_base_nodes_;
   int n_base_vars_;
@@ -57,10 +71,14 @@ private:
 
   std::vector<double> _get_base_poly_duration();
   double _get_total_time();
+
+  SplineHolder spline_holder_;
+
   void _set_base_nodes();
   void _set_ee_motion_nodes();
   void _set_ee_wrench_nodes();
   void _set_ee_schedule_variables();
+  void _set_splines();
   Eigen::MatrixXd _transpose(Eigen::MatrixXd mat, std::vector<int> order,
                              std::string col_or_row);
 };
