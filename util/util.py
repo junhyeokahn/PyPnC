@@ -8,6 +8,22 @@ def pretty_print(ob):
     print(json.dumps(ob, indent=4))
 
 
+def euler_to_rot(seq, euler_angle, degrees=False):
+    """
+    Parameters
+    ----------
+    seq (str): Euler seq
+    euler_angle (list or np.array): angles
+    degrees (bool): If it is degrees or radians
+
+    Returns
+    -------
+    ret (np.array): SO3
+
+    """
+    return (R.from_euler(seq, euler_angle, degrees=degrees)).as_matrix()
+
+
 def quat_to_rot(quat):
     """
     Parameters
@@ -17,6 +33,7 @@ def quat_to_rot(quat):
     Returns
     -------
     ret (np.array): SO3
+
     """
     return (R.from_quat(quat)).as_matrix()
 

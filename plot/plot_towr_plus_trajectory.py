@@ -4,8 +4,10 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 import pickle
 
+import yaml
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.spatial.transform import Rotation as R
 import math, matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.patches as patches
@@ -41,6 +43,10 @@ def set_axes_equal(ax):
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
 
+def euler_to_rot(seq, euler_angle, degrees=False):
+    return (R.from_euler(seq, euler_angle, degrees=degrees)).as_matrix()
+
+
 def quat2mat(quat):
     quat = np.squeeze(np.asarray(quat))
     x, y, z, w = quat
@@ -53,11 +59,11 @@ def quat2mat(quat):
     ]])
 
 
-def compute_arrow_vec(quats):
-    n_points = quats.shape[0]
+def compute_arrow_vec(euler_xyz):
+    n_points = euler_xyz.shape[0]
     arrow_ends = np.zeros([n_points, 3])
     for i in range(n_points):
-        R = quat2mat(quats[i])
+        R = euler_to_rot("xyz", euler_xyz[i], False)
         arrow_ends[i] = np.dot(R, np.array([1., 0., 0.]))
     return arrow_ends
 
@@ -85,36 +91,44 @@ def plot_foot(ax, pos, ori, color, text):
 def main(args):
     file = args.file
 
-    with open(file, 'rb') as file:
-        while True:
-            try:
-                d = pickle.load(file)
+    with open(file, 'r') as stream:
+        try:
+            # Read Trajectory
+            data = yaml.load(stream, Loader=yaml.FullLoader)
+            time = data["trajectory"]["time"]
+            base_lin = np.array(data["trajectory"]["base_lin"])
+            base_ang = np.array(data["trajectory"]["base_ang"])
+            ee_motion_lin = dict()
+            ee_wrench_lin = dict()
+            for ee in range(2):
+                ee_motion_lin[ee] = np.array(
+                    data["trajectory"]["ee_motion_lin"][ee])
+                ee_wrench_lin[ee] = np.array(
+                    data["trajectory"]["ee_wrench_lin"][ee])
 
-                initial_time = d["temporal_parameters"]["initial_time"]
-                final_time = d["temporal_parameters"]["final_time"]
-                time_step = d["temporal_parameters"]["time_step"]
-                t_ds = d["temporal_parameters"]["t_ds"]
-                t_ss = d["temporal_parameters"]["t_ss"]
-                t_transfer = d["temporal_parameters"]["t_transfer"]
+            # Read Node and Contact Schedule
+            node_base_lin = np.array(data["node"]["base_lin"])
+            node_base_ang = np.array(data["node"]["base_ang"])
+            node_ee_motion_lin = dict()
+            node_ee_wrench_lin = dict()
+            contact_schedule = dict()
+            for ee in range(2):
+                node_ee_motion_lin[ee] = np.array(
+                    data["node"]["ee_motion_lin"][ee])
+                node_ee_wrench_lin[ee] = np.array(
+                    data["node"]["ee_wrench_lin"][ee])
+                contact_schedule[ee] = np.array(data["contact_schedule"][ee])
 
-                curr_rfoot_contact_pos = d["contact"]["curr_right_foot"]["pos"]
-                curr_rfoot_contact_ori = d["contact"]["curr_right_foot"]["ori"]
-                curr_lfoot_contact_pos = d["contact"]["curr_left_foot"]["pos"]
-                curr_lfoot_contact_ori = d["contact"]["curr_left_foot"]["ori"]
+            # Read Parameter
+            force_polynomials_per_stance_phase = np.array(
+                data["parameter"]["force_polynomials_per_stance_phase"])
+            ee_polynomials_per_swing_phase = np.array(
+                data["parameter"]["ee_polynomials_per_swing_phase"])
 
-                rfoot_contact_pos = d["contact"]["right_foot"]["pos"]
-                rfoot_contact_ori = d["contact"]["right_foot"]["ori"]
-                lfoot_contact_pos = d["contact"]["left_foot"]["pos"]
-                lfoot_contact_ori = d["contact"]["left_foot"]["ori"]
+        except yaml.YAMLError as exc:
+            print(exc)
 
-                t = d["reference"]["time"]
-                com_pos_ref = d["reference"]["com_pos"]
-                com_vel_ref = d["reference"]["com_vel"]
-                base_ori_ref = d["reference"]["base_ori"]
-            except EOFError:
-                break
-
-    arrow_ends = compute_arrow_vec(base_ori_ref)
+    arrow_ends = compute_arrow_vec(base_ang[:, 0:3])
     line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
     colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
     line_colors = {
@@ -133,22 +147,22 @@ def main(args):
     axis_label_color = '#373834'
     comref_linewidth = 2
     comref_linecolor = 'darkorange'
-    dcmref_linewidth = 4
-    dcmref_linecolor = 'cornflowerblue'
+    ee_motion_linewidth = 2
+    ee_motion_linecolor = 'cornflowerblue'
 
     fig1 = plt.figure()
     com_motion = Axes3D(fig1)
 
     # plot com
-    com_motion.plot(xs=com_pos_ref[:, 0],
-                    ys=com_pos_ref[:, 1],
-                    zs=com_pos_ref[:, 2],
+    com_motion.plot(xs=base_lin[:, 0],
+                    ys=base_lin[:, 1],
+                    zs=base_lin[:, 2],
                     linewidth=comref_linewidth,
                     color=comref_linecolor)
     num_interval = 50
-    com_motion.quiver(com_pos_ref[::num_interval, 0],
-                      com_pos_ref[::num_interval, 1],
-                      com_pos_ref[::num_interval, 2],
+    com_motion.quiver(base_lin[::num_interval, 0],
+                      base_lin[::num_interval, 1],
+                      base_lin[::num_interval, 2],
                       arrow_ends[::num_interval, 0],
                       arrow_ends[::num_interval, 1],
                       arrow_ends[::num_interval, 2],
@@ -156,14 +170,20 @@ def main(args):
                       linewidth=comref_linewidth,
                       color='red')
     # plot foot
-    plot_foot(com_motion, np.squeeze(curr_rfoot_contact_pos),
-              np.squeeze(curr_rfoot_contact_ori), colors[0], "InitRF")
-    plot_foot(com_motion, np.squeeze(curr_lfoot_contact_pos),
-              np.squeeze(curr_lfoot_contact_ori), colors[1], "InitLF")
-    for i, (pos, ori) in enumerate(zip(rfoot_contact_pos, rfoot_contact_ori)):
-        plot_foot(com_motion, pos, ori, colors[0], "RF" + str(i))
-    for i, (pos, ori) in enumerate(zip(lfoot_contact_pos, lfoot_contact_ori)):
-        plot_foot(com_motion, pos, ori, colors[1], "LF" + str(i))
+    for ee in range(2):
+        com_motion.plot(xs=ee_motion_lin[ee][:, 0],
+                        ys=ee_motion_lin[ee][:, 1],
+                        zs=ee_motion_lin[ee][:, 2],
+                        linewidth=ee_motion_linewidth,
+                        color=ee_motion_linecolor)
+    # plot_foot(com_motion, np.squeeze(curr_rfoot_contact_pos),
+    # np.squeeze(curr_rfoot_contact_ori), colors[0], "InitRF")
+    # plot_foot(com_motion, np.squeeze(curr_lfoot_contact_pos),
+    # np.squeeze(curr_lfoot_contact_ori), colors[1], "InitLF")
+    # for i, (pos, ori) in enumerate(zip(rfoot_contact_pos, rfoot_contact_ori)):
+    # plot_foot(com_motion, pos, ori, colors[0], "RF" + str(i))
+    # for i, (pos, ori) in enumerate(zip(lfoot_contact_pos, lfoot_contact_ori)):
+    # plot_foot(com_motion, pos, ori, colors[1], "LF" + str(i))
 
     com_motion.tick_params(labelsize=axis_tick_size, colors=axis_tick_color)
     com_motion.set_xlabel("x",
@@ -181,14 +201,24 @@ def main(args):
     # Plot Trajectory
     # ==========================================================================
 
-    fig, axes = plt.subplots(3, 2)
-    for i in range(3):
-        axes[i, 0].plot(t, com_pos_ref[:, i], color='k', linewidth=3)
-        axes[i, 1].plot(t, com_vel_ref[:, i], color='k', linewidth=3)
-        axes[i, 0].grid(True)
-        axes[i, 1].grid(True)
-    axes[0, 0].set_title('com pos')
-    axes[0, 1].set_title('com vel')
+    fig, axes = plt.subplots(6, 8)
+    for i in range(6):
+        axes[i, 0].plot(time, base_lin[:, i], color='k', linewidth=3)
+        axes[i, 1].plot(time, base_ang[:, i], color='k', linewidth=3)
+        for ee in range(2):
+            axes[i, 2 + 2 * ee].plot(time,
+                                     ee_motion_lin[ee][:, i],
+                                     color='k',
+                                     linewidth=3)
+            # axes[2+2*ee+1, i].plot(time, ee_motion_ang[ee][:,i])
+            if i < 3:
+                # axes[6+ee, i].plot(time, ee_wrench_ang[ee][:,i])
+                pass
+            else:
+                axes[i, 6 + ee].plot(time,
+                                     ee_wrench_lin[ee][:, i - 3],
+                                     color='k',
+                                     linewidth=3)
 
     plt.show()
 

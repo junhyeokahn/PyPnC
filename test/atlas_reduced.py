@@ -48,13 +48,12 @@ if __name__ == "__main__":
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=KinSimConfig.DT,numSubSteps=1)
+    p.setPhysicsEngineParameter(fixedTimeStep=KinSimConfig.DT, numSubSteps=1)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(
-        cwd + "/robot_model/atlas/atlas_reduced.urdf",
-        [0, 0, 1.5 - 0.761])
+    robot = p.loadURDF(cwd + "/robot_model/atlas/atlas_reduced.urdf",
+                       [0, 0, 1.5 - 0.761])
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
