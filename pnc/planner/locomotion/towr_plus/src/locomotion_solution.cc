@@ -240,11 +240,26 @@ void LocomotionSolution::_set_ee_motion_nodes() {
         // node_idx, variable_idx, variable_idx + 1, variable_idx + 2,
         // variable_idx + 3, variable_idx + 4);
         for (auto dim : {0, 1, 2, 3, 4, 5}) {
-          if (dim == 5) {
-            ee_motion_lin_nodes_.at(ee)(node_idx, dim) = 0.;
-          } else {
-            ee_motion_lin_nodes_.at(ee)(node_idx, dim) =
+          if (dim == 0) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 0) =
                 one_hot_ee_motion_lin_.at(ee)(variable_idx + dim);
+          } else if (dim == 1) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 3) =
+                one_hot_ee_motion_lin_.at(ee)(variable_idx + dim);
+          } else if (dim == 2) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 1) =
+                one_hot_ee_motion_lin_.at(ee)(variable_idx + dim);
+          } else if (dim == 3) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 4) =
+                one_hot_ee_motion_lin_.at(ee)(variable_idx + dim);
+          } else if (dim == 4) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 2) =
+                one_hot_ee_motion_lin_.at(ee)(variable_idx + dim);
+          } else if (dim == 5) {
+            ee_motion_lin_nodes_.at(ee)(node_idx, 5) = 0.;
+          } else {
+            std::cout << "Wrong Dim" << std::endl;
+            exit(0);
           }
         }
         node_idx += 1;
@@ -489,14 +504,47 @@ void LocomotionSolution::to_yaml(double dt) {
           ee_wrench_lin.at(ee);
     }
 
-    data["node"]["base_lin"] = base_lin_nodes_;
-    data["node"]["base_ang"] = base_ang_nodes_;
+    // std::vector<double> base_node_durations =
+    // spline_holder_.base_linear_->GetPolyDurations();
+    // for (int i = 0; i < base_node_durations.size(); ++i) {
+    // std::cout << base_node_durations[i] << std::endl;
+    //}
+    // exit(0);
+
+    Eigen::VectorXd tmp_vec;
+    data["node"]["base_lin"]["value"] = base_lin_nodes_;
+    tmp_vec = Eigen::VectorXd::Zero(
+        spline_holder_.base_linear_->GetPolyDurations().size());
+    for (int i = 0; i < spline_holder_.base_linear_->GetPolyDurations().size();
+         ++i) {
+      tmp_vec(i) = spline_holder_.base_linear_->GetPolyDurations()[i];
+    }
+    data["node"]["base_lin"]["duration"] = tmp_vec;
+    data["node"]["base_ang"]["value"] = base_ang_nodes_;
+    data["node"]["base_ang"]["duration"] = tmp_vec;
     for (auto ee : {L, R}) {
-      data["node"]["ee_motion_lin"][std::to_string(ee)] =
+      data["node"]["ee_motion_lin"][std::to_string(ee)]["value"] =
           ee_motion_lin_nodes_.at(ee);
-      data["node"]["ee_wrench_lin"][std::to_string(ee)] =
+      tmp_vec = Eigen::VectorXd::Zero(
+          spline_holder_.ee_motion_.at(ee)->GetPolyDurations().size());
+      for (int i = 0;
+           i < spline_holder_.ee_motion_.at(ee)->GetPolyDurations().size();
+           ++i) {
+        tmp_vec(i) = spline_holder_.ee_motion_.at(ee)->GetPolyDurations()[i];
+      }
+      data["node"]["ee_motion_lin"][std::to_string(ee)]["duration"] = tmp_vec;
+      data["node"]["ee_wrench_lin"][std::to_string(ee)]["value"] =
           ee_wrench_lin_nodes_.at(ee);
-      Eigen::VectorXd tmp_vec(ee_schedules_.at(ee).size());
+      tmp_vec = Eigen::VectorXd::Zero(
+          spline_holder_.ee_force_.at(ee)->GetPolyDurations().size());
+      for (int i = 0;
+           i < spline_holder_.ee_force_.at(ee)->GetPolyDurations().size();
+           ++i) {
+        tmp_vec(i) = spline_holder_.ee_force_.at(ee)->GetPolyDurations()[i];
+      }
+      data["node"]["ee_wrench_lin"][std::to_string(ee)]["duration"] = tmp_vec;
+
+      tmp_vec = Eigen::VectorXd::Zero(ee_schedules_.at(ee).size());
       for (int i = 0; i < ee_schedules_.at(ee).size(); ++i)
         tmp_vec(i) = ee_schedules_.at(ee)[i];
       data["contact_schedule"][std::to_string(ee)] = tmp_vec;

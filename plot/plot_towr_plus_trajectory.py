@@ -3,16 +3,41 @@ import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
 import pickle
+import itertools
 
 import yaml
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
-import math, matplotlib
+import matplotlib
 matplotlib.use('TkAgg')
+plt.rcParams.update({
+    'axes.grid': True,
+    'axes.titlesize': 18,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'text.usetex': True
+})
+from scipy.spatial.transform import Rotation as R
+import math
 import matplotlib.patches as patches
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import Axes3D
+
+line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
+colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
+line_colors = {0: 'cornflowerblue', 1: 'sandybrown', 2: 'seagreen', 3: 'gold'}
+facecolors = [
+    'cornflowerblue', 'darkorange', 'lightgray', 'rosybrown', 'seagreen',
+    'gold', 'lightpink', 'slategrey'
+]
+motion_label = [
+    r'$x$', r'$y$', r'$z$', r'$\dot{x}$', r'$\dot{y}$', r'$\dot{z}$'
+]
+xyz_label = [r'$x$', r'$y$', r'$z$']
+dxdydz_label = [r'$\dot{x}$', r'$\dot{y}$', r'$\dot{z}$']
+frc_label = [r'$f_x$', r'$f_y$', r'$f_z$']
+trq_label = ['$\tau_x$', r'$\tau_y$', r'$\tau_z$']
 
 
 def set_axes_equal(ax):
@@ -88,6 +113,44 @@ def plot_foot(ax, pos, ori, color, text):
                depthshade=True)
 
 
+def fill_phase(ax, ph_durations, facecolor_iter):
+    t_start = 0
+    shading = 0.2
+    lb, ub = ax.get_ylim()
+    for time_dur in ph_durations:
+        t_end = t_start + time_dur
+        ax.fill_between([t_start, t_end],
+                        lb,
+                        ub,
+                        facecolor=next(facecolor_iter),
+                        alpha=shading)
+        t_start = t_end
+
+
+def add_twinx(ax, x, y, color, linewidth):
+    ax2 = ax.twinx()
+    ax.spines['right'].set_color(color)
+    ax2.plot(x, y, color=color, linewidth=linewidth)
+    ax2.tick_params('y', colors=color)
+    ax2.yaxis.label.set_color(color)
+
+    def _adjust_grid(event):
+        ylim1 = ax.get_ylim()
+        len1 = ylim1[1] - ylim1[0]
+        yticks1 = ax.get_yticks()
+        rel_dist = [(y - ylim1[0]) / len1 for y in yticks1]
+        ylim2 = ax2.get_ylim()
+        len2 = ylim2[1] - ylim2[0]
+        yticks2 = [ry * len2 + ylim2[0] for ry in rel_dist]
+        ax2.set_yticks(yticks2)
+        ax2.set_ylim(ylim2)
+
+    fig = ax.get_figure()
+    fig.canvas.mpl_connect('resize_event', _adjust_grid)
+
+    return ax2
+
+
 def main(args):
     file = args.file
 
@@ -107,16 +170,43 @@ def main(args):
                     data["trajectory"]["ee_wrench_lin"][ee])
 
             # Read Node and Contact Schedule
-            node_base_lin = np.array(data["node"]["base_lin"])
-            node_base_ang = np.array(data["node"]["base_ang"])
+            node_base_lin = np.array(data["node"]["base_lin"]["value"])
+            node_base_lin_time = data["node"]["base_lin"]["duration"]
+            node_base_lin_time = np.array([0] + [
+                sum(node_base_lin_time[0:i + 1])
+                for i in range(len(node_base_lin_time))
+            ])
+
+            node_base_ang = np.array(data["node"]["base_ang"]["value"])
+            node_base_ang_time = data["node"]["base_lin"]["duration"]
+            node_base_ang_time = np.array([0] + [
+                sum(node_base_ang_time[0:i + 1])
+                for i in range(len(node_base_ang_time))
+            ])
+
             node_ee_motion_lin = dict()
+            node_ee_motion_lin_time = dict()
             node_ee_wrench_lin = dict()
+            node_ee_wrench_lin_time = dict()
             contact_schedule = dict()
             for ee in range(2):
                 node_ee_motion_lin[ee] = np.array(
-                    data["node"]["ee_motion_lin"][ee])
+                    data["node"]["ee_motion_lin"][ee]["value"])
+                node_ee_motion_lin_time[ee] = data["node"]["ee_motion_lin"][
+                    ee]["duration"]
+                node_ee_motion_lin_time[ee] = np.array([0] + [
+                    sum(node_ee_motion_lin_time[ee][0:i + 1])
+                    for i in range(len(node_ee_motion_lin_time[ee]))
+                ])
                 node_ee_wrench_lin[ee] = np.array(
-                    data["node"]["ee_wrench_lin"][ee])
+                    data["node"]["ee_wrench_lin"][ee]["value"])
+                node_ee_wrench_lin_time[ee] = data["node"]["ee_wrench_lin"][
+                    ee]["duration"]
+                node_ee_wrench_lin_time[ee] = np.array([0] + [
+                    sum(node_ee_wrench_lin_time[ee][0:i + 1])
+                    for i in range(len(node_ee_wrench_lin_time[ee]))
+                ])
+
                 contact_schedule[ee] = np.array(data["contact_schedule"][ee])
 
             # Read Parameter
@@ -129,27 +219,10 @@ def main(args):
             print(exc)
 
     arrow_ends = compute_arrow_vec(base_ang[:, 0:3])
-    line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
-    colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
-    line_colors = {
-        0: 'cornflowerblue',
-        1: 'sandybrown',
-        2: 'seagreen',
-        3: 'gold'
-    }
+
     # ==========================================================================
     # Plot Motion
     # ==========================================================================
-    offset = 0.05
-    axis_tick_size = 10
-    axis_label_size = 14
-    axis_tick_color = '#434440'
-    axis_label_color = '#373834'
-    comref_linewidth = 2
-    comref_linecolor = 'darkorange'
-    ee_motion_linewidth = 2
-    ee_motion_linecolor = 'cornflowerblue'
-
     fig1 = plt.figure()
     com_motion = Axes3D(fig1)
 
@@ -157,8 +230,8 @@ def main(args):
     com_motion.plot(xs=base_lin[:, 0],
                     ys=base_lin[:, 1],
                     zs=base_lin[:, 2],
-                    linewidth=comref_linewidth,
-                    color=comref_linecolor)
+                    linewidth=3,
+                    color='darkorange')
     num_interval = 50
     com_motion.quiver(base_lin[::num_interval, 0],
                       base_lin[::num_interval, 1],
@@ -166,16 +239,16 @@ def main(args):
                       arrow_ends[::num_interval, 0],
                       arrow_ends[::num_interval, 1],
                       arrow_ends[::num_interval, 2],
-                      length=0.1,
-                      linewidth=comref_linewidth,
+                      length=0.07,
+                      linewidth=3,
                       color='red')
     # plot foot
     for ee in range(2):
         com_motion.plot(xs=ee_motion_lin[ee][:, 0],
                         ys=ee_motion_lin[ee][:, 1],
                         zs=ee_motion_lin[ee][:, 2],
-                        linewidth=ee_motion_linewidth,
-                        color=ee_motion_linecolor)
+                        linewidth=3,
+                        color='cornflowerblue')
     # plot_foot(com_motion, np.squeeze(curr_rfoot_contact_pos),
     # np.squeeze(curr_rfoot_contact_ori), colors[0], "InitRF")
     # plot_foot(com_motion, np.squeeze(curr_lfoot_contact_pos),
@@ -185,40 +258,70 @@ def main(args):
     # for i, (pos, ori) in enumerate(zip(lfoot_contact_pos, lfoot_contact_ori)):
     # plot_foot(com_motion, pos, ori, colors[1], "LF" + str(i))
 
-    com_motion.tick_params(labelsize=axis_tick_size, colors=axis_tick_color)
-    com_motion.set_xlabel("x",
-                          fontsize=axis_label_size,
-                          color=axis_label_color)
-    com_motion.set_ylabel("y",
-                          fontsize=axis_label_size,
-                          color=axis_label_color)
-    com_motion.set_zlabel("z",
-                          fontsize=axis_label_size,
-                          color=axis_label_color)
+    com_motion.set_xlabel(r"$x$")
+    com_motion.set_ylabel(r"$y$")
+    com_motion.set_zlabel(r"$z$")
     set_axes_equal(com_motion)
 
     # ==========================================================================
     # Plot Trajectory
     # ==========================================================================
 
-    fig, axes = plt.subplots(6, 8)
+    fig, axes = plt.subplots(6, 4, constrained_layout=True)
+    axes[0, 0].set_title('base lin')
+    axes[0, 1].set_title('base ang')
+    axes[0, 2].set_title('left foot')
+    axes[0, 3].set_title('right foot')
     for i in range(6):
         axes[i, 0].plot(time, base_lin[:, i], color='k', linewidth=3)
+        axes[i, 0].scatter(node_base_lin_time,
+                           node_base_lin[:, i],
+                           s=50,
+                           c='lightgray',
+                           linewidths=2,
+                           edgecolors='k')
+        axes[i, 0].set_ylabel(motion_label[i])
         axes[i, 1].plot(time, base_ang[:, i], color='k', linewidth=3)
+        axes[i, 1].scatter(node_base_ang_time,
+                           node_base_ang[:, i],
+                           s=50,
+                           c='lightgray',
+                           linewidths=2,
+                           edgecolors='k')
+        axes[i, 1].set_ylabel(motion_label[i])
         for ee in range(2):
-            axes[i, 2 + 2 * ee].plot(time,
-                                     ee_motion_lin[ee][:, i],
-                                     color='k',
-                                     linewidth=3)
-            # axes[2+2*ee+1, i].plot(time, ee_motion_ang[ee][:,i])
             if i < 3:
-                # axes[6+ee, i].plot(time, ee_wrench_ang[ee][:,i])
                 pass
             else:
-                axes[i, 6 + ee].plot(time,
-                                     ee_wrench_lin[ee][:, i - 3],
-                                     color='k',
+                # Draw EE Lin Motion
+                axes[i, 2 + ee].plot(time,
+                                     ee_motion_lin[ee][:, i - 3],
+                                     color='b',
                                      linewidth=3)
+                axes[i, 2 + ee].scatter(node_ee_motion_lin_time[ee],
+                                        node_ee_motion_lin[ee][:, i - 3],
+                                        s=50,
+                                        c='skyblue',
+                                        linewidths=2,
+                                        edgecolors='b')
+                axes[i, 2 + ee].tick_params('y', colors='b')
+                axes[i, 2 + ee].spines['left'].set_color('b')
+                axes[i, 2 + ee].set_ylabel(xyz_label[i - 3])
+                axes[i, 2 + ee].yaxis.label.set_color('b')
+                # Draw EE Lin Wrench
+                frc_ax = add_twinx(axes[i, 2 + ee], time,
+                                   ee_wrench_lin[ee][:, i - 3], 'r', 3)
+                frc_ax.scatter(node_ee_wrench_lin_time[ee],
+                               node_ee_wrench_lin[ee][:, i - 3],
+                               s=50,
+                               c='lightpink',
+                               linewidths=2,
+                               edgecolors='r')
+                frc_ax.set_ylabel(frc_label[i - 3])
+
+                # Fill Phase
+                fill_phase(axes[i, 2 + ee], contact_schedule[ee],
+                           itertools.cycle(facecolors[0:2]))
 
     plt.show()
 
