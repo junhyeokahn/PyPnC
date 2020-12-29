@@ -39,7 +39,7 @@ namespace towr_plus {
 
 NodeCost::NodeCost(const std::string &nodes_id, Dx deriv, int dim,
                    double weight, double des_val)
-    : CostTerm(nodes_id + "-dx_" + std::to_string(deriv) + "-dim_" +
+    : CostTerm(nodes_id + "all-dx_" + std::to_string(deriv) + "-dim_" +
                std::to_string(dim)) {
   node_id_ = nodes_id;
   deriv_ = deriv;
