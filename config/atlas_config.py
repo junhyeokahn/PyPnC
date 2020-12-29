@@ -1,9 +1,10 @@
 import numpy as np
 
+
 class KinSimConfig(object):
     DT = 0.01
 
-    PRINT_ROBOT_INFO = False
+    PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
 
 

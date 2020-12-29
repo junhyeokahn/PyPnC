@@ -2,14 +2,19 @@ import os
 import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
-import time, math
+import time
+import math
+import copy
 from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
+# np.set_printoptions(precision=3)
 
 from config.atlas_config import KinSimConfig
-from util import util
+from util.util import *
+from util.liegroup import *
+from util.robot_kinematics import *
 
 
 def get_robot_config(robot):
@@ -32,10 +37,10 @@ def get_robot_config(robot):
         print("nq: ", nq, ", nv: ", nv, ", na: ", na)
         print("+" * 80)
         print("Joint Infos")
-        util.pretty_print(joint_id)
+        pretty_print(joint_id)
         print("+" * 80)
         print("Link Infos")
-        util.pretty_print(link_id)
+        pretty_print(link_id)
 
     return nq, nv, na, joint_id, link_id
 
@@ -60,11 +65,158 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["l_leg_aky"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
 
-def set_config(robot, config):
-    pass
+
+def set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos):
+    p.resetBasePositionAndOrientation(robot, base_pos, base_quat)
+    for k, v in joint_pos.items():
+        p.resetJointState(robot, joint_id[k], v, 0.)
+
 
 def inv_kin(robot, sensor_data):
     pass
+
+
+def _ik_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data,
+                     nominal_sensor_data):
+    lf_state = p.getLinkState(robot, link_id['l_sole'], False, True)
+    T_w_lf = RpToTrans(quat_to_rot(np.array(lf_state[1])),
+                       np.array(lf_state[0]))
+    T_w_base = RpToTrans(quat_to_rot(sensor_data['base_quat']),
+                         sensor_data['base_pos'])
+    T_base_lf = np.dot(TransInv(T_w_base), T_w_lf)
+    gt_lf_joints = np.array([
+        sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['left_foot']
+    ])
+    guess_lf_joints = np.array([
+        nominal_sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['left_foot']
+    ])
+    sol_lf_joints, done = IKinBody(joint_screws_in_ee_at_home['left_foot'],
+                                   ee_conf_at_home['left_foot'], T_base_lf,
+                                   guess_lf_joints)
+
+    left_foot_SE3_from_ik = FKinBody(ee_conf_at_home['left_foot'],
+                                     joint_screws_in_ee_at_home['left_foot'],
+                                     sol_lf_joints)
+    if not done:
+        print("ik fail")
+        __import__('ipdb').set_trace()
+
+    if not (np.isclose(left_foot_SE3_from_ik, T_base_lf, rtol=0.,
+                       atol=1.e-2)).all():
+        print("--" * 40)
+        print((np.isclose(left_foot_SE3_from_ik,
+                          T_base_lf,
+                          rtol=0.,
+                          atol=1.e-2)))
+        print("left foot SE3 error")
+        print(T_base_lf - left_foot_SE3_from_ik)
+        __import__('ipdb').set_trace()
+    else:
+        print("left foot ik SE3 pass")
+
+    if not (np.isclose(gt_lf_joints, sol_lf_joints, rtol=0.,
+                       atol=5.e-2)).all():
+        print("--" * 40)
+        print((np.isclose(gt_lf_joints, sol_lf_joints)))
+        print("left foot joint error")
+        print(gt_lf_joints - sol_lf_joints)
+        __import__('ipdb').set_trace()
+    else:
+        print("left foot ik joint pass")
+
+    rf_state = p.getLinkState(robot, link_id['r_sole'], False, True)
+    T_w_rf = RpToTrans(quat_to_rot(np.array(rf_state[1])),
+                       np.array(rf_state[0]))
+    T_base_rf = np.dot(TransInv(T_w_base), T_w_rf)
+    tf_rf_joints = np.array([
+        sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['right_foot']
+    ])
+    guess_rf_joints = np.array([
+        nominal_sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['right_foot']
+    ])
+    sol_rf_joints, done = IKinBody(joint_screws_in_ee_at_home['right_foot'],
+                                   ee_conf_at_home['right_foot'], T_base_rf,
+                                   guess_rf_joints)
+
+    right_foot_SE3_from_ik = FKinBody(ee_conf_at_home['right_foot'],
+                                      joint_screws_in_ee_at_home['right_foot'],
+                                      sol_rf_joints)
+    if not done:
+        print("ik fail")
+        __import__('ipdb').set_trace()
+
+    if not (np.isclose(right_foot_SE3_from_ik, T_base_rf, rtol=0.,
+                       atol=1.e-2)).all():
+        print("--" * 40)
+        print((np.isclose(right_foot_SE3_from_ik,
+                          T_base_rf,
+                          rtol=0.,
+                          atol=1.e-2)))
+        print("right foot SE3 error")
+        print(T_base_rf - right_foot_SE3_from_ik)
+        __import__('ipdb').set_trace()
+    else:
+        print("right foot ik SE3 pass")
+
+    if not (np.isclose(tf_rf_joints, sol_rf_joints, rtol=0.,
+                       atol=5.e-2)).all():
+        print("--" * 40)
+        print((np.isclose(tf_rf_joints, sol_rf_joints)))
+        print("right foot joint error")
+        print(tf_rf_joints - sol_rf_joints)
+        __import__('ipdb').set_trace()
+    else:
+        print("right foot ik joint pass")
+
+
+def _fk_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data):
+    lfoot_joints = np.array([
+        sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['left_foot']
+    ])
+    left_foot_SE3 = FKinBody(ee_conf_at_home['left_foot'],
+                             joint_screws_in_ee_at_home['left_foot'],
+                             lfoot_joints)
+    T_w_base = RpToTrans(quat_to_rot(sensor_data['base_quat']),
+                         sensor_data['base_pos'])
+    my_fwd_kin = np.dot(T_w_base, left_foot_SE3)
+    l_sole_link_state = p.getLinkState(robot, link_id['l_sole'], False, True)
+    pb_fwd_kin = RpToTrans(quat_to_rot(np.array(l_sole_link_state[1])),
+                           np.array(l_sole_link_state[0]))
+
+    if not (np.isclose(my_fwd_kin, pb_fwd_kin, rtol=0., atol=1.e-5)).all():
+        print("--" * 40)
+        print((np.isclose(my_fwd_kin, pb_fwd_kin)))
+        print("left foot error")
+        print(my_fwd_kin - pb_fwd_kin)
+        __import__('ipdb').set_trace()
+    else:
+        print("Pass Left Foot")
+
+    rfoot_joints = np.array([
+        sensor_data['joint_pos'][j_name]
+        for j_name in open_chain_frames['right_foot']
+    ])
+    right_foot_SE3 = FKinBody(ee_conf_at_home['right_foot'],
+                              joint_screws_in_ee_at_home['right_foot'],
+                              rfoot_joints)
+    my_fwd_kin = np.dot(T_w_base, right_foot_SE3)
+    r_sole_link_state = p.getLinkState(robot, link_id['r_sole'], False, True)
+    pb_fwd_kin = RpToTrans(quat_to_rot(np.array(r_sole_link_state[1])),
+                           np.array(r_sole_link_state[0]))
+
+    if not (np.isclose(my_fwd_kin, pb_fwd_kin, rtol=0., atol=1.e-5)).all():
+        print("--" * 40)
+        print((np.isclose(my_fwd_kin, pb_fwd_kin)))
+        print("right foot error")
+        print(my_fwd_kin - pb_fwd_kin)
+    else:
+        print("Pass Right Foot")
+
 
 def set_joint_friction(robot, joint_id, max_force=0):
     p.setJointMotorControlArray(robot, [*joint_id.values()],
@@ -111,12 +263,12 @@ def get_sensor_data(robot, joint_id, link_id):
         sensor_data['joint_pos'][k] = js[0]
         sensor_data['joint_vel'][k] = js[1]
 
-    rf_info = p.getLinkState(robot, link_id["r_sole"])
+    rf_info = p.getLinkState(robot, link_id["r_sole"], False, True)
     rf_pos = rf_info[0]
-    lf_info = p.getLinkState(robot, link_id["l_sole"])
+    lf_info = p.getLinkState(robot, link_id["l_sole"], False, True)
     lf_pos = lf_info[0]
 
-    # util.pretty_print(sensor_data['joint_pos'])
+    # pretty_print(sensor_data['joint_pos'])
     # print('base_pos: ', sensor_data['base_pos'])
     # print('base_quat: ',sensor_data['base_quat'])
     # print('rf_pos: ', rf_pos)
@@ -141,8 +293,8 @@ if __name__ == "__main__":
                                  cameraYaw=120,
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
-    p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=KinSimConfig.DT,numSubSteps=1)
+    p.setGravity(0, 0, -9.81)
+    p.setPhysicsEngineParameter(fixedTimeStep=KinSimConfig.DT, numSubSteps=1)
     if KinSimConfig.VIDEO_RECORD:
         if not os.path.exists('video'):
             os.makedirs('video')
@@ -158,7 +310,30 @@ if __name__ == "__main__":
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+
+    # Robot Configuration
     nq, nv, na, joint_id, link_id = get_robot_config(robot)
+    joint_screws_in_ee_at_home, ee_conf_at_home = dict(), dict()
+    open_chain_frames, base_link, ee_link = dict(), dict(), dict()
+    base_link['left_foot'] = 'pelvis'
+    ee_link['left_foot'] = 'l_sole'
+    open_chain_frames['left_foot'] = [
+        'l_leg_hpz', 'l_leg_hpx', 'l_leg_hpy', 'l_leg_kny', 'l_leg_aky',
+        'l_leg_akx'
+    ]
+    base_link['right_foot'] = 'pelvis'
+    ee_link['right_foot'] = 'r_sole'
+    open_chain_frames['right_foot'] = [
+        'r_leg_hpz', 'r_leg_hpx', 'r_leg_hpy', 'r_leg_kny', 'r_leg_aky',
+        'r_leg_akx'
+    ]
+
+    for ee in ['left_foot', 'right_foot']:
+        joint_screws_in_ee_at_home[ee], ee_conf_at_home[
+            ee] = get_kinematics_config(robot, joint_id, link_id,
+                                        open_chain_frames[ee], base_link[ee],
+                                        ee_link[ee])
+    ## TEST
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -175,6 +350,11 @@ if __name__ == "__main__":
     t = 0
     dt = KinSimConfig.DT
     count = 0
+
+    nominal_sensor_data = get_sensor_data(robot, joint_id, link_id)
+    base_pos = np.copy(nominal_sensor_data['base_pos'])
+    base_quat = np.copy(nominal_sensor_data['base_quat'])
+    joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
     while (1):
 
         # Get SensorData
@@ -182,6 +362,8 @@ if __name__ == "__main__":
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
+
+        # Reset base_pos, base_quat, joint_pos here for visualization
         if is_key_triggered(keys, '8'):
             pass
         elif is_key_triggered(keys, '5'):
@@ -196,14 +378,26 @@ if __name__ == "__main__":
             pass
         elif is_key_triggered(keys, '9'):
             pass
-
-        # Solve Inverse Kinematics
-        sol_config = inv_kin(robot, sensor_data)
+        elif is_key_triggered(keys, '1'):
+            # Nominal Pos
+            print("Reset to Nominal Pos")
+            base_pos = np.copy(nominal_sensor_data['base_pos'])
+            base_quat = np.copy(nominal_sensor_data['base_quat'])
+            joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
 
         # Visualize config
-        set_config(robot, sol_config)
+        set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos)
 
-        p.stepSimulation()
+        # Forward Kinematics Sanity Check : To check this, comoment out set_config and comment in stepSimulation to make robot fall down
+        # _fk_sanity_check(robot, joint_id, link_id, open_chain_frames,
+        # sensor_data)
+
+        # Inverse Kinemtaics Sanity Check : To check this, comoment out set_config and comment in stepSimulation to make robot fall down
+        # _ik_sanity_check(robot, joint_id, link_id, open_chain_frames,
+        # sensor_data, nominal_sensor_data)
+
+        # Disable forward step
+        # p.stepSimulation()
 
         time.sleep(dt)
         t += dt
