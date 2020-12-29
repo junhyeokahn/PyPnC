@@ -1,27 +1,27 @@
 import pybullet as p
 import numpy as np
+import multiprocessing as mp
+from itertools import repeat
+from functools import partial
 
 from util.util import *
 from util.liegroup import *
 
 
-def get_kinematics_config(robot, joint_id, link_id, open_chain_frames,
+def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
                           base_link, ee_link):
-    joint_screws_in_ee = np.zeros((6, len(open_chain_frames)))
+    joint_screws_in_ee = np.zeros((6, len(open_chain_joints)))
     ee_link_state = p.getLinkState(robot, link_id[ee_link])
     if link_id[base_link] == -1:
         base_pos, base_quat = p.getBasePositionAndOrientation(robot)
     else:
         base_link_state = p.getLinkState(robot, link_id[base_link])
         base_pos, base_quat = base_link_state[0], base_link_state[1]
-    # print(base_pos)
-    # print(base_quat)
-    # exit()
     T_w_b = RpToTrans(quat_to_rot(np.array(base_quat)), np.array(base_pos))
     T_w_ee = RpToTrans(quat_to_rot(np.array(ee_link_state[1])),
                        np.array(ee_link_state[0]))
     T_b_ee = np.dot(TransInv(T_w_b), T_w_ee)
-    for i, joint_name in enumerate(open_chain_frames):
+    for i, joint_name in enumerate(open_chain_joints):
         joint_info = p.getJointInfo(robot, joint_id[joint_name])
         link_name = joint_info[12].decode("utf-8")
         joint_type = joint_info[2]
@@ -39,10 +39,7 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_frames,
         else:
             raise ValueError
         joint_screws_in_ee[:, i] = np.dot(Adj_ee_j, screw_at_joint)
-        # print(
-        # "joint name: {}, screw at joint: {}, T_j_ee: {}, screw at ee: {}".
-        # format(joint_name, screw_at_joint, T_j_ee, joint_screws_in_ee[:,
-        # i]))
+
     return joint_screws_in_ee, T_b_ee
 
 
@@ -77,6 +74,20 @@ def FKinBody(M, Blist, thetalist):
         T = np.dot(T, MatrixExp6(VecTose3(np.array(Blist)[:, i] \
                                           * thetalist[i])))
     return T
+
+
+def batch_fk(M, Blist, thetalistlist, num_cpu=4):
+
+    pool = mp.Pool(processes=num_cpu)
+
+    T_list = pool.starmap(FKinBody, zip(repeat(M), repeat(Blist),
+                                        thetalistlist))
+
+    pool.close()
+    pool.terminate()
+    pool.join()
+
+    return T_list
 
 
 def FKinSpace(M, Slist, thetalist):
@@ -172,6 +183,43 @@ def JacobianSpace(Slist, thetalist):
                                 * thetalist[i - 1])))
         Js[:, i] = np.dot(Adjoint(T), np.array(Slist)[:, i])
     return Js
+
+
+def batch_ik(Blist, M, Tlist, thetalist0, num_cpu=4, eomg=1.e-2, ev=1.e-4):
+    """Computes inverse kinematics in the body frame for an open chain robot
+    :param Blist: The joint screw axes in the end-effector frame when the
+                  manipulator is at the home position, in the format of a
+                  matrix with axes as the columns
+    :param M: The home configuration of the end-effector
+    :param Tlist: List of the desired end-effector configuration Tsd
+    :param thetalist0: An initial guess of joint angles that are close to
+                       satisfying Tsd
+    :param eomg: A small positive tolerance on the end-effector orientation
+                 error. The returned joint angles must give an end-effector
+                 orientation error less than eomg
+    :param ev: A small positive tolerance on the end-effector linear position
+               error. The returned joint angles must give an end-effector
+               position error less than ev
+    :return thetalist: Joint angles that achieve T within the specified
+                       tolerances,
+    :return success: A logical value where TRUE means that the function found
+                     a solution and FALSE means that it ran through the set
+                     number of maximum iterations without finding a solution
+                     within the tolerances eomg and ev.
+    """
+
+    pool = mp.Pool(processes=num_cpu)
+
+    sol_list, success_list = zip(*pool.starmap(
+        IKinBody,
+        zip(repeat(Blist), repeat(M), Tlist, repeat(thetalist0), repeat(eomg),
+            repeat(ev))))
+
+    pool.close()
+    pool.terminate()
+    pool.join()
+
+    return sol_list, success_list
 
 
 def IKinBody(Blist, M, T, thetalist0, eomg=1.e-2, ev=1.e-4):

@@ -76,7 +76,7 @@ def inv_kin(robot, sensor_data):
     pass
 
 
-def _ik_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data,
+def _ik_sanity_check(robot, joint_id, link_id, open_chain_joints, sensor_data,
                      nominal_sensor_data):
     lf_state = p.getLinkState(robot, link_id['l_sole'], False, True)
     T_w_lf = RpToTrans(quat_to_rot(np.array(lf_state[1])),
@@ -86,17 +86,17 @@ def _ik_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data,
     T_base_lf = np.dot(TransInv(T_w_base), T_w_lf)
     gt_lf_joints = np.array([
         sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['left_foot']
+        for j_name in open_chain_joints['left_foot']
     ])
     guess_lf_joints = np.array([
         nominal_sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['left_foot']
+        for j_name in open_chain_joints['left_foot']
     ])
     sol_lf_joints, done = IKinBody(joint_screws_in_ee_at_home['left_foot'],
-                                   ee_conf_at_home['left_foot'], T_base_lf,
+                                   ee_SE3_at_home['left_foot'], T_base_lf,
                                    guess_lf_joints)
 
-    left_foot_SE3_from_ik = FKinBody(ee_conf_at_home['left_foot'],
+    left_foot_SE3_from_ik = FKinBody(ee_SE3_at_home['left_foot'],
                                      joint_screws_in_ee_at_home['left_foot'],
                                      sol_lf_joints)
     if not done:
@@ -132,17 +132,17 @@ def _ik_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data,
     T_base_rf = np.dot(TransInv(T_w_base), T_w_rf)
     tf_rf_joints = np.array([
         sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['right_foot']
+        for j_name in open_chain_joints['right_foot']
     ])
     guess_rf_joints = np.array([
         nominal_sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['right_foot']
+        for j_name in open_chain_joints['right_foot']
     ])
     sol_rf_joints, done = IKinBody(joint_screws_in_ee_at_home['right_foot'],
-                                   ee_conf_at_home['right_foot'], T_base_rf,
+                                   ee_SE3_at_home['right_foot'], T_base_rf,
                                    guess_rf_joints)
 
-    right_foot_SE3_from_ik = FKinBody(ee_conf_at_home['right_foot'],
+    right_foot_SE3_from_ik = FKinBody(ee_SE3_at_home['right_foot'],
                                       joint_screws_in_ee_at_home['right_foot'],
                                       sol_rf_joints)
     if not done:
@@ -173,12 +173,12 @@ def _ik_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data,
         print("right foot ik joint pass")
 
 
-def _fk_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data):
+def _fk_sanity_check(robot, joint_id, link_id, open_chain_joints, sensor_data):
     lfoot_joints = np.array([
         sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['left_foot']
+        for j_name in open_chain_joints['left_foot']
     ])
-    left_foot_SE3 = FKinBody(ee_conf_at_home['left_foot'],
+    left_foot_SE3 = FKinBody(ee_SE3_at_home['left_foot'],
                              joint_screws_in_ee_at_home['left_foot'],
                              lfoot_joints)
     T_w_base = RpToTrans(quat_to_rot(sensor_data['base_quat']),
@@ -199,9 +199,9 @@ def _fk_sanity_check(robot, joint_id, link_id, open_chain_frames, sensor_data):
 
     rfoot_joints = np.array([
         sensor_data['joint_pos'][j_name]
-        for j_name in open_chain_frames['right_foot']
+        for j_name in open_chain_joints['right_foot']
     ])
-    right_foot_SE3 = FKinBody(ee_conf_at_home['right_foot'],
+    right_foot_SE3 = FKinBody(ee_SE3_at_home['right_foot'],
                               joint_screws_in_ee_at_home['right_foot'],
                               rfoot_joints)
     my_fwd_kin = np.dot(T_w_base, right_foot_SE3)
@@ -313,25 +313,25 @@ if __name__ == "__main__":
 
     # Robot Configuration
     nq, nv, na, joint_id, link_id = get_robot_config(robot)
-    joint_screws_in_ee_at_home, ee_conf_at_home = dict(), dict()
-    open_chain_frames, base_link, ee_link = dict(), dict(), dict()
+    joint_screws_in_ee_at_home, ee_SE3_at_home = dict(), dict()
+    open_chain_joints, base_link, ee_link = dict(), dict(), dict()
     base_link['left_foot'] = 'pelvis'
     ee_link['left_foot'] = 'l_sole'
-    open_chain_frames['left_foot'] = [
+    open_chain_joints['left_foot'] = [
         'l_leg_hpz', 'l_leg_hpx', 'l_leg_hpy', 'l_leg_kny', 'l_leg_aky',
         'l_leg_akx'
     ]
     base_link['right_foot'] = 'pelvis'
     ee_link['right_foot'] = 'r_sole'
-    open_chain_frames['right_foot'] = [
+    open_chain_joints['right_foot'] = [
         'r_leg_hpz', 'r_leg_hpx', 'r_leg_hpy', 'r_leg_kny', 'r_leg_aky',
         'r_leg_akx'
     ]
 
     for ee in ['left_foot', 'right_foot']:
-        joint_screws_in_ee_at_home[ee], ee_conf_at_home[
+        joint_screws_in_ee_at_home[ee], ee_SE3_at_home[
             ee] = get_kinematics_config(robot, joint_id, link_id,
-                                        open_chain_frames[ee], base_link[ee],
+                                        open_chain_joints[ee], base_link[ee],
                                         ee_link[ee])
     ## TEST
 
@@ -377,10 +377,80 @@ if __name__ == "__main__":
         elif is_key_triggered(keys, '7'):
             pass
         elif is_key_triggered(keys, '9'):
-            pass
+            print("Pressed 9: Testing Batch IK and Batch FK")
+            # Testing batch_ik
+            l_sole_state = p.getLinkState(robot, link_id['l_sole'], False,
+                                          True)
+            sol_guess = np.array([
+                sensor_data['joint_pos'][j_name]
+                for j_name in open_chain_joints['left_foot']
+            ])
+            N = 1000
+            l_sole_SE3_list = [
+                RpToTrans(
+                    quat_to_rot(np.array(l_sole_state[1])),
+                    np.random.normal(np.array(l_sole_state[0]),
+                                     np.array([0.05, 0.02, 0.])) -
+                    sensor_data['base_pos']) for i in range(N)
+            ]
+            t0 = time.time()
+            sol_list, success_list = batch_ik(
+                joint_screws_in_ee_at_home['left_foot'],
+                ee_SE3_at_home['left_foot'], l_sole_SE3_list, sol_guess)
+            t1 = time.time()
+            print("batck ik takes {}".format(t1 - t0))
+            sol_list2, success_list2 = [], []
+            t0 = time.time()
+            for des_SE3 in l_sole_SE3_list:
+                _sol, _suc = IKinBody(joint_screws_in_ee_at_home['left_foot'],
+                                      ee_SE3_at_home['left_foot'], des_SE3,
+                                      sol_guess)
+                sol_list2.append(_sol)
+                success_list2.append(_suc)
+            t1 = time.time()
+            print("single ik takes {}".format(t1 - t0))
+            t0 = time.time()
+            T_list = batch_fk(ee_SE3_at_home['left_foot'],
+                              joint_screws_in_ee_at_home['left_foot'],
+                              sol_list)
+            t1 = time.time()
+            print("batch fk takes {}".format(t1 - t0))
+            T_list2 = []
+            t0 = time.time()
+            for q in sol_list2:
+                _T = FKinBody(ee_SE3_at_home['left_foot'],
+                              joint_screws_in_ee_at_home['left_foot'], q)
+                T_list2.append(_T)
+            t1 = time.time()
+            print("single fk takes {}".format(t1 - t0))
+            for i in range(N):
+                if np.isclose(sol_list[i], sol_list2[i], rtol=0.,
+                              atol=1.e-5).all():
+                    pass
+                else:
+                    print("Batch IK is wrong")
+                    __import__('ipdb').set_trace()
+
+                if np.isclose(T_list2[i], T_list[i], rtol=0.,
+                              atol=1.e-5).all():
+                    pass
+                else:
+                    print("Batch FK is wrong")
+                    __import__('ipdb').set_trace()
+
+                if np.isclose(T_list[i],
+                              l_sole_SE3_list[i],
+                              rtol=0.,
+                              atol=1.e-2).all():
+                    pass
+                else:
+                    print("IK FK is not matched")
+                    __import__('ipdb').set_trace()
+            print("Batch FK Test and IK Test Passed")
+
         elif is_key_triggered(keys, '1'):
             # Nominal Pos
-            print("Reset to Nominal Pos")
+            print("Pressed 1: Reset to Nominal Pos")
             base_pos = np.copy(nominal_sensor_data['base_pos'])
             base_quat = np.copy(nominal_sensor_data['base_quat'])
             joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
@@ -389,11 +459,11 @@ if __name__ == "__main__":
         set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos)
 
         # Forward Kinematics Sanity Check : To check this, comoment out set_config and comment in stepSimulation to make robot fall down
-        # _fk_sanity_check(robot, joint_id, link_id, open_chain_frames,
+        # _fk_sanity_check(robot, joint_id, link_id, open_chain_joints,
         # sensor_data)
 
         # Inverse Kinemtaics Sanity Check : To check this, comoment out set_config and comment in stepSimulation to make robot fall down
-        # _ik_sanity_check(robot, joint_id, link_id, open_chain_frames,
+        # _ik_sanity_check(robot, joint_id, link_id, open_chain_joints,
         # sensor_data, nominal_sensor_data)
 
         # Disable forward step
