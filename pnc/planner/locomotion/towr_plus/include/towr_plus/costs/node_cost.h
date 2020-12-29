@@ -56,7 +56,8 @@ public:
    * @param deriv     The node derivative (pos, vel) which should be penalized.
    * @param dim       The node dimension which should be penalized.
    */
-  NodeCost(const std::string &nodes_id, Dx deriv, int dim, double weight);
+  NodeCost(const std::string &nodes_id, Dx deriv, int dim, double weight,
+           double des_val = 0.);
   virtual ~NodeCost() = default;
 
   void InitVariableDependedQuantities(const VariablesPtr &x) override;
@@ -70,6 +71,7 @@ private:
   Dx deriv_;
   int dim_;
   double weight_;
+  double des_val_;
 
   void FillJacobianBlock(std::string var_set, Jacobian &) const override;
 };

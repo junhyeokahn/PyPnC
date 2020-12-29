@@ -1,0 +1,60 @@
+**Code Structure**
+
+===============================================================================
+Class Tree
+===============================================================================
+
+ifopt::VariableSet
+    - NodesVariables
+        - NodesVariablesAll
+        - NodesVariablesPhaseBased
+            - NodesVariablesEEMotion
+            - NodesVariablesEEForce
+    - PhaseDurations
+
+ifopt::ConstraintSet
+    - TimeDiscretizationConstraint
+        - DynamicConstraint
+        - RangeOfMotionConstraint
+        - BaseMotionConstraint
+    - TotalDurationConstraint
+    - TerrainConstraint
+    - ForceConstraint
+    - SwingConstraint
+    - SplineAccConstraint
+
+ifopt::CostTerm
+    - NodeCost
+
+
+Spline
+    - NodeSpline
+        - PhaseSpline
+
+DynamicModel
+    - SingleRigidBodyDynamics
+        - BipedDynamicModel
+
+===============================================================================
+NLP formulation
+===============================================================================
+
+DynamicModel / Locomotion Task / Parameter
+
+Make Base & EE & Frc variables / Make Constraints / Make Cost
+
+===============================================================================
+Dynamic Constraint
+===============================================================================
+
+Update Model / Constraint Value / Bounds / Jacobian
+
+===============================================================================
+DynamicModel - SingleRigidBodyDynamics
+===============================================================================
+
+SetCurrent
+
+GetDynamicViolation / Jac wrt BaseLin / wrt BaseAng / wrt EEPos
+
+

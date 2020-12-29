@@ -38,13 +38,14 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 namespace towr_plus {
 
 NodeCost::NodeCost(const std::string &nodes_id, Dx deriv, int dim,
-                   double weight)
+                   double weight, double des_val)
     : CostTerm(nodes_id + "-dx_" + std::to_string(deriv) + "-dim_" +
                std::to_string(dim)) {
   node_id_ = nodes_id;
   deriv_ = deriv;
   dim_ = dim;
   weight_ = weight;
+  des_val_ = des_val;
 }
 
 void NodeCost::InitVariableDependedQuantities(const VariablesPtr &x) {
@@ -55,7 +56,7 @@ double NodeCost::GetCost() const {
   double cost;
   for (auto n : nodes_->GetNodes()) {
     double val = n.at(deriv_)(dim_);
-    cost += weight_ * std::pow(val, 2);
+    cost += weight_ * std::pow(des_val_ - val, 2);
   }
 
   return cost;
@@ -67,7 +68,7 @@ void NodeCost::FillJacobianBlock(std::string var_set, Jacobian &jac) const {
       for (auto nvi : nodes_->GetNodeValuesInfo(i))
         if (nvi.deriv_ == deriv_ && nvi.dim_ == dim_) {
           double val = nodes_->GetNodes().at(nvi.id_).at(deriv_)(dim_);
-          jac.coeffRef(0, i) += weight_ * 2.0 * val;
+          jac.coeffRef(0, i) += weight_ * 2.0 * (val - des_val_);
         }
   }
 }
