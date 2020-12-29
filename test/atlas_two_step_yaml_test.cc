@@ -44,7 +44,7 @@ int main() {
 
   Eigen::VectorXd vars = nlp.GetVariableValues();
   sol.from_one_hot_vector(vars);
-  sol.print_solution();
+  // sol.print_solution();
   sol.to_yaml();
 
   return 0;

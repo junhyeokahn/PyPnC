@@ -43,9 +43,6 @@ void LocomotionTask::from_yaml(const YAML::Node &node) {
   }
 }
 
-// void LocomotionTask::from_one_hot_vector(const Eigen::VectorXd &one_hot_vec)
-// {}
-
 void LocomotionTask::print_info() {
   std::cout << "Locomotion Task for " << name_ << std::endl;
 }
