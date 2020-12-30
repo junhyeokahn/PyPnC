@@ -57,7 +57,7 @@ NlpFormulation::NlpFormulation() {
   cout << "\n";
   cout << "************************************************************\n";
   cout << "                           TOWR+ \n";
-  cout << "                 \u00a9 Junhyeok Ahn \n";
+  cout << "                       \u00a9 Junhyeok Ahn \n";
   cout << "************************************************************";
   cout << "\n\n";
 }
