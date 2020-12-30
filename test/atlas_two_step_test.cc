@@ -22,8 +22,8 @@ int main() {
   double nominal_height = 0.766;
   formulation.initial_base_.lin.at(kPos).z() = nominal_height;
   Eigen::Vector3d lfoot, rfoot;
-  lfoot << 0.003, -0.111, 0;
-  rfoot << 0.003, 0.111, 0;
+  lfoot << 0.003, 0.111, 0;
+  rfoot << 0.003, -0.111, 0;
   formulation.initial_ee_W_.resize(2);
   formulation.initial_ee_W_.at(L) = lfoot;
   formulation.initial_ee_W_.at(R) = rfoot;

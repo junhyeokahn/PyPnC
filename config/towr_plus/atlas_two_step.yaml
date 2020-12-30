@@ -5,8 +5,8 @@ locomotion_task:
 
     # Left Foot: 0, Right Foot: 1
     initial_ee_motion_lin:
-        0: [0.003, -0.111, 0.]
-        1: [0.003, 0.111, 0.]
+        0: [0.003, 0.111, 0.]
+        1: [0.003, -0.111, 0.]
     initial_ee_motion_ang:
         0: [0., 0., 0.]
         1: [0., 0., 0.]
