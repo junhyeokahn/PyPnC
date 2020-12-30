@@ -70,7 +70,7 @@ int main() {
   // However, it's more convenient to access the splines constructed from
   // these variables and query their values at specific times:
   using namespace std;
-  cout.precision(2);
+  cout.precision(4);
   nlp.PrintCurrent(); // view variable-set, constraint violations,
                       // indices,...
 

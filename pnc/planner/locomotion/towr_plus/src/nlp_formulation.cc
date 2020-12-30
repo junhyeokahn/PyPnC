@@ -56,8 +56,8 @@ NlpFormulation::NlpFormulation() {
   using namespace std;
   cout << "\n";
   cout << "************************************************************\n";
-  cout << " TOWR+ - Trajectory Optimization for Walking Robots (v1.4)\n";
-  cout << "                \u00a9 Junhyeok Ahn \n";
+  cout << "                           TOWR+ \n";
+  cout << "                 \u00a9 Junhyeok Ahn \n";
   cout << "************************************************************";
   cout << "\n\n";
 }
@@ -419,13 +419,17 @@ NlpFormulation::MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const {
 NlpFormulation::CostPtrVec
 NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
+  double m = model_.dynamic_model_->m();
+  double g = model_.dynamic_model_->g();
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
     // X, Y, Z
     for (int i = 0; i < 3; ++i) {
       if (dx == Dx::kPos) {
+        // if (i != 2) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
-                                                  i, weight(i), 0.));
+                                                  i, weight(i) / (m * g), 0.));
+        //}
       } else if (dx == Dx::kVel) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
                                                   i, weight(i), 0.));
@@ -440,13 +444,15 @@ NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
 NlpFormulation::CostPtrVec
 NlpFormulation::MakeWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
+  double m = model_.dynamic_model_->m();
+  double g = model_.dynamic_model_->g();
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
     // X, Y, Z
     for (int i = 0; i < 3; ++i) {
       if (dx == Dx::kPos) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchAngNodes(ee), dx,
-                                                  i, weight(i), 0.));
+                                                  i, weight(i) / (m * g), 0.));
       } else if (dx == Dx::kVel) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchAngNodes(ee), dx,
                                                   i, weight(i), 0.));

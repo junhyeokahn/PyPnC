@@ -92,8 +92,8 @@ Parameters::Parameters() {
   costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
   costs_.push_back({IntermediateBaseLinVelCost, w_IntermediateBaseLinVelCost});
   costs_.push_back({IntermediateBaseAngVelCost, w_IntermediateBaseLinVelCost});
-  costs_.push_back({BaseLinVelDiffCost, w_BaseLinVelDiffCost});
-  costs_.push_back({BaseAngVelDiffCost, w_BaseAngVelDiffCost});
+  // costs_.push_back({BaseLinVelDiffCost, w_BaseLinVelDiffCost});
+  // costs_.push_back({BaseAngVelDiffCost, w_BaseAngVelDiffCost});
   // costs_.push_back({WrenchLinPosCost, w_WrenchLinPosCost});
   // costs_.push_back({WrenchLinVelCost, w_WrenchLinVelCost});
   // costs_.push_back({WrenchLinVelDiffCost, w_WrenchLinVelDiffCost});
