@@ -24,6 +24,9 @@ add_library(towr_plus SHARED
   src/linear_constraint.cc
   # costs
   src/node_cost.cc
+  src/node_difference_cost.cc
+  src/final_node_cost.cc
+  src/intermediate_node_cost.cc
   src/soft_constraint.cc
   # initialization
   src/gait_generator.cc

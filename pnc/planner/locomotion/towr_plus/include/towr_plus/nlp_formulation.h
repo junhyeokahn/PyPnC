@@ -132,9 +132,16 @@ private:
   ContraintPtrVec MakeBaseAccConstraint(const SplineHolder &s) const;
 
   // costs
-  CostPtrVec GetCost(const Parameters::CostName &id, double weight) const;
-  CostPtrVec MakeForcesCost(double weight) const;
-  CostPtrVec MakeEEMotionCost(double weight) const;
+  CostPtrVec GetCost(const Parameters::CostName &id,
+                     const Eigen::VectorXd weight) const;
+  CostPtrVec MakeFinalBaseLinCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeFinalBaseAngCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeIntermediateBaseLinCost(Dx dx,
+                                         const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeIntermediateBaseAngCost(Dx dx,
+                                         const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeAllWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeAllWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const;
 };
 
 } /* namespace towr_plus */

@@ -42,6 +42,8 @@ int main() {
   solver->SetOption("max_cpu_time", 500.0);
   solver->Solve(nlp);
 
+  nlp.PrintCurrent();
+
   Eigen::VectorXd vars = nlp.GetVariableValues();
   sol.from_one_hot_vector(vars);
   // sol.print_solution();

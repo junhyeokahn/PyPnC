@@ -158,11 +158,19 @@ public:
    *  problem.
    */
   enum CostName {
-    ForcesCostID,  ///< sets NodeCost on force nodes
-    EEMotionCostID ///< sets NodeCost on endeffector velocity
+    FinalBaseLinPosCost,
+    FinalBaseLinVelCost,
+    FinalBaseAngPosCost,
+    FinalBaseAngVelCost,
+    IntermediateBaseLinVelCost,
+    IntermediateBaseAngVelCost,
+    AllWrenchLinPosCost,
+    AllWrenchLinVelCost,
+    AllWrenchAngPosCost,
+    AllWrenchAngVelCost,
   };
 
-  using CostWeights = std::vector<std::pair<CostName, double>>;
+  using CostWeights = std::vector<std::pair<CostName, Eigen::VectorXd>>;
   using UsedConstraints = std::vector<ConstraintName>;
   using VecTimes = std::vector<double>;
   using EEID = unsigned int;
@@ -239,6 +247,21 @@ public:
 
   /// Set robot specific parameters from yaml.
   void from_yaml(const YAML::Node &node);
+
+  Eigen::VectorXd w_FinalBaseLinPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalBaseLinVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalBaseLinAccCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalBaseAngPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalBaseAngVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalBaseAngAccCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_IntermediateBaseLinVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_IntermediateBaseAngVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_IntermediateBaseLinAccCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_IntermediateBaseAngAccCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_AllWrenchLinPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_AllWrenchAngPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_AllWrenchLinVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_AllWrenchAngVelCost = Eigen::VectorXd::Zero(3);
 };
 
 } // namespace towr_plus

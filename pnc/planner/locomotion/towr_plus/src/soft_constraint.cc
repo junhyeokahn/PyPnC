@@ -35,17 +35,16 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-SoftConstraint::SoftConstraint (const ConstraintPtr& constraint)
-    :Component(1, "soft-" + constraint->GetName())
-{
+SoftConstraint::SoftConstraint(const ConstraintPtr &constraint)
+    : Component(1, "soft-" + constraint->GetName()) {
   constraint_ = constraint;
   int n_constraints = constraint_->GetRows();
 
   // average value of each upper and lower bound
   b_ = VectorXd(n_constraints);
-  int i=0;
+  int i = 0;
   for (auto b : constraint_->GetBounds()) {
-    b_(i++) = (b.upper_ + b.lower_)/2.;
+    b_(i++) = (b.upper_ + b.lower_) / 2.;
   }
 
   // treat all constraints equally by default
@@ -53,20 +52,16 @@ SoftConstraint::SoftConstraint (const ConstraintPtr& constraint)
   W_.setOnes();
 }
 
-SoftConstraint::VectorXd
-SoftConstraint::GetValues () const
-{
+SoftConstraint::VectorXd SoftConstraint::GetValues() const {
   VectorXd g = constraint_->GetValues();
-  VectorXd cost = 0.5*(g-b_).transpose()*W_.asDiagonal()*(g-b_);
+  VectorXd cost = 0.5 * (g - b_).transpose() * W_.asDiagonal() * (g - b_);
   return cost;
 }
 
-SoftConstraint::Jacobian
-SoftConstraint::GetJacobian () const
-{
-  VectorXd g   = constraint_->GetValues();
+SoftConstraint::Jacobian SoftConstraint::GetJacobian() const {
+  VectorXd g = constraint_->GetValues();
   Jacobian jac = constraint_->GetJacobian();
-  VectorXd grad = jac.transpose()*W_.asDiagonal()*(g-b_);
+  VectorXd grad = jac.transpose() * W_.asDiagonal() * (g - b_);
   return grad.transpose().sparseView();
 }
 

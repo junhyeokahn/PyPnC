@@ -34,3 +34,14 @@ locomotion_param:
         0: True
         1: True
 
+    costs:
+        w_FinalBaseLinPosCost: [3., 3., 3.]
+        w_FinalBaseLinVelCost: [1., 1., 1.]
+        w_FinalBaseAngPosCost: [3., 3., 3.]
+        w_FinalBaseAngVelCost: [1., 1., 1.]
+        w_IntermediateBaseLinVelCost: [0.1, 0.1, 0.1]
+        w_IntermediateBaseAngVelCost: [0.1, 0.1, 0.1]
+        w_AllWrenchLinPosCost: [0.01, 0.01, 0.01]
+        w_AllWrenchAngPosCost: [0.01, 0.01, 0.01]
+        w_AllWrenchLinVelCost: [0.01, 0.01, 0.01]
+        w_AllWrenchAngVelCost: [0.01, 0.01, 0.01]

@@ -44,46 +44,65 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 namespace towr_plus {
 
 Parameters::Parameters() {
-  // constructs optimization variables
+  // ===========================================================================
+  // Optimization Parameters
+  // ===========================================================================
   duration_base_polynomial_ = 0.1;
   force_polynomials_per_stance_phase_ = 3;
   ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
 
-  // parameters related to specific constraints (only used when it is added as
-  // well)
   force_limit_in_normal_direction_ = 1000;
   dt_constraint_range_of_motion_ = 0.08;
   dt_constraint_dynamic_ = 0.1;
-  dt_constraint_base_motion_ =
-      duration_base_polynomial_ / 4.; // only for base RoM constraint
-  bound_phase_duration_ = std::make_pair(
-      0.2, 2.0); // used only when optimizing phase durations, so gait
+  dt_constraint_base_motion_ = duration_base_polynomial_ / 4.;
+  bound_phase_duration_ = std::make_pair(0.2, 2.0);
 
-  // a minimal set of basic constraints
+  // ===========================================================================
+  // Constraints
+  // ===========================================================================
   constraints_.push_back(Terrain);
-  constraints_.push_back(Dynamic); // Ensures that the dynamic model is
-                                   // fullfilled at discrete times.
-  constraints_.push_back(
-      BaseAcc); // so accelerations don't jump between polynomials
-  constraints_.push_back(EndeffectorRom); // Ensures that the range of motion
-                                          // is respected at discrete times.
-  constraints_.push_back(
-      Force); // ensures unilateral forces and inside the friction cone.
-  constraints_.push_back(
-      Swing); // creates smoother swing motions, not absolutely required.
-  constraints_.push_back(
-      TotalTime); // add this here rather than include this occasionally.
+  constraints_.push_back(Dynamic);
+  constraints_.push_back(BaseAcc);
+  constraints_.push_back(EndeffectorRom);
+  constraints_.push_back(Force);
+  constraints_.push_back(Swing);
+  constraints_.push_back(TotalTime);
 
-  // optional costs to e.g penalize endeffector forces
-  // costs_.push_back(
-  //{ForcesCostID, 1.0}); // weighed by 1.0 relative to other costs
+  // ===========================================================================
+  // Costs
+  // ===========================================================================
+  w_FinalBaseLinPosCost << 3., 3., 3.;
+  w_FinalBaseLinVelCost << 1., 1., 1.;
+  w_FinalBaseAngPosCost << 3., 3., 3.;
+  w_FinalBaseAngVelCost << 1., 1., 1.;
+  w_IntermediateBaseLinVelCost << 0.1, 0.1, 0.1;
+  w_IntermediateBaseAngVelCost << 0.1, 0.1, 0.1;
+  w_AllWrenchLinPosCost << 0.01, 0.01, 0.01;
+  w_AllWrenchAngPosCost << 0.01, 0.01, 0.01;
+  w_AllWrenchLinVelCost << 0.01, 0.01, 0.01;
+  w_AllWrenchAngVelCost << 0.01, 0.01, 0.01;
 
-  // bounds on final 6DoF base state
-  // TODO(JH): Play with these and see if this is too restrictive
-  bounds_final_lin_pos_ = {X, Y};
-  bounds_final_lin_vel_ = {X, Y, Z};
-  bounds_final_ang_pos_ = {X, Y, Z};
-  bounds_final_ang_vel_ = {X, Y, Z};
+  costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
+  costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
+  costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
+  costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
+  // costs_.push_back({IntermediateBaseLinVelCost,
+  // w_IntermediateBaseLinVelCost});
+  // costs_.push_back({IntermediateBaseAngVelCost,
+  // w_IntermediateBaseLinVelCost});
+  // costs_.push_back({AllWrenchLinPosCost, w_AllWrenchLinPosCost});
+  // costs_.push_back({AllWrenchLinVelCost, w_AllWrenchLinVelCost});
+
+  // costs_.push_back({AllWrenchAngPosCost, w_AllWrenchAngPosCost});
+  // costs_.push_back({AllWrenchAngVelCost, w_AllWrenchAngVelCost});
+
+  // ===========================================================================
+  // Final Boundary Constarints
+  // ===========================================================================
+  // bounds_final_lin_pos_ = {X, Y};
+  // bounds_final_lin_vel_ = {X, Y, Z};
+  // bounds_final_ang_pos_ = {X, Y, Z};
+  // bounds_final_ang_vel_ = {X, Y, Z};
 
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
@@ -118,6 +137,27 @@ void Parameters::from_yaml(const YAML::Node &node) {
                     tmp_bool);
       ee_in_contact_at_start_.at(ee) = tmp_bool;
     }
+
+    readParameter(node["costs"], "w_FinalBaseLinPosCost",
+                  w_FinalBaseLinPosCost);
+    readParameter(node["costs"], "w_FinalBaseLinVelCost",
+                  w_FinalBaseLinVelCost);
+    readParameter(node["costs"], "w_FinalBaseAngPosCost",
+                  w_FinalBaseAngPosCost);
+    readParameter(node["costs"], "w_FinalBaseAngVelCost",
+                  w_FinalBaseAngVelCost);
+    readParameter(node["costs"], "w_IntermediateBaseLinVelCost",
+                  w_IntermediateBaseLinVelCost);
+    readParameter(node["costs"], "w_IntermediateBaseAngVelCost",
+                  w_IntermediateBaseAngVelCost);
+    readParameter(node["costs"], "w_AllWrenchLinPosCost",
+                  w_AllWrenchLinPosCost);
+    readParameter(node["costs"], "w_AllWrenchLinVelCost",
+                  w_AllWrenchLinVelCost);
+    readParameter(node["costs"], "w_AllWrenchAngPosCost",
+                  w_AllWrenchAngPosCost);
+    readParameter(node["costs"], "w_AllWrenchAngVelCost",
+                  w_AllWrenchAngVelCost);
 
   } catch (std::runtime_error &e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["

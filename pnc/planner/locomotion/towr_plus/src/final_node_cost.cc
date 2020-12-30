@@ -24,7 +24,7 @@ void FinalNodeCost::InitVariableDependedQuantities(const VariablesPtr &x) {
 }
 
 double FinalNodeCost::GetCost() const {
-  double cost;
+  double cost(0.);
   auto final_node = nodes_->GetNodes().at(nodes_->GetNodes().size() - 1);
   double val = final_node.at(deriv_)(dim_);
   cost = weight_ * std::pow(des_val_ - val, 2);

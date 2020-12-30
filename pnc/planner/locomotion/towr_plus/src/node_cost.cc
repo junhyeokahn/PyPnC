@@ -53,7 +53,7 @@ void NodeCost::InitVariableDependedQuantities(const VariablesPtr &x) {
 }
 
 double NodeCost::GetCost() const {
-  double cost;
+  double cost(0.);
   for (auto n : nodes_->GetNodes()) {
     double val = n.at(deriv_)(dim_);
     cost += weight_ * std::pow(des_val_ - val, 2);

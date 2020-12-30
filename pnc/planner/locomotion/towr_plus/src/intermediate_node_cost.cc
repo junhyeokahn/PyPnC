@@ -2,9 +2,10 @@
 Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
-#include <towr_plus/costs/intermediate_node_cost.h>
-
 #include <cmath>
+#include <iostream>
+
+#include <towr_plus/costs/intermediate_node_cost.h>
 
 namespace towr_plus {
 
@@ -26,7 +27,7 @@ void IntermediateNodeCost::InitVariableDependedQuantities(
 }
 
 double IntermediateNodeCost::GetCost() const {
-  double cost;
+  double cost(0.);
   // Iterate except for the final node
   for (int i = 0; i < nodes_->GetNodes().size() - 1; ++i) {
     auto n = nodes_->GetNodes().at(i);
@@ -39,13 +40,15 @@ double IntermediateNodeCost::GetCost() const {
 void IntermediateNodeCost::FillJacobianBlock(std::string var_set,
                                              Jacobian &jac) const {
   if (var_set == node_id_) {
-    for (int i = 0; i < nodes_->GetRows(); ++i)
-      for (auto nvi : nodes_->GetNodeValuesInfo(i))
-        if ((nvi.id_ != (nodes_->GetNodes().size() - 1)) &&
+    for (int i = 0; i < nodes_->GetRows(); ++i) {
+      for (auto nvi : nodes_->GetNodeValuesInfo(i)) {
+        if ((nvi.id_ < (nodes_->GetNodes().size() - 1)) &&
             nvi.deriv_ == deriv_ && nvi.dim_ == dim_) {
           double val = nodes_->GetNodes().at(nvi.id_).at(deriv_)(dim_);
           jac.coeffRef(0, i) += weight_ * 2.0 * (val - des_val_);
         }
+      }
+    }
   }
 }
 
