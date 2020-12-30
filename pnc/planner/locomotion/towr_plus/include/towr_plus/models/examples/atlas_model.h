@@ -13,10 +13,10 @@ public:
     const double y_nominal_b = 0.111;
     const double z_nominal_b = -0.765;
 
-    nominal_stance_.at(L) << x_nominal_b, -y_nominal_b, z_nominal_b;
-    nominal_stance_.at(R) << x_nominal_b, y_nominal_b, z_nominal_b;
+    nominal_stance_.at(L) << x_nominal_b, y_nominal_b, z_nominal_b;
+    nominal_stance_.at(R) << x_nominal_b, -y_nominal_b, z_nominal_b;
 
-    max_dev_from_nominal_ << 0.45, 0.25, 0.25;
+    max_dev_from_nominal_ << 0.4, 0.2, 0.2;
   }
 };
 

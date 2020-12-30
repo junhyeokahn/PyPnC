@@ -306,8 +306,9 @@ def main(args):
                                         edgecolors='b')
                 axes[i, 2 + ee].tick_params('y', colors='b')
                 axes[i, 2 + ee].spines['left'].set_color('b')
-                axes[i, 2 + ee].set_ylabel(xyz_label[i - 3])
-                axes[i, 2 + ee].yaxis.label.set_color('b')
+                if ee == 0:
+                    axes[i, 2 + ee].set_ylabel(xyz_label[i - 3])
+                    axes[i, 2 + ee].yaxis.label.set_color('b')
                 # Draw EE Lin Wrench
                 frc_ax = add_twinx(axes[i, 2 + ee], time,
                                    ee_wrench_lin[ee][:, i - 3], 'r', 3)
@@ -317,7 +318,9 @@ def main(args):
                                c='lightpink',
                                linewidths=2,
                                edgecolors='r')
-                frc_ax.set_ylabel(frc_label[i - 3])
+                if ee == 1:
+                    frc_ax.set_ylabel(frc_label[i - 3])
+                    frc_ax.tick_params('y', colors='r')
 
                 # Fill Phase
                 fill_phase(axes[i, 2 + ee], contact_schedule[ee],
