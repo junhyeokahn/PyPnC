@@ -251,6 +251,7 @@ public:
 
   /// Set robot specific parameters from yaml.
   void from_yaml(const YAML::Node &node);
+  void initialize();
 
   Eigen::VectorXd w_FinalBaseLinPosCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseLinVelCost = Eigen::VectorXd::Zero(3);

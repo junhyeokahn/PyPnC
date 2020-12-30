@@ -43,7 +43,8 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-Parameters::Parameters() {
+Parameters::Parameters() { initialize(); }
+void Parameters::initialize() {
   // ===========================================================================
   // Optimization Parameters
   // ===========================================================================
@@ -60,6 +61,7 @@ Parameters::Parameters() {
   // ===========================================================================
   // Constraints
   // ===========================================================================
+  constraints_.clear();
   constraints_.push_back(Terrain);
   constraints_.push_back(Dynamic);
   constraints_.push_back(BaseAcc);
@@ -71,9 +73,9 @@ Parameters::Parameters() {
   // ===========================================================================
   // Costs
   // ===========================================================================
-  w_FinalBaseLinPosCost << 3., 3., 3.;
+  w_FinalBaseLinPosCost << 1., 1., 1.;
   w_FinalBaseLinVelCost << 1., 1., 1.;
-  w_FinalBaseAngPosCost << 3., 3., 3.;
+  w_FinalBaseAngPosCost << 1., 1., 1.;
   w_FinalBaseAngVelCost << 1., 1., 1.;
   w_IntermediateBaseLinVelCost << 0.1, 0.1, 0.1;
   w_IntermediateBaseAngVelCost << 0.1, 0.1, 0.1;
@@ -86,12 +88,15 @@ Parameters::Parameters() {
   w_WrenchLinVelDiffCost << 0.01, 0.01, 0.01;
   w_WrenchAngVelDiffCost << 0.01, 0.01, 0.01;
 
+  costs_.clear();
   costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
   costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
   costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
   costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
-  costs_.push_back({IntermediateBaseLinVelCost, w_IntermediateBaseLinVelCost});
-  costs_.push_back({IntermediateBaseAngVelCost, w_IntermediateBaseLinVelCost});
+  // costs_.push_back({IntermediateBaseLinVelCost,
+  // w_IntermediateBaseLinVelCost});
+  // costs_.push_back({IntermediateBaseAngVelCost,
+  // w_IntermediateBaseLinVelCost});
   // costs_.push_back({BaseLinVelDiffCost, w_BaseLinVelDiffCost});
   // costs_.push_back({BaseAngVelDiffCost, w_BaseAngVelDiffCost});
   // costs_.push_back({WrenchLinPosCost, w_WrenchLinPosCost});
@@ -172,6 +177,8 @@ void Parameters::from_yaml(const YAML::Node &node) {
               << __FILE__ << "]" << std::endl
               << std::endl;
   }
+
+  initialize();
 }
 
 void Parameters::OptimizePhaseDurations() { constraints_.push_back(TotalTime); }

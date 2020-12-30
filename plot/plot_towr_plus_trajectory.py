@@ -9,11 +9,11 @@ import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 plt.rcParams.update({
     'axes.grid': True,
-    'axes.titlesize': 18,
-    'axes.labelsize': 16,
+    'axes.titlesize': 16,
+    'axes.labelsize': 14,
     'xtick.labelsize': 12,
     'ytick.labelsize': 12,
     'text.usetex': True

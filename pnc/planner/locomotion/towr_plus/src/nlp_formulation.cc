@@ -57,7 +57,7 @@ NlpFormulation::NlpFormulation() {
   cout << "\n";
   cout << "************************************************************\n";
   cout << "                           TOWR+ \n";
-  cout << "                       \u00a9 Junhyeok Ahn \n";
+  cout << "                  \u00a9 Junhyeok Ahn \n";
   cout << "************************************************************";
   cout << "\n\n";
 }
@@ -426,10 +426,8 @@ NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
     // X, Y, Z
     for (int i = 0; i < 3; ++i) {
       if (dx == Dx::kPos) {
-        // if (i != 2) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
                                                   i, weight(i) / (m * g), 0.));
-        //}
       } else if (dx == Dx::kVel) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
                                                   i, weight(i), 0.));

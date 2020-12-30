@@ -5,6 +5,7 @@ Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <towr_plus/costs/final_node_cost.h>
 
 #include <cmath>
+#include <iostream>
 
 namespace towr_plus {
 
