@@ -164,10 +164,14 @@ public:
     FinalBaseAngVelCost,
     IntermediateBaseLinVelCost,
     IntermediateBaseAngVelCost,
-    AllWrenchLinPosCost,
-    AllWrenchLinVelCost,
-    AllWrenchAngPosCost,
-    AllWrenchAngVelCost,
+    BaseLinVelDiffCost, // Min Jerk
+    BaseAngVelDiffCost, // Min Jerk
+    WrenchLinPosCost,
+    WrenchLinVelCost,
+    WrenchAngPosCost,
+    WrenchAngVelCost,
+    WrenchLinVelDiffCost, // Min Jerk
+    WrenchAngVelDiffCost  // Min Jerk
   };
 
   using CostWeights = std::vector<std::pair<CostName, Eigen::VectorXd>>;
@@ -250,18 +254,18 @@ public:
 
   Eigen::VectorXd w_FinalBaseLinPosCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseLinVelCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_FinalBaseLinAccCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseAngPosCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseAngVelCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_FinalBaseAngAccCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_IntermediateBaseLinVelCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_IntermediateBaseAngVelCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_IntermediateBaseLinAccCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_IntermediateBaseAngAccCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_AllWrenchLinPosCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_AllWrenchAngPosCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_AllWrenchLinVelCost = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd w_AllWrenchAngVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_BaseLinVelDiffCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_BaseAngVelDiffCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchLinPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchAngPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchLinVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchAngVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchLinVelDiffCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_WrenchAngVelDiffCost = Eigen::VectorXd::Zero(3);
 };
 
 } // namespace towr_plus

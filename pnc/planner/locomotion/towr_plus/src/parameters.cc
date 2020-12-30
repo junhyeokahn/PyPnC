@@ -77,24 +77,30 @@ Parameters::Parameters() {
   w_FinalBaseAngVelCost << 1., 1., 1.;
   w_IntermediateBaseLinVelCost << 0.1, 0.1, 0.1;
   w_IntermediateBaseAngVelCost << 0.1, 0.1, 0.1;
-  w_AllWrenchLinPosCost << 0.01, 0.01, 0.01;
-  w_AllWrenchAngPosCost << 0.01, 0.01, 0.01;
-  w_AllWrenchLinVelCost << 0.01, 0.01, 0.01;
-  w_AllWrenchAngVelCost << 0.01, 0.01, 0.01;
+  w_BaseLinVelDiffCost << 0.01, 0.01, 0.01;
+  w_BaseAngVelDiffCost << 0.01, 0.01, 0.01;
+  w_WrenchLinPosCost << 0.01, 0.01, 0.01;
+  w_WrenchLinVelCost << 0.01, 0.01, 0.01;
+  w_WrenchAngPosCost << 0.01, 0.01, 0.01;
+  w_WrenchAngVelCost << 0.01, 0.01, 0.01;
+  w_WrenchLinVelDiffCost << 0.01, 0.01, 0.01;
+  w_WrenchAngVelDiffCost << 0.01, 0.01, 0.01;
 
   costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
   costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
   costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
   costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
-  // costs_.push_back({IntermediateBaseLinVelCost,
-  // w_IntermediateBaseLinVelCost});
-  // costs_.push_back({IntermediateBaseAngVelCost,
-  // w_IntermediateBaseLinVelCost});
-  // costs_.push_back({AllWrenchLinPosCost, w_AllWrenchLinPosCost});
-  // costs_.push_back({AllWrenchLinVelCost, w_AllWrenchLinVelCost});
+  costs_.push_back({IntermediateBaseLinVelCost, w_IntermediateBaseLinVelCost});
+  costs_.push_back({IntermediateBaseAngVelCost, w_IntermediateBaseLinVelCost});
+  costs_.push_back({BaseLinVelDiffCost, w_BaseLinVelDiffCost});
+  costs_.push_back({BaseAngVelDiffCost, w_BaseAngVelDiffCost});
+  // costs_.push_back({WrenchLinPosCost, w_WrenchLinPosCost});
+  // costs_.push_back({WrenchLinVelCost, w_WrenchLinVelCost});
+  // costs_.push_back({WrenchLinVelDiffCost, w_WrenchLinVelDiffCost});
+  // costs_.push_back({WrenchAngVelDiffCost, w_WrenchAngVelDiffCost});
 
-  // costs_.push_back({AllWrenchAngPosCost, w_AllWrenchAngPosCost});
-  // costs_.push_back({AllWrenchAngVelCost, w_AllWrenchAngVelCost});
+  // costs_.push_back({WrenchAngPosCost, w_WrenchAngPosCost});
+  // costs_.push_back({WrenchAngVelCost, w_WrenchAngVelCost});
 
   // ===========================================================================
   // Final Boundary Constarints
@@ -150,14 +156,16 @@ void Parameters::from_yaml(const YAML::Node &node) {
                   w_IntermediateBaseLinVelCost);
     readParameter(node["costs"], "w_IntermediateBaseAngVelCost",
                   w_IntermediateBaseAngVelCost);
-    readParameter(node["costs"], "w_AllWrenchLinPosCost",
-                  w_AllWrenchLinPosCost);
-    readParameter(node["costs"], "w_AllWrenchLinVelCost",
-                  w_AllWrenchLinVelCost);
-    readParameter(node["costs"], "w_AllWrenchAngPosCost",
-                  w_AllWrenchAngPosCost);
-    readParameter(node["costs"], "w_AllWrenchAngVelCost",
-                  w_AllWrenchAngVelCost);
+    readParameter(node["costs"], "w_BaseLinVelDiffCost", w_BaseLinVelDiffCost);
+    readParameter(node["costs"], "w_BaseAngVelDiffCost", w_BaseAngVelDiffCost);
+    readParameter(node["costs"], "w_WrenchLinPosCost", w_WrenchLinPosCost);
+    readParameter(node["costs"], "w_WrenchLinVelCost", w_WrenchLinVelCost);
+    readParameter(node["costs"], "w_WrenchAngPosCost", w_WrenchAngPosCost);
+    readParameter(node["costs"], "w_WrenchAngVelCost", w_WrenchAngVelCost);
+    readParameter(node["costs"], "w_WrenchLinVelDiffCost",
+                  w_WrenchLinVelDiffCost);
+    readParameter(node["costs"], "w_WrenchAngVelDiffCost",
+                  w_WrenchAngVelDiffCost);
 
   } catch (std::runtime_error &e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["

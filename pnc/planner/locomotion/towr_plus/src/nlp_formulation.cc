@@ -42,6 +42,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <towr_plus/costs/final_node_cost.h>
 #include <towr_plus/costs/intermediate_node_cost.h>
 #include <towr_plus/costs/node_cost.h>
+#include <towr_plus/costs/node_difference_cost.h>
 #include <towr_plus/nlp_formulation.h>
 #include <towr_plus/variables/nodes_variables_all.h>
 #include <towr_plus/variables/phase_durations.h>
@@ -346,22 +347,77 @@ NlpFormulation::GetCost(const Parameters::CostName &name,
     return MakeIntermediateBaseLinCost(Dx::kVel, weight);
   case Parameters::IntermediateBaseAngVelCost:
     return MakeIntermediateBaseAngCost(Dx::kVel, weight);
-  case Parameters::AllWrenchLinPosCost:
-    return MakeAllWrenchLinCost(Dx::kPos, weight);
-  case Parameters::AllWrenchLinVelCost:
-    return MakeAllWrenchLinCost(Dx::kVel, weight);
-  case Parameters::AllWrenchAngPosCost:
-    return MakeAllWrenchAngCost(Dx::kPos, weight);
-  case Parameters::AllWrenchAngVelCost:
-    return MakeAllWrenchAngCost(Dx::kVel, weight);
+  case Parameters::BaseLinVelDiffCost:
+    return MakeBaseLinVelDiffCost(weight);
+  case Parameters::BaseAngVelDiffCost:
+    return MakeBaseAngVelDiffCost(weight);
+  case Parameters::WrenchLinPosCost:
+    return MakeWrenchLinCost(Dx::kPos, weight);
+  case Parameters::WrenchLinVelCost:
+    return MakeWrenchLinCost(Dx::kVel, weight);
+  case Parameters::WrenchAngPosCost:
+    return MakeWrenchAngCost(Dx::kPos, weight);
+  case Parameters::WrenchAngVelCost:
+    return MakeWrenchAngCost(Dx::kVel, weight);
+  case Parameters::WrenchLinVelDiffCost:
+    return MakeWrenchLinVelDiffCost(weight);
+  case Parameters::WrenchAngVelDiffCost:
+    return MakeWrenchAngVelDiffCost(weight);
   default:
     throw std::runtime_error("cost not defined!");
   }
 }
 
 NlpFormulation::CostPtrVec
-NlpFormulation::MakeAllWrenchLinCost(Dx dx,
-                                     const Eigen::VectorXd &weight) const {
+NlpFormulation::MakeBaseLinVelDiffCost(const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // X, Y, Z
+  for (int i = 0; i < 3; ++i) {
+    cost.push_back(std::make_shared<NodeDifferenceCost>(
+        id::base_lin_nodes, Dx::kVel, i, weight(i)));
+  }
+  return cost;
+}
+
+NlpFormulation::CostPtrVec
+NlpFormulation::MakeBaseAngVelDiffCost(const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // X, Y, Z
+  for (int i = 0; i < 3; ++i) {
+    cost.push_back(std::make_shared<NodeDifferenceCost>(
+        id::base_ang_nodes, Dx::kVel, i, weight(i)));
+  }
+  return cost;
+}
+
+NlpFormulation::CostPtrVec
+NlpFormulation::MakeWrenchLinVelDiffCost(const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // X, Y, Z
+  for (int ee = 0; ee < params_.GetEECount(); ++ee) {
+    for (int i = 0; i < 3; ++i) {
+      cost.push_back(std::make_shared<NodeDifferenceCost>(
+          id::EEWrenchLinNodes(ee), Dx::kVel, i, weight(i)));
+    }
+  }
+  return cost;
+}
+
+NlpFormulation::CostPtrVec
+NlpFormulation::MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // X, Y, Z
+  for (int ee = 0; ee < params_.GetEECount(); ++ee) {
+    for (int i = 0; i < 3; ++i) {
+      cost.push_back(std::make_shared<NodeDifferenceCost>(
+          id::EEWrenchAngNodes(ee), Dx::kVel, i, weight(i)));
+    }
+  }
+  return cost;
+}
+
+NlpFormulation::CostPtrVec
+NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
@@ -374,7 +430,7 @@ NlpFormulation::MakeAllWrenchLinCost(Dx dx,
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
                                                   i, weight(i), 0.));
       } else {
-        throw std::runtime_error("[MakeAllWrenchLinCost] Wrong dx type");
+        throw std::runtime_error("[MakeWrenchLinCost] Wrong dx type");
       }
     }
   }
@@ -382,8 +438,7 @@ NlpFormulation::MakeAllWrenchLinCost(Dx dx,
 }
 
 NlpFormulation::CostPtrVec
-NlpFormulation::MakeAllWrenchAngCost(Dx dx,
-                                     const Eigen::VectorXd &weight) const {
+NlpFormulation::MakeWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
@@ -396,7 +451,7 @@ NlpFormulation::MakeAllWrenchAngCost(Dx dx,
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchAngNodes(ee), dx,
                                                   i, weight(i), 0.));
       } else {
-        throw std::runtime_error("[MakeAllWrenchAngCost] Wrong dx type");
+        throw std::runtime_error("[MakeWrenchAngCost] Wrong dx type");
       }
     }
   }

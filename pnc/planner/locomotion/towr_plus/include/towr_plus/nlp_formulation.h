@@ -140,8 +140,12 @@ private:
                                          const Eigen::VectorXd &weight) const;
   CostPtrVec MakeIntermediateBaseAngCost(Dx dx,
                                          const Eigen::VectorXd &weight) const;
-  CostPtrVec MakeAllWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const;
-  CostPtrVec MakeAllWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeBaseLinVelDiffCost(const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeBaseAngVelDiffCost(const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeWrenchLinVelDiffCost(const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const;
 };
 
 } /* namespace towr_plus */
