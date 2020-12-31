@@ -51,14 +51,15 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <iostream>
 
 namespace towr_plus {
-
 NlpFormulation::NlpFormulation() {
   using namespace std;
   cout << "\n";
-  cout << "************************************************************\n";
-  cout << "                           TOWR+ \n";
-  cout << "                  \u00a9 Junhyeok Ahn \n";
-  cout << "************************************************************";
+  cout << "********************************************************************"
+          "**********\n";
+  cout << "                                    TOWR+ \n";
+  cout << "                               \u00a9 Junhyeok Ahn \n";
+  cout << "********************************************************************"
+          "**********";
   cout << "\n\n";
 }
 
@@ -343,6 +344,10 @@ NlpFormulation::GetCost(const Parameters::CostName &name,
     return MakeFinalBaseAngCost(Dx::kPos, weight);
   case Parameters::FinalBaseAngVelCost:
     return MakeFinalBaseAngCost(Dx::kVel, weight);
+  case Parameters::FinalEEMotionLinPosCost:
+    return MakeFinalEEMotionLinPosCost(weight);
+  case Parameters::FinalEEMotionAngPosCost:
+    return MakeFinalEEMotionAngPosCost(weight);
   case Parameters::IntermediateBaseLinVelCost:
     return MakeIntermediateBaseLinCost(Dx::kVel, weight);
   case Parameters::IntermediateBaseAngVelCost:
@@ -419,21 +424,21 @@ NlpFormulation::MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const {
 NlpFormulation::CostPtrVec
 NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  double m = model_.dynamic_model_->m();
-  double g = model_.dynamic_model_->g();
+  double mg = model_.dynamic_model_->m() * model_.dynamic_model_->g();
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
-    // X, Y, Z
-    for (int i = 0; i < 3; ++i) {
-      if (dx == Dx::kPos) {
-        cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
-                                                  i, weight(i) / (m * g), 0.));
-      } else if (dx == Dx::kVel) {
+    if (dx == Dx::kPos) {
+      for (int i = 0; i < 3; ++i) {
+        cost.push_back(std::make_shared<NodeCost>(
+            id::EEWrenchLinNodes(ee), dx, i, weight(i) / std::pow(mg, 2), 0.));
+      }
+    } else if (dx == Dx::kVel) {
+      for (int i = 0; i < 3; ++i) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchLinNodes(ee), dx,
                                                   i, weight(i), 0.));
-      } else {
-        throw std::runtime_error("[MakeWrenchLinCost] Wrong dx type");
       }
+    } else {
+      throw std::runtime_error("[MakeWrenchLinCost] Wrong dx type");
     }
   }
   return cost;
@@ -442,23 +447,59 @@ NlpFormulation::MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const {
 NlpFormulation::CostPtrVec
 NlpFormulation::MakeWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  double m = model_.dynamic_model_->m();
-  double g = model_.dynamic_model_->g();
+  double mg = model_.dynamic_model_->m() * model_.dynamic_model_->g();
   // For all endeffector
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
-    // X, Y, Z
-    for (int i = 0; i < 3; ++i) {
-      if (dx == Dx::kPos) {
-        cost.push_back(std::make_shared<NodeCost>(id::EEWrenchAngNodes(ee), dx,
-                                                  i, weight(i) / (m * g), 0.));
-      } else if (dx == Dx::kVel) {
+    if (dx == Dx::kPos) {
+      for (int i = 0; i < 3; ++i) {
+        cost.push_back(std::make_shared<NodeCost>(
+            id::EEWrenchAngNodes(ee), dx, i, weight(i) / std::pow(mg, 2), 0.));
+      }
+    } else if (dx == Dx::kVel) {
+      for (int i = 0; i < 3; ++i) {
         cost.push_back(std::make_shared<NodeCost>(id::EEWrenchAngNodes(ee), dx,
                                                   i, weight(i), 0.));
-      } else {
-        throw std::runtime_error("[MakeWrenchAngCost] Wrong dx type");
       }
+    } else {
+      throw std::runtime_error("[MakeWrenchAngCost] Wrong dx type");
     }
   }
+  return cost;
+}
+
+NlpFormulation::CostPtrVec NlpFormulation::MakeFinalEEMotionLinPosCost(
+    const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // For all endeffector
+  for (int ee = 0; ee < params_.GetEECount(); ++ee) {
+    double x = final_base_.lin.p().x() +
+               model_.kinematic_model_->GetNominalStanceInBase().at(ee)(0);
+    double y = final_base_.lin.p().y() +
+               model_.kinematic_model_->GetNominalStanceInBase().at(ee)(1);
+    double z = terrain_->GetHeight(x, y);
+    Eigen::Vector3d final_ee_motion_lin_pos(x, y, z);
+    for (int i = 0; i < 3; ++i) {
+      cost.push_back(std::make_shared<FinalNodeCost>(
+          id::EEMotionLinNodes(ee), kPos, i, weight(i),
+          final_ee_motion_lin_pos(i)));
+    }
+  }
+
+  return cost;
+}
+
+NlpFormulation::CostPtrVec NlpFormulation::MakeFinalEEMotionAngPosCost(
+    const Eigen::VectorXd &weight) const {
+  CostPtrVec cost;
+  // For all endeffector
+  for (int ee = 0; ee < params_.GetEECount(); ++ee) {
+    for (int i = 0; i < 3; ++i) {
+      cost.push_back(std::make_shared<FinalNodeCost>(id::EEMotionAngNodes(ee),
+                                                     kPos, i, weight(i),
+                                                     final_base_.ang.p()(i)));
+    }
+  }
+
   return cost;
 }
 
@@ -466,17 +507,23 @@ NlpFormulation::CostPtrVec
 NlpFormulation::MakeFinalBaseLinCost(Dx dx,
                                      const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  // X, Y, Z
-  for (int i = 0; i < 3; ++i) {
-    if (dx == Dx::kPos) {
+  if (dx == Dx::kPos) {
+    double x = final_base_.lin.p().x();
+    double y = final_base_.lin.p().y();
+    double z = terrain_->GetHeight(x, y) -
+               model_.kinematic_model_->GetNominalStanceInBase().front().z();
+    Eigen::Vector3d final_base_lin_pos(x, y, z);
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<FinalNodeCost>(
-          id::base_lin_nodes, dx, i, weight(i), final_base_.lin.p()(i)));
-    } else if (dx == Dx::kVel) {
+          id::base_lin_nodes, dx, i, weight(i), final_base_lin_pos(i)));
+    }
+  } else if (dx == Dx::kVel) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<FinalNodeCost>(
           id::base_lin_nodes, dx, i, weight(i), final_base_.lin.v()(i)));
-    } else {
-      throw std::runtime_error("[MakeFinalBaseLinCost] Wrong dx type");
     }
+  } else {
+    throw std::runtime_error("[MakeFinalBaseLinCost] Wrong dx type");
   }
 
   return cost;
@@ -485,18 +532,19 @@ NlpFormulation::MakeFinalBaseLinCost(Dx dx,
 NlpFormulation::CostPtrVec NlpFormulation::MakeIntermediateBaseLinCost(
     Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  // X, Y, Z
-  for (int i = 0; i < 3; ++i) {
-    if (dx == Dx::kPos) {
+  if (dx == Dx::kPos) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<IntermediateNodeCost>(
           id::base_lin_nodes, dx, i, weight(i),
           0.5 * (initial_base_.lin.p()(i) + final_base_.lin.p()(i))));
-    } else if (dx == Dx::kVel) {
+    }
+  } else if (dx == Dx::kVel) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<IntermediateNodeCost>(
           id::base_lin_nodes, dx, i, weight(i), 0.));
-    } else {
-      throw std::runtime_error("[MakeIntermediateBaseLinCost] Wrong dx type");
     }
+  } else {
+    throw std::runtime_error("[MakeIntermediateBaseLinCost] Wrong dx type");
   }
 
   return cost;
@@ -506,17 +554,18 @@ NlpFormulation::CostPtrVec
 NlpFormulation::MakeFinalBaseAngCost(Dx dx,
                                      const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  // X, Y, Z
-  for (int i = 0; i < 3; ++i) {
-    if (dx == Dx::kPos) {
+  if (dx == Dx::kPos) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<FinalNodeCost>(
           id::base_ang_nodes, dx, i, weight(i), final_base_.ang.p()(i)));
-    } else if (dx == Dx::kVel) {
+    }
+  } else if (dx == Dx::kVel) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<FinalNodeCost>(
           id::base_ang_nodes, dx, i, weight(i), final_base_.ang.v()(i)));
-    } else {
-      throw std::runtime_error("[MakeFinalBaseAngCost] Wrong dx type");
     }
+  } else {
+    throw std::runtime_error("[MakeFinalBaseAngCost] Wrong dx type");
   }
 
   return cost;
@@ -525,18 +574,19 @@ NlpFormulation::MakeFinalBaseAngCost(Dx dx,
 NlpFormulation::CostPtrVec NlpFormulation::MakeIntermediateBaseAngCost(
     Dx dx, const Eigen::VectorXd &weight) const {
   CostPtrVec cost;
-  // X, Y, Z
-  for (int i = 0; i < 3; ++i) {
-    if (dx == Dx::kPos) {
+  if (dx == Dx::kPos) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<IntermediateNodeCost>(
           id::base_ang_nodes, dx, i, weight(i),
           0.5 * (initial_base_.ang.p()(i) + final_base_.ang.p()(i))));
-    } else if (dx == Dx::kVel) {
+    }
+  } else if (dx == Dx::kVel) {
+    for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<IntermediateNodeCost>(
           id::base_ang_nodes, dx, i, weight(i), 0.));
-    } else {
-      throw std::runtime_error("[MakeIntermediateBaseAngCost] Wrong dx type");
     }
+  } else {
+    throw std::runtime_error("[MakeIntermediateBaseAngCost] Wrong dx type");
   }
 
   return cost;

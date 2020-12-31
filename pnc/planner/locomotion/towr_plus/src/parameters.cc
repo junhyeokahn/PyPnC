@@ -43,11 +43,8 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-Parameters::Parameters() { initialize(); }
-void Parameters::initialize() {
-  // ===========================================================================
-  // Optimization Parameters
-  // ===========================================================================
+Parameters::Parameters() {
+  // Default Values
   duration_base_polynomial_ = 0.1;
   force_polynomials_per_stance_phase_ = 3;
   ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
@@ -57,6 +54,27 @@ void Parameters::initialize() {
   dt_constraint_dynamic_ = 0.1;
   dt_constraint_base_motion_ = duration_base_polynomial_ / 4.;
   bound_phase_duration_ = std::make_pair(0.2, 2.0);
+
+  w_FinalBaseLinPosCost << 1., 1., 1.;
+  w_FinalBaseLinVelCost << 1., 1., 1.;
+  w_FinalBaseAngPosCost << 1., 1., 1.;
+  w_FinalBaseAngVelCost << 1., 1., 1.;
+  w_FinalEEMotionLinPosCost << 1., 1., 1.;
+  w_FinalEEMotionAngPosCost << 1., 1., 1.;
+  w_IntermediateBaseLinVelCost << 0.1, 0.1, 0.1;
+  w_IntermediateBaseAngVelCost << 0.1, 0.1, 0.1;
+  w_BaseLinVelDiffCost << 0.01, 0.01, 0.01;
+  w_BaseAngVelDiffCost << 0.01, 0.01, 0.01;
+  w_WrenchLinPosCost << 0.01, 0.01, 0.01;
+  w_WrenchLinVelCost << 0.01, 0.01, 0.01;
+  w_WrenchAngPosCost << 0.01, 0.01, 0.01;
+  w_WrenchAngVelCost << 0.01, 0.01, 0.01;
+  w_WrenchLinVelDiffCost << 0.01, 0.01, 0.01;
+  w_WrenchAngVelDiffCost << 0.01, 0.01, 0.01;
+
+  initialize();
+}
+void Parameters::initialize() {
 
   // ===========================================================================
   // Constraints
@@ -73,26 +91,14 @@ void Parameters::initialize() {
   // ===========================================================================
   // Costs
   // ===========================================================================
-  w_FinalBaseLinPosCost << 1., 1., 1.;
-  w_FinalBaseLinVelCost << 1., 1., 1.;
-  w_FinalBaseAngPosCost << 1., 1., 1.;
-  w_FinalBaseAngVelCost << 1., 1., 1.;
-  w_IntermediateBaseLinVelCost << 0.1, 0.1, 0.1;
-  w_IntermediateBaseAngVelCost << 0.1, 0.1, 0.1;
-  w_BaseLinVelDiffCost << 0.01, 0.01, 0.01;
-  w_BaseAngVelDiffCost << 0.01, 0.01, 0.01;
-  w_WrenchLinPosCost << 0.01, 0.01, 0.01;
-  w_WrenchLinVelCost << 0.01, 0.01, 0.01;
-  w_WrenchAngPosCost << 0.01, 0.01, 0.01;
-  w_WrenchAngVelCost << 0.01, 0.01, 0.01;
-  w_WrenchLinVelDiffCost << 0.01, 0.01, 0.01;
-  w_WrenchAngVelDiffCost << 0.01, 0.01, 0.01;
 
   costs_.clear();
   costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
   costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
   costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
   costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
+  costs_.push_back({FinalEEMotionLinPosCost, w_FinalEEMotionLinPosCost});
+  // costs_.push_back({FinalEEMotionAngPosCost, w_FinalEEMotionAngPosCost})
   // costs_.push_back({IntermediateBaseLinVelCost,
   // w_IntermediateBaseLinVelCost});
   // costs_.push_back({IntermediateBaseAngVelCost,
@@ -114,9 +120,6 @@ void Parameters::initialize() {
   // bounds_final_lin_vel_ = {X, Y, Z};
   // bounds_final_ang_pos_ = {X, Y, Z};
   // bounds_final_ang_vel_ = {X, Y, Z};
-
-  // additional restrictions are set directly on the variables in nlp_factory,
-  // such as e.g. initial and endeffector,...
 }
 
 void Parameters::from_yaml(const YAML::Node &node) {
@@ -157,6 +160,10 @@ void Parameters::from_yaml(const YAML::Node &node) {
                   w_FinalBaseAngPosCost);
     readParameter(node["costs"], "w_FinalBaseAngVelCost",
                   w_FinalBaseAngVelCost);
+    readParameter(node["costs"], "w_FinalEEMotionLinPosCost",
+                  w_FinalEEMotionLinPosCost);
+    readParameter(node["costs"], "w_FinalEEMotionAngPosCost",
+                  w_FinalEEMotionAngPosCost);
     readParameter(node["costs"], "w_IntermediateBaseLinVelCost",
                   w_IntermediateBaseLinVelCost);
     readParameter(node["costs"], "w_IntermediateBaseAngVelCost",

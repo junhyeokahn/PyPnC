@@ -136,14 +136,20 @@ private:
                      const Eigen::VectorXd weight) const;
   CostPtrVec MakeFinalBaseLinCost(Dx dx, const Eigen::VectorXd &weight) const;
   CostPtrVec MakeFinalBaseAngCost(Dx dx, const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeFinalEEMotionLinPosCost(const Eigen::VectorXd &weight) const;
+  CostPtrVec MakeFinalEEMotionAngPosCost(const Eigen::VectorXd &weight) const;
+
   CostPtrVec MakeIntermediateBaseLinCost(Dx dx,
                                          const Eigen::VectorXd &weight) const;
   CostPtrVec MakeIntermediateBaseAngCost(Dx dx,
                                          const Eigen::VectorXd &weight) const;
+
   CostPtrVec MakeBaseLinVelDiffCost(const Eigen::VectorXd &weight) const;
   CostPtrVec MakeBaseAngVelDiffCost(const Eigen::VectorXd &weight) const;
+
   CostPtrVec MakeWrenchLinCost(Dx dx, const Eigen::VectorXd &weight) const;
   CostPtrVec MakeWrenchAngCost(Dx dx, const Eigen::VectorXd &weight) const;
+
   CostPtrVec MakeWrenchLinVelDiffCost(const Eigen::VectorXd &weight) const;
   CostPtrVec MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const;
 };

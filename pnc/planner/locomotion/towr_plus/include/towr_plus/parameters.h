@@ -162,6 +162,8 @@ public:
     FinalBaseLinVelCost,
     FinalBaseAngPosCost,
     FinalBaseAngVelCost,
+    FinalEEMotionLinPosCost,
+    FinalEEMotionAngPosCost,
     IntermediateBaseLinVelCost,
     IntermediateBaseAngVelCost,
     BaseLinVelDiffCost, // Min Jerk
@@ -257,6 +259,8 @@ public:
   Eigen::VectorXd w_FinalBaseLinVelCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseAngPosCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_FinalBaseAngVelCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalEEMotionLinPosCost = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd w_FinalEEMotionAngPosCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_IntermediateBaseLinVelCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_IntermediateBaseAngVelCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_BaseLinVelDiffCost = Eigen::VectorXd::Zero(3);
