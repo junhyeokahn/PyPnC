@@ -68,7 +68,8 @@ public:
 
 private:
   NodesVariablesPhaseBased::Ptr ee_motion_;
-  double t_swing_avg_ = 0.3;
+  // double t_swing_avg_ = 0.3;
+  double t_swing_avg_ = 0.75;
   std::string ee_motion_id_;
 
   std::vector<int> pure_swing_node_ids_;
