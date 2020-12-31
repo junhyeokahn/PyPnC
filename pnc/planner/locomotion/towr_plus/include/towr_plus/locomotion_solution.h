@@ -40,6 +40,7 @@ private:
   double duration_base_polynomial_;
   int force_polynomials_per_stance_phase_;
   int ee_polynomials_per_swing_phase_; // Assume this is always 2
+  bool b_optimize_timings_;
   std::vector<std::vector<double>> ee_phase_durations_;
 
   int parsing_idx_;

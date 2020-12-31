@@ -43,6 +43,7 @@ void LocomotionSolution::initialize(const YAML::Node &node) {
                   force_polynomials_per_stance_phase_);
     readParameter(node, "ee_polynomials_per_swing_phase",
                   ee_polynomials_per_swing_phase_);
+    readParameter(node, "b_optimize_timings", b_optimize_timings_);
     assert(ee_polynomials_per_swing_phase == 2); // Assume this is always 2
     for (auto ee : {L, R}) {
       readParameter(node["ee_phase_durations"], std::to_string(ee), tmp_vec);
@@ -366,20 +367,32 @@ void LocomotionSolution::_set_ee_wrench_nodes() {
 }
 
 void LocomotionSolution::_set_ee_schedule_variables() {
-  for (auto ee : {L, R}) {
-    ee_schedules_.at(ee).clear();
-    one_hot_ee_contact_schedule_.at(ee) = one_hot_vector_.segment(
-        parsing_idx_, ee_phase_durations_.at(ee).size() - 1);
-    parsing_idx_ += (ee_phase_durations_.at(ee).size() - 1);
-    double sum(0.);
-    for (int i = 0; i < ee_phase_durations_.at(ee).size(); ++i) {
-      if (i == ee_phase_durations_.at(ee).size() - 1) {
-        ee_schedules_.at(ee).push_back(_get_total_time() - sum);
-      } else {
-        ee_schedules_.at(ee).push_back(one_hot_ee_contact_schedule_.at(ee)(i));
-        sum += one_hot_ee_contact_schedule_.at(ee)(i);
+  if (b_optimize_timings_) {
+    for (auto ee : {L, R}) {
+      ee_schedules_.at(ee).clear();
+      one_hot_ee_contact_schedule_.at(ee) = one_hot_vector_.segment(
+          parsing_idx_, ee_phase_durations_.at(ee).size() - 1);
+      parsing_idx_ += (ee_phase_durations_.at(ee).size() - 1);
+      double sum(0.);
+      for (int i = 0; i < ee_phase_durations_.at(ee).size(); ++i) {
+        if (i == ee_phase_durations_.at(ee).size() - 1) {
+          ee_schedules_.at(ee).push_back(_get_total_time() - sum);
+        } else {
+          ee_schedules_.at(ee).push_back(
+              one_hot_ee_contact_schedule_.at(ee)(i));
+          sum += one_hot_ee_contact_schedule_.at(ee)(i);
+        }
       }
     }
+  } else {
+    for (auto ee : {L, R}) {
+      one_hot_ee_contact_schedule_.at(ee) =
+          Eigen::VectorXd::Zero(ee_phase_durations_.at(ee).size() - 1);
+      for (int i = 0; i < one_hot_ee_contact_schedule_.at(ee).size(); ++i) {
+        one_hot_ee_contact_schedule_.at(ee)(i) = ee_phase_durations_.at(ee)[i];
+      }
+    }
+    ee_schedules_ = ee_phase_durations_;
   }
 
   // std::cout << "total_time: " << _get_total_time() << std::endl;

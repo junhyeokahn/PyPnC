@@ -271,6 +271,8 @@ public:
   Eigen::VectorXd w_WrenchAngVelCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_WrenchLinVelDiffCost = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd w_WrenchAngVelDiffCost = Eigen::VectorXd::Zero(3);
+
+  bool b_optimize_timings;
 };
 
 } // namespace towr_plus

@@ -53,6 +53,7 @@ Parameters::Parameters() {
   dt_constraint_range_of_motion_ = 0.08;
   dt_constraint_dynamic_ = 0.1;
   dt_constraint_base_motion_ = duration_base_polynomial_ / 4.;
+  b_optimize_timings = true;
   bound_phase_duration_ = std::make_pair(0.2, 2.0);
 
   w_FinalBaseLinPosCost << 1., 1., 1.;
@@ -86,7 +87,8 @@ void Parameters::initialize() {
   constraints_.push_back(EndeffectorRom);
   constraints_.push_back(Force);
   constraints_.push_back(Swing);
-  constraints_.push_back(TotalTime);
+  if (b_optimize_timings)
+    constraints_.push_back(TotalTime);
 
   // ===========================================================================
   // Costs
@@ -141,6 +143,7 @@ void Parameters::from_yaml(const YAML::Node &node) {
     readParameter(node, "dt_constraint_dynamic", dt_constraint_dynamic_);
     readParameter(node, "dt_constraint_base_motion",
                   dt_constraint_base_motion_);
+    readParameter(node, "b_optimize_timings", b_optimize_timings);
     readParameter(node, "bound_phase_duration", tmp_vec);
     bound_phase_duration_ = std::make_pair(tmp_vec(0), tmp_vec(1));
     for (auto ee : {L, R}) {
