@@ -110,10 +110,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
                                        params_.GetTotalTime());
   spline_lin->AddStartBound(kPos, {X, Y, Z}, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, {X, Y, Z}, initial_base_.lin.v());
-  // spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos_,
-  // final_base_.lin.p());
-  // spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel_,
-  // final_base_.lin.v());
   vars.push_back(spline_lin);
 
   auto spline_ang =
@@ -122,10 +118,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
       initial_base_.ang.p(), final_base_.ang.p(), params_.GetTotalTime());
   spline_ang->AddStartBound(kPos, {X, Y, Z}, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, {X, Y, Z}, initial_base_.ang.v());
-  // spline_ang->AddFinalBound(kPos, params_.bounds_final_ang_pos_,
-  // final_base_.ang.p());
-  // spline_ang->AddFinalBound(kVel, params_.bounds_final_ang_vel_,
-  // final_base_.ang.v());
   vars.push_back(spline_ang);
 
   return vars;
@@ -135,7 +127,7 @@ std::vector<NodesVariablesPhaseBased::Ptr>
 NlpFormulation::MakeEndeffectorVariables() const {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  // Endeffector Motions
+  // Endeffector Linear Motions
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto nodes = std::make_shared<NodesVariablesEEMotion>(
@@ -146,15 +138,39 @@ NlpFormulation::MakeEndeffectorVariables() const {
     double yaw = final_base_.ang.p().z();
     Eigen::Vector3d euler(0.0, 0.0, yaw);
     Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
-    Vector3d final_ee_pos_W =
+    Vector3d final_ee_motion_lin =
         final_base_.lin.p() +
         w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
-    double x = final_ee_pos_W.x();
-    double y = final_ee_pos_W.y();
+    double x = final_ee_motion_lin.x();
+    double y = final_ee_motion_lin.y();
     double z = terrain_->GetHeight(x, y);
-    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+    nodes->SetByLinearInterpolation(initial_ee_motion_lin_.at(ee),
+                                    Vector3d(x, y, z), T);
 
-    nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_W_.at(ee));
+    nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
+    vars.push_back(nodes);
+  }
+
+  // Endeffector Angular Motions
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto nodes = std::make_shared<NodesVariablesEEMotion>(
+        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
+        id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_);
+
+    // initialize towards final footholds
+    double yaw = final_base_.ang.p().z();
+    Eigen::Vector3d euler(0.0, 0.0, yaw);
+    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+    Vector3d final_ee_motion_lin =
+        final_base_.lin.p() +
+        w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+    double x = final_base_.ang.p().x();
+    double y = final_base_.ang.p().y();
+    double z = final_base_.ang.p().z();
+    nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
+                                    Vector3d(x, y, z), T);
+
+    nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
     vars.push_back(nodes);
   }
 
@@ -600,8 +616,8 @@ void NlpFormulation::from_locomotion_task(const LocomotionTask &task) {
   initial_base_.ang.at(kPos) = task.initial_base_ang.segment(0, 3);
   initial_base_.ang.at(kVel) = task.initial_base_ang.segment(3, 3);
 
-  initial_ee_W_ = task.initial_ee_motion_lin;
-  // TODO(JH): initial_ee_motion_ang
+  initial_ee_motion_lin_ = task.initial_ee_motion_lin;
+  initial_ee_motion_ang_ = task.initial_ee_motion_ang;
 
   final_base_.lin.at(kPos) = task.final_base_lin.segment(0, 3);
   final_base_.lin.at(kVel) = task.final_base_lin.segment(3, 3);

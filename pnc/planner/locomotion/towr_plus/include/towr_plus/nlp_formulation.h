@@ -82,6 +82,7 @@ public:
   using ContraintPtrVec = std::vector<ifopt::ConstraintSet::Ptr>;
   using CostPtrVec = std::vector<ifopt::CostTerm::Ptr>;
   using EEPos = std::vector<Eigen::Vector3d>;
+  using EEOri = std::vector<Eigen::Vector3d>;
   using Vector3d = Eigen::Vector3d;
 
   NlpFormulation();
@@ -105,7 +106,8 @@ public:
 
   BaseState initial_base_;
   BaseState final_base_;
-  EEPos initial_ee_W_;
+  EEPos initial_ee_motion_lin_;
+  EEOri initial_ee_motion_ang_;
   RobotModel model_;
   HeightMap::Ptr terrain_;
   Parameters params_;

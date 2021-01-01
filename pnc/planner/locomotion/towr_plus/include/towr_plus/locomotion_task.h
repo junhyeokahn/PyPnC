@@ -20,16 +20,16 @@ public:
   // ===========================================================================
   // Initial Configuration
   // ===========================================================================
-  Eigen::VectorXd initial_base_lin; // 6D linear pos, vel
-  Eigen::VectorXd initial_base_ang; // 6D angular pos, vel
-  std::vector<Eigen::Vector3d> initial_ee_motion_lin;
-  std::vector<Eigen::Vector3d> initial_ee_motion_ang;
+  Eigen::VectorXd initial_base_lin; // 6D base linear pos, vel
+  Eigen::VectorXd initial_base_ang; // 6D base angular pos, vel
+  std::vector<Eigen::Vector3d> initial_ee_motion_lin; // 3D EE linear pos
+  std::vector<Eigen::Vector3d> initial_ee_motion_ang; // 3D EE angular pos
 
   // ===========================================================================
   // Goal Configuration
   // ===========================================================================
-  Eigen::VectorXd final_base_lin;
-  Eigen::VectorXd final_base_ang;
+  Eigen::VectorXd final_base_lin; // 6D base linear pos, vel
+  Eigen::VectorXd final_base_ang; // 6D base angular pos, vel
 
   // ===========================================================================
   // Terrain
