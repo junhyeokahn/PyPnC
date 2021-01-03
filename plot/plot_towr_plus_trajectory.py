@@ -88,7 +88,7 @@ def compute_arrow_vec(euler_xyz):
     n_points = euler_xyz.shape[0]
     arrow_ends = np.zeros([n_points, 3])
     for i in range(n_points):
-        R = euler_to_rot("xyz", euler_xyz[i], False)
+        R = euler_to_rot("zyx", euler_xyz[i], False)
         arrow_ends[i] = np.dot(R, np.array([1., 0., 0.]))
     return arrow_ends
 

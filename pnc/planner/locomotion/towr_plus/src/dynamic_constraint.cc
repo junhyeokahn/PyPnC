@@ -48,8 +48,8 @@ DynamicConstraint::DynamicConstraint(const DynamicModel::Ptr &m, double T,
   // link with up-to-date spline variables
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = EulerConverter(spline_holder.base_angular_);
-  ee_forces_ = spline_holder.ee_force_;
-  ee_motion_ = spline_holder.ee_motion_;
+  ee_wrench_linear_ = spline_holder.ee_wrench_linear_;
+  ee_motion_linear_ = spline_holder.ee_motion_linear_;
 
   SetRows(GetNumberOfNodes() * k6D);
 }
@@ -94,20 +94,24 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
   // sensitivity of dynamic constraint w.r.t. endeffector variables
   for (int ee = 0; ee < model_->GetEECount(); ++ee) {
     if (var_set == id::EEWrenchLinNodes(ee)) {
-      Jacobian jac_ee_force = ee_forces_.at(ee)->GetJacobianWrtNodes(t, kPos);
+      Jacobian jac_ee_force =
+          ee_wrench_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
       jac_model = model_->GetJacobianWrtForce(jac_ee_force, ee);
     }
 
     if (var_set == id::EEMotionLinNodes(ee)) {
-      Jacobian jac_ee_pos = ee_motion_.at(ee)->GetJacobianWrtNodes(t, kPos);
+      Jacobian jac_ee_pos =
+          ee_motion_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
       jac_model = model_->GetJacobianWrtEEPos(jac_ee_pos, ee);
     }
 
     if (var_set == id::EESchedule(ee)) {
-      Jacobian jac_f_dT = ee_forces_.at(ee)->GetJacobianOfPosWrtDurations(t);
+      Jacobian jac_f_dT =
+          ee_wrench_linear_.at(ee)->GetJacobianOfPosWrtDurations(t);
       jac_model += model_->GetJacobianWrtForce(jac_f_dT, ee);
 
-      Jacobian jac_x_dT = ee_motion_.at(ee)->GetJacobianOfPosWrtDurations(t);
+      Jacobian jac_x_dT =
+          ee_motion_linear_.at(ee)->GetJacobianOfPosWrtDurations(t);
       jac_model += model_->GetJacobianWrtEEPos(jac_x_dT, ee);
     }
   }
@@ -126,8 +130,8 @@ void DynamicConstraint::UpdateModel(double t) const {
   std::vector<Eigen::Vector3d> ee_pos;
   std::vector<Eigen::Vector3d> ee_force;
   for (int ee = 0; ee < n_ee; ++ee) {
-    ee_force.push_back(ee_forces_.at(ee)->GetPoint(t).p());
-    ee_pos.push_back(ee_motion_.at(ee)->GetPoint(t).p());
+    ee_force.push_back(ee_wrench_linear_.at(ee)->GetPoint(t).p());
+    ee_pos.push_back(ee_motion_linear_.at(ee)->GetPoint(t).p());
   }
 
   model_->SetCurrent(com.p(), com.a(), w_R_b, omega, omega_dot, ee_force,

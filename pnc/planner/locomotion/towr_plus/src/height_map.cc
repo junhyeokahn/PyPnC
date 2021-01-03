@@ -99,6 +99,24 @@ HeightMap::Vector3d HeightMap::GetBasis(Direction basis, double x, double y,
 }
 
 HeightMap::Vector3d
+HeightMap::GetProjectionToTerrain(double x, double y,
+                                  const HeightMap::Vector3d &vec,
+                                  bool b_normalize) const {
+
+  Eigen::Vector3d ret1, ret2;
+
+  ret1(X) = vec(X);
+  ret1(Y) = vec(Y);
+  ret1(Z) = vec(X) * GetDerivativeOfHeightWrt(X_, x, y) +
+            vec(Y) * GetDerivativeOfHeightWrt(Y_, x, y);
+
+  if (b_normalize) {
+    return ret1.normalized();
+  }
+  return ret1;
+}
+
+HeightMap::Vector3d
 HeightMap::GetDerivativeOfNormalizedBasisWrt(Direction basis, Dim2D dim,
                                              double x, double y) const {
   // inner derivative

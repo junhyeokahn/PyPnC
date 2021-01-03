@@ -117,8 +117,10 @@ public:
 private:
   // variables
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
-  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
-  std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeEEMotionLinVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeEEMotionAngVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeWrenchLinVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeWrenchAngVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
 
   // constraints

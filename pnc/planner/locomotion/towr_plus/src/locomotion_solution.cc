@@ -85,35 +85,35 @@ void LocomotionSolution::print_solution(double dt) {
     cout << (rad).transpose() << "\t[deg]" << endl;
 
     cout << "Left Foot position x,y,z:   \t";
-    cout << spline_holder_.ee_motion_.at(L)->GetPoint(t).p().transpose()
+    cout << spline_holder_.ee_motion_linear_.at(L)->GetPoint(t).p().transpose()
          << "\t[m]" << endl;
 
     cout << "Left Foot velocity x,y,z:   \t";
-    cout << spline_holder_.ee_motion_.at(L)->GetPoint(t).v().transpose()
+    cout << spline_holder_.ee_motion_linear_.at(L)->GetPoint(t).v().transpose()
          << "\t[m]" << endl;
 
     cout << "Right Foot position x,y,z:   \t";
-    cout << spline_holder_.ee_motion_.at(R)->GetPoint(t).p().transpose()
+    cout << spline_holder_.ee_motion_linear_.at(R)->GetPoint(t).p().transpose()
          << "\t[m]" << endl;
 
     cout << "Right Foot velocity x,y,z:   \t";
-    cout << spline_holder_.ee_motion_.at(R)->GetPoint(t).v().transpose()
+    cout << spline_holder_.ee_motion_linear_.at(R)->GetPoint(t).v().transpose()
          << "\t[m]" << endl;
 
     cout << "Left Foot Contact force x,y,z:   \t";
-    cout << spline_holder_.ee_force_.at(L)->GetPoint(t).p().transpose()
+    cout << spline_holder_.ee_wrench_linear_.at(L)->GetPoint(t).p().transpose()
          << "\t[N]" << endl;
 
     cout << "Left Foot Contact force dot x,y,z:   \t";
-    cout << spline_holder_.ee_force_.at(L)->GetPoint(t).v().transpose()
+    cout << spline_holder_.ee_wrench_linear_.at(L)->GetPoint(t).v().transpose()
          << "\t[N]" << endl;
 
     cout << "Right Foot Contact force x,y,z:   \t";
-    cout << spline_holder_.ee_force_.at(R)->GetPoint(t).p().transpose()
+    cout << spline_holder_.ee_wrench_linear_.at(R)->GetPoint(t).p().transpose()
          << "\t[N]" << endl;
 
     cout << "Right Foot Contact force dot x,y,z:   \t";
-    cout << spline_holder_.ee_force_.at(R)->GetPoint(t).v().transpose()
+    cout << spline_holder_.ee_wrench_linear_.at(R)->GetPoint(t).v().transpose()
          << "\t[N]" << endl;
 
     bool contact = spline_holder_.phase_durations_.at(L)->IsContactPhase(t);
@@ -157,7 +157,9 @@ void LocomotionSolution::_set_splines() {
 
   // EE Motion & Wrench & Contact Schedule
   std::vector<std::shared_ptr<NodesVariablesPhaseBased>> ee_motion_lin(2);
+  std::vector<std::shared_ptr<NodesVariablesPhaseBased>> ee_motion_ang(2);
   std::vector<std::shared_ptr<NodesVariablesPhaseBased>> ee_wrench_lin(2);
+  std::vector<std::shared_ptr<NodesVariablesPhaseBased>> ee_wrench_ang(2);
   std::vector<std::shared_ptr<PhaseDurations>> ee_phase_dur(2);
   for (auto ee : {L, R}) {
     ee_motion_lin.at(ee) = std::make_shared<NodesVariablesEEMotion>(
@@ -165,10 +167,20 @@ void LocomotionSolution::_set_splines() {
         ee_polynomials_per_swing_phase_);
     ee_motion_lin.at(ee)->SetVariables(one_hot_ee_motion_lin_.at(ee));
 
+    ee_motion_ang.at(ee) = std::make_shared<NodesVariablesEEMotion>(
+        ee_phase_durations_.at(ee).size(), true, id::EEMotionLinNodes(ee),
+        ee_polynomials_per_swing_phase_);
+    ee_motion_ang.at(ee)->SetVariables(one_hot_ee_motion_ang_.at(ee));
+
     ee_wrench_lin.at(ee) = std::make_shared<NodesVariablesEEForce>(
         ee_phase_durations_.at(ee).size(), true, id::EEWrenchLinNodes(ee),
         force_polynomials_per_stance_phase_);
     ee_wrench_lin.at(ee)->SetVariables(one_hot_ee_wrench_lin_.at(ee));
+
+    ee_wrench_ang.at(ee) = std::make_shared<NodesVariablesEEForce>(
+        ee_phase_durations_.at(ee).size(), true, id::EEWrenchLinNodes(ee),
+        force_polynomials_per_stance_phase_);
+    ee_wrench_ang.at(ee)->SetVariables(one_hot_ee_wrench_ang_.at(ee));
 
     ee_phase_dur.at(ee) = std::make_shared<PhaseDurations>(
         ee, ee_phase_durations_.at(ee), true, -100.,
@@ -179,7 +191,8 @@ void LocomotionSolution::_set_splines() {
   // Construct Splineholder
   spline_holder_ =
       SplineHolder(base_lin, base_ang, _get_base_poly_duration(), ee_motion_lin,
-                   ee_wrench_lin, ee_phase_dur, true);
+                   ee_motion_ang, ee_wrench_lin, ee_wrench_ang, ee_phase_dur,
+                   b_optimize_timings_);
 }
 
 void LocomotionSolution::_set_base_nodes() {
@@ -201,6 +214,7 @@ void LocomotionSolution::_set_base_nodes() {
 }
 
 void LocomotionSolution::_set_ee_motion_nodes() {
+  // TODO : Add angular motion
 
   // Assume ee phase starts and ends with contact
   for (auto ee : {L, R}) {
@@ -280,6 +294,7 @@ void LocomotionSolution::_set_ee_motion_nodes() {
 }
 
 void LocomotionSolution::_set_ee_wrench_nodes() {
+  // TODO : Add angular wrench
 
   // Assume ee phase starts and ends with contact
   for (auto ee : {L, R}) {
@@ -495,13 +510,25 @@ void LocomotionSolution::to_yaml(double dt) {
           spline_holder_.base_angular_->GetPoint(t).v().transpose();
       for (auto ee : {L, R}) {
         ee_motion_lin.at(ee).block(i, 0, 1, 3) =
-            spline_holder_.ee_motion_.at(ee)->GetPoint(t).p().transpose();
+            spline_holder_.ee_motion_linear_.at(ee)
+                ->GetPoint(t)
+                .p()
+                .transpose();
         ee_motion_lin.at(ee).block(i, 3, 1, 3) =
-            spline_holder_.ee_motion_.at(ee)->GetPoint(t).v().transpose();
+            spline_holder_.ee_motion_linear_.at(ee)
+                ->GetPoint(t)
+                .v()
+                .transpose();
         ee_wrench_lin.at(ee).block(i, 0, 1, 3) =
-            spline_holder_.ee_force_.at(ee)->GetPoint(t).p().transpose();
+            spline_holder_.ee_wrench_linear_.at(ee)
+                ->GetPoint(t)
+                .p()
+                .transpose();
         ee_wrench_lin.at(ee).block(i, 3, 1, 3) =
-            spline_holder_.ee_force_.at(ee)->GetPoint(t).v().transpose();
+            spline_holder_.ee_wrench_linear_.at(ee)
+                ->GetPoint(t)
+                .v()
+                .transpose();
       }
     }
 
@@ -539,21 +566,25 @@ void LocomotionSolution::to_yaml(double dt) {
       data["node"]["ee_motion_lin"][std::to_string(ee)]["value"] =
           ee_motion_lin_nodes_.at(ee);
       tmp_vec = Eigen::VectorXd::Zero(
-          spline_holder_.ee_motion_.at(ee)->GetPolyDurations().size());
+          spline_holder_.ee_motion_linear_.at(ee)->GetPolyDurations().size());
       for (int i = 0;
-           i < spline_holder_.ee_motion_.at(ee)->GetPolyDurations().size();
+           i <
+           spline_holder_.ee_motion_linear_.at(ee)->GetPolyDurations().size();
            ++i) {
-        tmp_vec(i) = spline_holder_.ee_motion_.at(ee)->GetPolyDurations()[i];
+        tmp_vec(i) =
+            spline_holder_.ee_motion_linear_.at(ee)->GetPolyDurations()[i];
       }
       data["node"]["ee_motion_lin"][std::to_string(ee)]["duration"] = tmp_vec;
       data["node"]["ee_wrench_lin"][std::to_string(ee)]["value"] =
           ee_wrench_lin_nodes_.at(ee);
       tmp_vec = Eigen::VectorXd::Zero(
-          spline_holder_.ee_force_.at(ee)->GetPolyDurations().size());
+          spline_holder_.ee_wrench_linear_.at(ee)->GetPolyDurations().size());
       for (int i = 0;
-           i < spline_holder_.ee_force_.at(ee)->GetPolyDurations().size();
+           i <
+           spline_holder_.ee_wrench_linear_.at(ee)->GetPolyDurations().size();
            ++i) {
-        tmp_vec(i) = spline_holder_.ee_force_.at(ee)->GetPolyDurations()[i];
+        tmp_vec(i) =
+            spline_holder_.ee_wrench_linear_.at(ee)->GetPolyDurations()[i];
       }
       data["node"]["ee_wrench_lin"][std::to_string(ee)]["duration"] = tmp_vec;
 

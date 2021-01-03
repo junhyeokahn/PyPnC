@@ -20,3 +20,6 @@ void readParameter(const YAML::Node &node, const std::string &name,
     throw std::runtime_error(name);
   }
 };
+
+// Euler ZYX to Rotation Matrix
+Eigen::Matrix3d euler_xyz_to_rot(Eigen::Vector3d euler_xyz);

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 project(towr_plus VERSION 1.3.2)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+find_package(Eigen)
+include_directories(${EIGEN_INCLUDE_DIRS})
 find_package(ifopt 2.0.1 REQUIRED)
 
 ###########
@@ -16,7 +20,7 @@ include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/util")
 include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/locomotion/towr_plus/include")
 
-add_subdirectory(util/yaml)
+add_subdirectory(util)
 add_subdirectory(pnc/planner/locomotion/towr_plus)
 
 add_executable(atlas_two_step_test test/atlas_two_step_test.cc)

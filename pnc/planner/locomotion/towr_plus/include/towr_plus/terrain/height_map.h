@@ -138,6 +138,10 @@ public:
    */
   double GetFrictionCoeff() const { return friction_coeff_; };
 
+  // Return projection vector to the terrain
+  Vector3d GetProjectionToTerrain(double x, double y, const Vector3d &vec,
+                                  bool b_normalize) const;
+
 protected:
   double friction_coeff_ = 0.5;
 

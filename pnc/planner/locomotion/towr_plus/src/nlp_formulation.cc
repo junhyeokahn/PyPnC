@@ -70,11 +70,17 @@ NlpFormulation::GetVariableSets(SplineHolder &spline_holder) {
   auto base_motion = MakeBaseVariables();
   vars.insert(vars.end(), base_motion.begin(), base_motion.end());
 
-  auto ee_motion = MakeEndeffectorVariables();
-  vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+  auto ee_motion_lin = MakeEEMotionLinVariables();
+  vars.insert(vars.end(), ee_motion_lin.begin(), ee_motion_lin.end());
 
-  auto ee_force = MakeForceVariables();
-  vars.insert(vars.end(), ee_force.begin(), ee_force.end());
+  auto ee_motion_ang = MakeEEMotionAngVariables();
+  vars.insert(vars.end(), ee_motion_ang.begin(), ee_motion_ang.end());
+
+  auto ee_wrench_lin = MakeWrenchLinVariables();
+  vars.insert(vars.end(), ee_wrench_lin.begin(), ee_wrench_lin.end());
+
+  auto ee_wrench_ang = MakeWrenchAngVariables();
+  vars.insert(vars.end(), ee_wrench_ang.begin(), ee_wrench_ang.end());
 
   auto contact_schedule = MakeContactScheduleVariables();
   // can also just be fixed timings that aren't optimized over, but still
@@ -84,11 +90,14 @@ NlpFormulation::GetVariableSets(SplineHolder &spline_holder) {
   }
 
   // stores these readily constructed spline
-  spline_holder =
-      SplineHolder(base_motion.at(0), // linear
-                   base_motion.at(1), // angular
-                   params_.GetBasePolyDurations(), ee_motion, ee_force,
-                   contact_schedule, params_.IsOptimizeTimings());
+  spline_holder = SplineHolder(base_motion.at(0), // linear
+                               base_motion.at(1), // angular
+                               params_.GetBasePolyDurations(),
+                               ee_motion_lin, // linear
+                               ee_motion_ang, // angular
+                               ee_wrench_lin, // linear
+                               ee_wrench_ang, // angular
+                               contact_schedule, params_.IsOptimizeTimings());
   return vars;
 }
 
@@ -124,13 +133,12 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
 }
 
 std::vector<NodesVariablesPhaseBased::Ptr>
-NlpFormulation::MakeEndeffectorVariables() const {
+NlpFormulation::MakeEEMotionLinVariables() const {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  // Endeffector Linear Motions
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<NodesVariablesEEMotion>(
+    auto lin_nodes = std::make_shared<NodesVariablesEEMotion>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
         id::EEMotionLinNodes(ee), params_.ee_polynomials_per_swing_phase_);
 
@@ -144,57 +152,86 @@ NlpFormulation::MakeEndeffectorVariables() const {
     double x = final_ee_motion_lin.x();
     double y = final_ee_motion_lin.y();
     double z = terrain_->GetHeight(x, y);
-    nodes->SetByLinearInterpolation(initial_ee_motion_lin_.at(ee),
-                                    Vector3d(x, y, z), T);
+    lin_nodes->SetByLinearInterpolation(initial_ee_motion_lin_.at(ee),
+                                        Vector3d(x, y, z), T);
 
-    nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
-    vars.push_back(nodes);
-  }
-
-  // Endeffector Angular Motions
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<NodesVariablesEEMotion>(
-        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
-        id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_);
-
-    // initialize towards final footholds
-    double yaw = final_base_.ang.p().z();
-    Eigen::Vector3d euler(0.0, 0.0, yaw);
-    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
-    Vector3d final_ee_motion_lin =
-        final_base_.lin.p() +
-        w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
-    double x = final_base_.ang.p().x();
-    double y = final_base_.ang.p().y();
-    double z = final_base_.ang.p().z();
-    nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
-                                    Vector3d(x, y, z), T);
-
-    nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
-    vars.push_back(nodes);
+    lin_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
+    vars.push_back(lin_nodes);
   }
 
   return vars;
 }
 
 std::vector<NodesVariablesPhaseBased::Ptr>
-NlpFormulation::MakeForceVariables() const {
+NlpFormulation::MakeEEMotionAngVariables() const {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
+  // compute final footholds orientation
+  Eigen::Vector3d base_euler_xyz(final_base_.ang.p().x(),
+                                 final_base_.ang.p().y(),
+                                 final_base_.ang.p().z());
+  Eigen::Matrix3d base_rot = euler_xyz_to_rot(base_euler_xyz);
+  double x = final_base_.ang.p().x();
+  double y = final_base_.ang.p().y();
+  Eigen::Vector3d foot_x_axis =
+      terrain_->GetProjectionToTerrain(x, y, base_rot.col(X), true);
+  Eigen::Vector3d foot_z_axis =
+      terrain_->GetNormalizedBasis(HeightMap::Normal, x, y);
+  Eigen::Vector3d foot_y_axis = foot_z_axis.cross(foot_x_axis);
+  Eigen::Matrix3d foot_rot;
+  foot_rot.col(0) = foot_x_axis;
+  foot_rot.col(1) = foot_y_axis;
+  foot_rot.col(2) = foot_z_axis;
+  std::cout << "foot_rot_final" << std::endl;
+  std::cout << foot_rot << std::endl;
+  exit(0);
+  Eigen::Vector3d final_foot_euler_angles;
+  // Little detail: Eigen returns zyx order
+  final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
+      foot_rot.eulerAngles(2, 1, 0)(1), foot_rot.eulerAngles(2, 1, 0)(0);
+
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto ang_nodes = std::make_shared<NodesVariablesEEMotion>(
+        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
+        id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_);
+
+    ang_nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
+                                        final_foot_euler_angles,
+                                        params_.GetTotalTime());
+    ang_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_ang_.at(ee));
+    vars.push_back(ang_nodes);
+  }
+  return vars;
+}
+
+std::vector<NodesVariablesPhaseBased::Ptr>
+NlpFormulation::MakeWrenchLinVariables() const {
+  std::vector<NodesVariablesPhaseBased::Ptr> vars;
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<NodesVariablesEEForce>(
+    auto lin_nodes = std::make_shared<NodesVariablesEEForce>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
         id::EEWrenchLinNodes(ee), params_.force_polynomials_per_stance_phase_);
 
-    // initialize with mass of robot distributed equally on all legs
     double m = model_.dynamic_model_->m();
     double g = model_.dynamic_model_->g();
 
     Vector3d f_stance(0.0, 0.0, m * g / params_.GetEECount());
-    nodes->SetByLinearInterpolation(f_stance, f_stance,
-                                    T); // stay constant
-    vars.push_back(nodes);
+    lin_nodes->SetByLinearInterpolation(f_stance, f_stance,
+                                        T); // stay constant
+    vars.push_back(lin_nodes);
+  }
+  return vars;
+}
+
+std::vector<NodesVariablesPhaseBased::Ptr>
+NlpFormulation::MakeWrenchAngVariables() const {
+  std::vector<NodesVariablesPhaseBased::Ptr> vars;
+  for (int ee = 0; ee < params_.GetEECount(); ++ee) {
+    auto ang_nodes = std::make_shared<NodesVariablesEEForce>(
+        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
+        id::EEWrenchAngNodes(ee), params_.force_polynomials_per_stance_phase_);
+    vars.push_back(ang_nodes);
   }
   return vars;
 }

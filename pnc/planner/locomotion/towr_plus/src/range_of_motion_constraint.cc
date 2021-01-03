@@ -43,7 +43,7 @@ RangeOfMotionConstraint::RangeOfMotionConstraint(
                                    "rangeofmotion-" + std::to_string(ee)) {
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = EulerConverter(spline_holder.base_angular_);
-  ee_motion_ = spline_holder.ee_motion_.at(ee);
+  ee_motion_linear_ = spline_holder.ee_motion_linear_.at(ee);
 
   max_deviation_from_nominal_ = model->GetMaximumDeviationFromNominal();
   nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
@@ -59,7 +59,7 @@ int RangeOfMotionConstraint::GetRow(int node, int dim) const {
 void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
                                                          VectorXd &g) const {
   Vector3d base_W = base_linear_->GetPoint(t).p();
-  Vector3d pos_ee_W = ee_motion_->GetPoint(t).p();
+  Vector3d pos_ee_W = ee_motion_linear_->GetPoint(t).p();
   EulerConverter::MatrixSXd b_R_w =
       base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
@@ -94,7 +94,7 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
 
   if (var_set == id::base_ang_nodes) {
     Vector3d base_W = base_linear_->GetPoint(t).p();
-    Vector3d ee_pos_W = ee_motion_->GetPoint(t).p();
+    Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
     Vector3d r_W = ee_pos_W - base_W;
     jac.middleRows(row_start, k3D) =
         base_angular_.DerivOfRotVecMult(t, r_W, true);
@@ -102,12 +102,12 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
 
   if (var_set == id::EEMotionLinNodes(ee_)) {
     jac.middleRows(row_start, k3D) =
-        b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
+        b_R_w * ee_motion_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::EESchedule(ee_)) {
     jac.middleRows(row_start, k3D) =
-        b_R_w * ee_motion_->GetJacobianOfPosWrtDurations(t);
+        b_R_w * ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
   }
 }
 

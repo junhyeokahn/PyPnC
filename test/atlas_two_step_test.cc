@@ -24,9 +24,9 @@ int main() {
   Eigen::Vector3d lfoot, rfoot;
   lfoot << 0.003, 0.111, 0;
   rfoot << 0.003, -0.111, 0;
-  formulation.initial_ee_W_.resize(2);
-  formulation.initial_ee_W_.at(L) = lfoot;
-  formulation.initial_ee_W_.at(R) = rfoot;
+  formulation.initial_ee_motion_lin_.resize(2);
+  formulation.initial_ee_motion_lin_.at(L) = lfoot;
+  formulation.initial_ee_motion_lin_.at(R) = rfoot;
 
   // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr_plus::kPos) << 0.3, 0.0, nominal_height;
@@ -98,36 +98,36 @@ int main() {
     cout << (rad).transpose() << "\t[deg]" << endl;
 
     cout << "Left Foot position x,y,z:   \t";
-    cout << solution.ee_motion_.at(L)->GetPoint(t).p().transpose() << "\t[m]"
-         << endl;
+    cout << solution.ee_motion_linear_.at(L)->GetPoint(t).p().transpose()
+         << "\t[m]" << endl;
 
     cout << "Left Foot velocity x,y,z:   \t";
-    cout << solution.ee_motion_.at(L)->GetPoint(t).v().transpose() << "\t[m]"
-         << endl;
+    cout << solution.ee_motion_linear_.at(L)->GetPoint(t).v().transpose()
+         << "\t[m]" << endl;
 
     cout << "Right Foot position x,y,z:   \t";
-    cout << solution.ee_motion_.at(R)->GetPoint(t).p().transpose() << "\t[m]"
-         << endl;
+    cout << solution.ee_motion_linear_.at(R)->GetPoint(t).p().transpose()
+         << "\t[m]" << endl;
 
     cout << "Right Foot velocity x,y,z:   \t";
-    cout << solution.ee_motion_.at(R)->GetPoint(t).v().transpose() << "\t[m]"
-         << endl;
+    cout << solution.ee_motion_linear_.at(R)->GetPoint(t).v().transpose()
+         << "\t[m]" << endl;
 
     cout << "Left Foot Contact force x,y,z:   \t";
-    cout << solution.ee_force_.at(L)->GetPoint(t).p().transpose() << "\t[N]"
-         << endl;
+    cout << solution.ee_wrench_linear_.at(L)->GetPoint(t).p().transpose()
+         << "\t[N]" << endl;
 
     cout << "Left Foot Contact force dot x,y,z:   \t";
-    cout << solution.ee_force_.at(L)->GetPoint(t).v().transpose() << "\t[N]"
-         << endl;
+    cout << solution.ee_wrench_linear_.at(L)->GetPoint(t).v().transpose()
+         << "\t[N]" << endl;
 
     cout << "Right Foot Contact force x,y,z:   \t";
-    cout << solution.ee_force_.at(R)->GetPoint(t).p().transpose() << "\t[N]"
-         << endl;
+    cout << solution.ee_wrench_linear_.at(R)->GetPoint(t).p().transpose()
+         << "\t[N]" << endl;
 
     cout << "Right Foot Contact force dot x,y,z:   \t";
-    cout << solution.ee_force_.at(R)->GetPoint(t).v().transpose() << "\t[N]"
-         << endl;
+    cout << solution.ee_wrench_linear_.at(R)->GetPoint(t).v().transpose()
+         << "\t[N]" << endl;
 
     bool contact = solution.phase_durations_.at(L)->IsContactPhase(t);
     std::string foot_in_contact = contact ? "yes" : "no";
