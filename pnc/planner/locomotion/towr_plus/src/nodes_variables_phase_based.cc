@@ -181,12 +181,14 @@ void NodesVariablesPhaseBased::SetNumberOfVariables(int n_variables) {
 NodesVariablesEEMotion::NodesVariablesEEMotion(int phase_count,
                                                bool is_in_contact_at_start,
                                                const std::string &name,
-                                               int n_polys_in_changing_phase)
+                                               int n_polys_in_changing_phase,
+                                               bool is_lin)
     : NodesVariablesPhaseBased(
           phase_count,
           is_in_contact_at_start, // contact phase for motion is constant
           name, n_polys_in_changing_phase) {
 
+  is_lin_ = is_lin;
   index_to_node_value_info_ = GetPhaseBasedEEParameterization();
   SetNumberOfVariables(index_to_node_value_info_.size());
 }
@@ -207,11 +209,16 @@ NodesVariablesEEMotion::GetPhaseBasedEEParameterization() {
         // optimized. Since we often choose two polynomials per
         // swing-phase, this restricts the swing to have reached it's
         // extreme at half-time and creates smoother stepping motions.
-        if (dim == Z)
-          nodes_.at(node_id).at(kVel).z() = 0.0;
-        else
-          // velocity in x,y dimension during swing fully optimized.
+        if (is_lin_) {
+          if (dim == Z) {
+            nodes_.at(node_id).at(kVel).z() = 0.0;
+          } else {
+            // velocity in x,y dimension during swing fully optimized.
+            index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+          }
+        } else {
           index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+        }
       }
     }
     // stance node (next one will also be stance, so handle that one too):
@@ -234,7 +241,7 @@ NodesVariablesEEMotion::GetPhaseBasedEEParameterization() {
   }
 
   return index_map;
-}
+} // namespace towr_plus
 
 NodesVariablesEEForce::NodesVariablesEEForce(int phase_count,
                                              bool is_in_contact_at_start,

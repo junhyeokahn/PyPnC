@@ -198,10 +198,13 @@ private:
 class NodesVariablesEEMotion : public NodesVariablesPhaseBased {
 public:
   NodesVariablesEEMotion(int phase_count, bool is_in_contact_at_start,
-                         const std::string &name,
-                         int n_polys_in_changing_phase);
+                         const std::string &name, int n_polys_in_changing_phase,
+                         bool is_lin);
   virtual ~NodesVariablesEEMotion() = default;
   OptIndexMap GetPhaseBasedEEParameterization();
+
+private:
+  bool is_lin_;
 };
 
 /**

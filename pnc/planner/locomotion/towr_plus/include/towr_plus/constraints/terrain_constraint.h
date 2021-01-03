@@ -60,7 +60,8 @@ public:
    * @param terrain  The terrain height value and slope for each position x,y.
    * @param ee_motion_id The name of the endeffector variable set.
    */
-  TerrainConstraint(const HeightMap::Ptr &terrain, std::string ee_motion_id);
+  TerrainConstraint(const HeightMap::Ptr &terrain, std::string ee_motion_lin,
+                    std::string ee_motion_ang);
   virtual ~TerrainConstraint() = default;
 
   void InitVariableDependedQuantities(const VariablesPtr &x) override;
@@ -70,12 +71,17 @@ public:
   void FillJacobianBlock(std::string var_set, Jacobian &) const override;
 
 private:
-  NodesVariablesPhaseBased::Ptr
-      ee_motion_;          ///< the position of the endeffector.
+  NodesVariablesPhaseBased::Ptr ee_motion_lin_;
+  NodesVariablesPhaseBased::Ptr ee_motion_ang_;
   HeightMap::Ptr terrain_; ///< the height map of the current terrain.
 
-  std::string ee_motion_id_;  ///< the name of the endeffector variable set.
-  std::vector<int> node_ids_; ///< the indices of the nodes constrained.
+  std::string ee_motion_lin_id_;  ///< the name of the endeffector variable set.
+  std::string ee_motion_ang_id_;  ///< the name of the endeffector variable set.
+  std::vector<int> lin_node_ids_; ///< the indices of the nodes constrained.
+  std::vector<int> contact_nodes_ids_;
+
+  int n_lin_;
+  int n_ang_;
 };
 
 } /* namespace towr_plus */

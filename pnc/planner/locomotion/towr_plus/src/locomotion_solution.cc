@@ -164,12 +164,12 @@ void LocomotionSolution::_set_splines() {
   for (auto ee : {L, R}) {
     ee_motion_lin.at(ee) = std::make_shared<NodesVariablesEEMotion>(
         ee_phase_durations_.at(ee).size(), true, id::EEMotionLinNodes(ee),
-        ee_polynomials_per_swing_phase_);
+        ee_polynomials_per_swing_phase_, true);
     ee_motion_lin.at(ee)->SetVariables(one_hot_ee_motion_lin_.at(ee));
 
     ee_motion_ang.at(ee) = std::make_shared<NodesVariablesEEMotion>(
         ee_phase_durations_.at(ee).size(), true, id::EEMotionLinNodes(ee),
-        ee_polynomials_per_swing_phase_);
+        ee_polynomials_per_swing_phase_, false);
     ee_motion_ang.at(ee)->SetVariables(one_hot_ee_motion_ang_.at(ee));
 
     ee_wrench_lin.at(ee) = std::make_shared<NodesVariablesEEForce>(

@@ -140,7 +140,8 @@ NlpFormulation::MakeEEMotionLinVariables() const {
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto lin_nodes = std::make_shared<NodesVariablesEEMotion>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
-        id::EEMotionLinNodes(ee), params_.ee_polynomials_per_swing_phase_);
+        id::EEMotionLinNodes(ee), params_.ee_polynomials_per_swing_phase_,
+        true);
 
     // initialize towards final footholds
     double yaw = final_base_.ang.p().z();
@@ -193,7 +194,8 @@ NlpFormulation::MakeEEMotionAngVariables() const {
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto ang_nodes = std::make_shared<NodesVariablesEEMotion>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
-        id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_);
+        id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_,
+        false);
 
     ang_nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
                                         final_foot_euler_angles,
@@ -332,8 +334,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const {
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c =
-        std::make_shared<TerrainConstraint>(terrain_, id::EEMotionLinNodes(ee));
+    auto c = std::make_shared<TerrainConstraint>(
+        terrain_, id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee));
     constraints.push_back(c);
   }
 
