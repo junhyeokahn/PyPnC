@@ -76,7 +76,9 @@ public:
   using BaseAcc = Eigen::Matrix<double, 6, 1>;
   using Jac = Eigen::SparseMatrix<double, Eigen::RowMajor>;
   using EEPos = std::vector<Eigen::Vector3d>;
-  using EELoad = EEPos;
+  using EEOri = std::vector<Eigen::Matrix3d>;
+  using EEFrc = EEPos;
+  using EETrq = EEPos;
   using EE = uint;
 
   /**
@@ -92,8 +94,8 @@ public:
    */
   void SetCurrent(const ComPos &com_W, const Vector3d com_acc_W,
                   const Matrix3d &w_R_b, const AngVel &omega_W,
-                  const Vector3d &omega_dot_W, const EELoad &force_W,
-                  const EEPos &pos_W);
+                  const Vector3d &omega_dot_W, const EEFrc &force_W,
+                  const EETrq &trq_W, const EEPos &pos_W, const EEOri &ori_W);
 
   /**
    * @brief  The violation of the system dynamics incurred by the current
@@ -134,6 +136,7 @@ public:
    *         variables defining the endeffector forces (e.g. node values).
    */
   virtual Jac GetJacobianWrtForce(const Jac &ee_force, EE ee) const = 0;
+  virtual Jac GetJacobianWrtTrq(const Jac &ee_force) const = 0;
 
   /**
    * @brief How the endeffector positions affect the dynamic violation.
@@ -168,8 +171,10 @@ protected:
   AngVel omega_;       ///< angular velocity expressed in world frame.
   Vector3d omega_dot_; ///< angular acceleration expressed in world frame.
 
-  EEPos ee_pos_;    ///< The x-y-z position of each endeffector.
-  EELoad ee_force_; ///< The endeffector force expressed in world frame.
+  EEPos ee_pos_; ///< The x-y-z position of each endeffector.
+  EEOri w_R_ee_;
+  EEFrc ee_force_; ///< The endeffector force expressed in world frame.
+  EETrq ee_trq_;
 
   /**
    * @brief Construct a dynamic object. Protected as this is abstract base

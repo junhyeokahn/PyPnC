@@ -49,7 +49,12 @@ DynamicConstraint::DynamicConstraint(const DynamicModel::Ptr &m, double T,
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = EulerConverter(spline_holder.base_angular_);
   ee_wrench_linear_ = spline_holder.ee_wrench_linear_;
+  ee_wrench_angular_ = spline_holder.ee_wrench_angular_;
   ee_motion_linear_ = spline_holder.ee_motion_linear_;
+  ee_motion_angular_.resize(spline_holder.ee_motion_angular_.size());
+  for (int i = 0; i < ee_motion_angular_.size(); ++i) {
+    ee_motion_angular_[i] = EulerConverter(spline_holder.ee_motion_angular_[i]);
+  }
 
   SetRows(GetNumberOfNodes() * k6D);
 }
@@ -99,6 +104,12 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
       jac_model = model_->GetJacobianWrtForce(jac_ee_force, ee);
     }
 
+    if (var_set == id::EEWrenchAngNodes(ee)) {
+      Jacobian jac_ee_wrench =
+          ee_wrench_angular_.at(ee)->GetJacobianWrtNodes(t, kPos);
+      jac_model = model_->GetJacobianWrtTrq(jac_ee_wrench);
+    }
+
     if (var_set == id::EEMotionLinNodes(ee)) {
       Jacobian jac_ee_pos =
           ee_motion_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
@@ -113,6 +124,10 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
       Jacobian jac_x_dT =
           ee_motion_linear_.at(ee)->GetJacobianOfPosWrtDurations(t);
       jac_model += model_->GetJacobianWrtEEPos(jac_x_dT, ee);
+
+      Jacobian jac_trq_dT =
+          ee_wrench_angular_.at(ee)->GetJacobianOfPosWrtDurations(t);
+      jac_model += model_->GetJacobianWrtTrq(jac_trq_dT);
     }
   }
 
@@ -128,14 +143,18 @@ void DynamicConstraint::UpdateModel(double t) const {
 
   int n_ee = model_->GetEECount();
   std::vector<Eigen::Vector3d> ee_pos;
+  std::vector<Eigen::Matrix3d> ee_ori;
   std::vector<Eigen::Vector3d> ee_force;
+  std::vector<Eigen::Vector3d> ee_trq;
   for (int ee = 0; ee < n_ee; ++ee) {
     ee_force.push_back(ee_wrench_linear_.at(ee)->GetPoint(t).p());
+    ee_trq.push_back(ee_wrench_angular_.at(ee)->GetPoint(t).p());
     ee_pos.push_back(ee_motion_linear_.at(ee)->GetPoint(t).p());
+    ee_ori.push_back(ee_motion_angular_.at(ee).GetRotationMatrixBaseToWorld(t));
   }
 
   model_->SetCurrent(com.p(), com.a(), w_R_b, omega, omega_dot, ee_force,
-                     ee_pos);
+                     ee_trq, ee_pos, ee_ori);
 }
 
 } /* namespace towr_plus */

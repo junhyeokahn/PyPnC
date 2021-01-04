@@ -1,37 +1,8 @@
 /******************************************************************************
-Copyright (c) 2018, Alexander W. Winkler. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
-/******************************************************************************
-Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
-******************************************************************************/
-
-#include <towr_plus/models/single_rigid_body_dynamics.h>
+#include <towr_plus/models/composite_rigid_body_dynamics.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 
 namespace towr_plus {
@@ -45,8 +16,8 @@ static Eigen::Matrix3d BuildInertiaTensor(double Ixx, double Iyy, double Izz,
 }
 
 // builds a cross product matrix out of "in", so in x v = X(in)*v
-SingleRigidBodyDynamics::Jac Cross(const Eigen::Vector3d &in) {
-  SingleRigidBodyDynamics::Jac out(3, 3);
+CompositeRigidBodyDynamics::Jac Cross(const Eigen::Vector3d &in) {
+  CompositeRigidBodyDynamics::Jac out(3, 3);
 
   out.coeffRef(0, 1) = -in(2);
   out.coeffRef(0, 2) = in(1);
@@ -58,21 +29,21 @@ SingleRigidBodyDynamics::Jac Cross(const Eigen::Vector3d &in) {
   return out;
 }
 
-SingleRigidBodyDynamics::SingleRigidBodyDynamics(double mass, double Ixx,
-                                                 double Iyy, double Izz,
-                                                 double Ixy, double Ixz,
-                                                 double Iyz, int ee_count)
-    : SingleRigidBodyDynamics(
+CompositeRigidBodyDynamics::CompositeRigidBodyDynamics(double mass, double Ixx,
+                                                       double Iyy, double Izz,
+                                                       double Ixy, double Ixz,
+                                                       double Iyz, int ee_count)
+    : CompositeRigidBodyDynamics(
           mass, BuildInertiaTensor(Ixx, Iyy, Izz, Ixy, Ixz, Iyz), ee_count) {}
 
-SingleRigidBodyDynamics::SingleRigidBodyDynamics(
+CompositeRigidBodyDynamics::CompositeRigidBodyDynamics(
     double mass, const Eigen::Matrix3d &inertia_b, int ee_count)
     : DynamicModel(mass, ee_count) {
   I_b = inertia_b.sparseView();
 }
 
-SingleRigidBodyDynamics::BaseAcc
-SingleRigidBodyDynamics::GetDynamicViolation() const {
+CompositeRigidBodyDynamics::BaseAcc
+CompositeRigidBodyDynamics::GetDynamicViolation() const {
   // https://en.wikipedia.org/wiki/Newton%E2%80%93Euler_equations
 
   Vector3d f_sum, tau_sum;
@@ -81,7 +52,7 @@ SingleRigidBodyDynamics::GetDynamicViolation() const {
 
   for (int ee = 0; ee < ee_pos_.size(); ++ee) {
     Vector3d f = ee_force_.at(ee);
-    tau_sum += f.cross(com_pos_ - ee_pos_.at(ee)) + ee_trq_.at(ee);
+    tau_sum += f.cross(com_pos_ - ee_pos_.at(ee));
     f_sum += f;
   }
 
@@ -96,7 +67,8 @@ SingleRigidBodyDynamics::GetDynamicViolation() const {
   return acc;
 }
 
-SingleRigidBodyDynamics::Jac SingleRigidBodyDynamics::GetJacobianWrtBaseLin(
+CompositeRigidBodyDynamics::Jac
+CompositeRigidBodyDynamics::GetJacobianWrtBaseLin(
     const Jac &jac_pos_base_lin, const Jac &jac_acc_base_lin) const {
   // build the com jacobian
   int n = jac_pos_base_lin.cols();
@@ -114,9 +86,9 @@ SingleRigidBodyDynamics::Jac SingleRigidBodyDynamics::GetJacobianWrtBaseLin(
   return jac;
 }
 
-SingleRigidBodyDynamics::Jac
-SingleRigidBodyDynamics::GetJacobianWrtBaseAng(const EulerConverter &base_euler,
-                                               double t) const {
+CompositeRigidBodyDynamics::Jac
+CompositeRigidBodyDynamics::GetJacobianWrtBaseAng(
+    const EulerConverter &base_euler, double t) const {
   Jac I_w = w_R_b_.sparseView() * I_b * w_R_b_.transpose().sparseView();
 
   // Derivative of R*I_b*R^T * wd
@@ -158,9 +130,9 @@ SingleRigidBodyDynamics::GetJacobianWrtBaseAng(const EulerConverter &base_euler,
   return jac;
 }
 
-SingleRigidBodyDynamics::Jac
-SingleRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
-                                             EE ee) const {
+CompositeRigidBodyDynamics::Jac
+CompositeRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
+                                                EE ee) const {
   Vector3d r = com_pos_ - ee_pos_.at(ee);
   Jac jac_tau = -Cross(r) * jac_force;
 
@@ -172,18 +144,9 @@ SingleRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
   return jac;
 }
 
-SingleRigidBodyDynamics::Jac
-SingleRigidBodyDynamics::GetJacobianWrtTrq(const Jac &jac_trq) const {
-  int n = jac_trq.cols();
-  Jac jac(k6D, n);
-  jac.middleRows(AX, k3D) = -jac_trq;
-
-  return jac;
-}
-
-SingleRigidBodyDynamics::Jac
-SingleRigidBodyDynamics::GetJacobianWrtEEPos(const Jac &jac_ee_pos,
-                                             EE ee) const {
+CompositeRigidBodyDynamics::Jac
+CompositeRigidBodyDynamics::GetJacobianWrtEEPos(const Jac &jac_ee_pos,
+                                                EE ee) const {
   Vector3d f = ee_force_.at(ee);
   Jac jac_tau = Cross(f) * (-jac_ee_pos);
 

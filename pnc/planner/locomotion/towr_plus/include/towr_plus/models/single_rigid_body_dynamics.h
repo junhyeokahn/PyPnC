@@ -89,6 +89,8 @@ public:
                             double t) const override;
   Jac GetJacobianWrtForce(const Jac &jac_force, EE) const override;
 
+  Jac GetJacobianWrtTrq(const Jac &jac_trq) const override;
+
   Jac GetJacobianWrtEEPos(const Jac &jac_ee_pos, EE) const override;
 
 private:

@@ -152,6 +152,12 @@ void TerrainConstraint::FillJacobianBlock(std::string var_set,
       }
       row++;
     }
+
+    std::cout << "row: " << row << std::endl;
+    std::cout << "n_lin_: " << n_lin_ << std::endl;
+    std::cout << "should be same in get bounds" << std::endl;
+    exit(0);
+
     // Orientation Constraints
     for (int id : contact_nodes_ids_) {
       Vector3d lin_p = lin_nodes.at(id).p();
