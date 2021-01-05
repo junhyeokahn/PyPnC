@@ -37,6 +37,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <array>
+#include <iostream>
 
 #include "cartesian_dimensions.h"
 #include "node_spline.h"
@@ -162,6 +163,8 @@ public:
    * values).
    */
   Jacobian DerivOfRotVecMult(double t, const Vector3d &v, bool inverse) const;
+  Jacobian DerivOfRotVecMultWrtScheduleVariables(double t, const Vector3d &v,
+                                                 bool inverse) const;
 
   /** @see GetQuaternionBaseToWorld(t)  */
   static Eigen::Quaterniond GetQuaternionBaseToWorld(const EulerAngles &pos);
@@ -208,6 +211,8 @@ private:
    * each cell if filled with a row vector.
    */
   JacRowMatrix GetDerivativeOfRotationMatrixWrtNodes(double t) const;
+  JacRowMatrix
+  GetDerivativeOfRotationMatrixWrtScheduleVariables(double t) const;
 
   /** @see GetAngularAccelerationInWorld(t)  */
   static Vector3d GetAngularAccelerationInWorld(State euler);
@@ -217,6 +222,7 @@ private:
                                             const EulerRates &vel);
 
   JacobianRow GetJac(double t, Dx deriv, Dim3D dim) const;
+  JacobianRow GetPosJacWrtScheduleVariables(double t, Dim3D dim) const;
   Jacobian jac_wrt_nodes_structure_;
 };
 

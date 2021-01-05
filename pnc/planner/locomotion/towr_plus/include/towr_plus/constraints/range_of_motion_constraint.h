@@ -74,10 +74,10 @@ public:
   virtual ~RangeOfMotionConstraint() = default;
 
 private:
-  NodeSpline::Ptr base_linear_; ///< the linear position of the base.
-  EulerConverter base_angular_; ///< the orientation of the base.
-  NodeSpline::Ptr
-      ee_motion_linear_; ///< the linear position of the endeffectors.
+  NodeSpline::Ptr base_linear_;
+  EulerConverter base_angular_;
+  NodeSpline::Ptr ee_motion_linear_;
+  EulerConverter ee_motion_angular_;
 
   Eigen::Vector3d max_deviation_from_nominal_;
   Eigen::Vector3d nominal_ee_pos_B_;
@@ -90,6 +90,17 @@ private:
                                 Jacobian &) const override;
 
   int GetRow(int node, int dimension) const;
+
+  double min_cos_;
+  double max_cos_;
+
+  Eigen::MatrixXd S1_;      // Selection matrix
+  Eigen::MatrixXd S2_;      // Selection matrix
+  Eigen::MatrixXd local_x_; // base local x axis
+
+  EulerConverter::MatrixSXd S1__;      // Selection matrix
+  EulerConverter::MatrixSXd S2__;      // Selection matrix
+  EulerConverter::MatrixSXd local_x__; // base local x axis
 };
 
 } /* namespace towr_plus */

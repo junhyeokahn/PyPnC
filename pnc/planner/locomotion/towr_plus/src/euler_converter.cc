@@ -225,6 +225,67 @@ EulerConverter::Jacobian EulerConverter::DerivOfRotVecMult(double t,
   return jac;
 }
 
+EulerConverter::Jacobian EulerConverter::DerivOfRotVecMultWrtScheduleVariables(
+    double t, const Vector3d &v, bool inverse) const {
+  JacRowMatrix Rd = GetDerivativeOfRotationMatrixWrtScheduleVariables(t);
+  Jacobian jac = Jacobian(k3D, Rd.at(X).at(X).size());
+  std::cout << "jac size in euler converter:" << std::endl;
+  std::cout << jac.cols() << std::endl;
+  std::cout << jac.rows() << std::endl;
+  exit(0);
+
+  for (int row : {X, Y, Z}) {
+    for (int col : {X, Y, Z}) {
+      // since for every rotation matrix R^(-1) = R^T, just swap rows and
+      // columns for calculation of derivative of inverse rotation matrix
+      JacobianRow jac_row = inverse ? Rd.at(col).at(row) : Rd.at(row).at(col);
+      jac.row(row) += v(col) * jac_row;
+    }
+  }
+
+  return jac;
+}
+
+EulerConverter::JacRowMatrix
+EulerConverter::GetDerivativeOfRotationMatrixWrtScheduleVariables(
+    double t) const {
+  JacRowMatrix jac;
+
+  State ori = euler_->GetPoint(t);
+  double x = ori.p()(X);
+  double y = ori.p()(Y);
+  double z = ori.p()(Z);
+
+  JacobianRow jac_x = GetPosJacWrtScheduleVariables(t, X);
+  JacobianRow jac_y = GetPosJacWrtScheduleVariables(t, Y);
+  JacobianRow jac_z = GetPosJacWrtScheduleVariables(t, Z);
+
+  jac.at(X).at(X) = -cos(z) * sin(y) * jac_y - cos(y) * sin(z) * jac_z;
+  jac.at(X).at(Y) = sin(x) * sin(z) * jac_x - cos(x) * cos(z) * jac_z -
+                    sin(x) * sin(y) * sin(z) * jac_z +
+                    cos(x) * cos(z) * sin(y) * jac_x +
+                    cos(y) * cos(z) * sin(x) * jac_y;
+  jac.at(X).at(Z) = cos(x) * sin(z) * jac_x + cos(z) * sin(x) * jac_z -
+                    cos(z) * sin(x) * sin(y) * jac_x -
+                    cos(x) * sin(y) * sin(z) * jac_z +
+                    cos(x) * cos(y) * cos(z) * jac_y;
+
+  jac.at(Y).at(X) = cos(y) * cos(z) * jac_z - sin(y) * sin(z) * jac_y;
+  jac.at(Y).at(Y) = cos(x) * sin(y) * sin(z) * jac_x - cos(x) * sin(z) * jac_z -
+                    cos(z) * sin(x) * jac_x + cos(y) * sin(x) * sin(z) * jac_y +
+                    cos(z) * sin(x) * sin(y) * jac_z;
+  jac.at(Y).at(Z) = sin(x) * sin(z) * jac_z - cos(x) * cos(z) * jac_x -
+                    sin(x) * sin(y) * sin(z) * jac_x +
+                    cos(x) * cos(y) * sin(z) * jac_y +
+                    cos(x) * cos(z) * sin(y) * jac_z;
+
+  jac.at(Z).at(X) = -cos(y) * jac_y;
+  jac.at(Z).at(Y) = cos(x) * cos(y) * jac_x - sin(x) * sin(y) * jac_y;
+  jac.at(Z).at(Z) = -cos(y) * sin(x) * jac_x - cos(x) * sin(y) * jac_y;
+
+  return jac;
+}
+
 EulerConverter::JacRowMatrix
 EulerConverter::GetDerivativeOfRotationMatrixWrtNodes(double t) const {
   JacRowMatrix jac;
@@ -306,6 +367,11 @@ EulerConverter::GetDerivMdotwrtNodes(double t, Dim3D ang_acc_dim) const {
 EulerConverter::JacobianRow EulerConverter::GetJac(double t, Dx deriv,
                                                    Dim3D dim) const {
   return euler_->GetJacobianWrtNodes(t, deriv).row(dim);
+}
+
+EulerConverter::JacobianRow
+EulerConverter::GetPosJacWrtScheduleVariables(double t, Dim3D dim) const {
+  return euler_->GetJacobianOfPosWrtDurations(t).row(dim);
 }
 
 } /* namespace towr_plus */

@@ -144,9 +144,11 @@ NlpFormulation::MakeEEMotionLinVariables() const {
         true);
 
     // initialize towards final footholds
-    double yaw = final_base_.ang.p().z();
-    Eigen::Vector3d euler(0.0, 0.0, yaw);
-    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+    Eigen::Vector3d final_base_euler(final_base_.ang.p().x(),
+                                     final_base_.ang.p().y(),
+                                     final_base_.ang.p().z());
+    Eigen::Matrix3d w_R_b =
+        EulerConverter::GetRotationMatrixBaseToWorld(final_base_euler);
     Vector3d final_ee_motion_lin =
         final_base_.lin.p() +
         w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
@@ -167,35 +169,38 @@ std::vector<NodesVariablesPhaseBased::Ptr>
 NlpFormulation::MakeEEMotionAngVariables() const {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  // compute final footholds orientation
-  Eigen::Vector3d base_euler_xyz(final_base_.ang.p().x(),
-                                 final_base_.ang.p().y(),
-                                 final_base_.ang.p().z());
-  Eigen::Matrix3d base_rot = euler_xyz_to_rot(base_euler_xyz);
-  double x = final_base_.ang.p().x();
-  double y = final_base_.ang.p().y();
-  Eigen::Vector3d foot_x_axis =
-      terrain_->GetProjectionToTerrain(x, y, base_rot.col(X), true);
-  Eigen::Vector3d foot_z_axis =
-      terrain_->GetNormalizedBasis(HeightMap::Normal, x, y);
-  Eigen::Vector3d foot_y_axis = foot_z_axis.cross(foot_x_axis);
-  Eigen::Matrix3d foot_rot;
-  foot_rot.col(0) = foot_x_axis;
-  foot_rot.col(1) = foot_y_axis;
-  foot_rot.col(2) = foot_z_axis;
-  std::cout << "foot_rot_final" << std::endl;
-  std::cout << foot_rot << std::endl;
-  exit(0);
-  Eigen::Vector3d final_foot_euler_angles;
-  // Little detail: Eigen returns zyx order
-  final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
-      foot_rot.eulerAngles(2, 1, 0)(1), foot_rot.eulerAngles(2, 1, 0)(0);
-
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto ang_nodes = std::make_shared<NodesVariablesEEMotion>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee),
         id::EEMotionAngNodes(ee), params_.ee_polynomials_per_swing_phase_,
         false);
+
+    // compute final footholds orientation
+    Eigen::Vector3d base_euler_xyz(final_base_.ang.p().x(),
+                                   final_base_.ang.p().y(),
+                                   final_base_.ang.p().z());
+    Eigen::Matrix3d base_rot = euler_xyz_to_rot(base_euler_xyz);
+    Vector3d final_ee_motion_lin =
+        final_base_.lin.p() +
+        base_rot * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+    double x = final_ee_motion_lin(0);
+    double y = final_ee_motion_lin(1);
+    Eigen::Vector3d foot_x_axis =
+        terrain_->GetProjectionToTerrain(x, y, base_rot.col(X), true);
+    Eigen::Vector3d foot_z_axis =
+        terrain_->GetNormalizedBasis(HeightMap::Normal, x, y);
+    Eigen::Vector3d foot_y_axis = foot_z_axis.cross(foot_x_axis);
+    Eigen::Matrix3d foot_rot;
+    foot_rot.col(0) = foot_x_axis;
+    foot_rot.col(1) = foot_y_axis;
+    foot_rot.col(2) = foot_z_axis;
+    std::cout << "foot_rot_final" << std::endl;
+    std::cout << foot_rot << std::endl;
+    exit(0);
+    Eigen::Vector3d final_foot_euler_angles;
+    // Little detail: Eigen returns zyx order
+    final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
+        foot_rot.eulerAngles(2, 1, 0)(1), foot_rot.eulerAngles(2, 1, 0)(0);
 
     ang_nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
                                         final_foot_euler_angles,
