@@ -57,7 +57,8 @@ public:
    * @brief Links the swing constraint with current foot variables.
    * @param ee_motion_id  The name of the foot variables in the optimization.
    */
-  SwingConstraint(std::string ee_motion_id);
+  SwingConstraint(std::string ee_motion_linear_id,
+                  std::string ee_motion_angular_id, double t_swing_avg = 0.5);
   virtual ~SwingConstraint() = default;
 
   VectorXd GetValues() const override;
@@ -67,12 +68,16 @@ public:
   void InitVariableDependedQuantities(const VariablesPtr &x) override;
 
 private:
-  NodesVariablesPhaseBased::Ptr ee_motion_;
-  // double t_swing_avg_ = 0.3;
-  double t_swing_avg_ = 0.75;
-  std::string ee_motion_id_;
+  NodesVariablesPhaseBased::Ptr ee_motion_linear_;
+  NodesVariablesPhaseBased::Ptr ee_motion_angular_;
+  double t_swing_avg_;
+  std::string ee_motion_linear_id_;
+  std::string ee_motion_angular_id_;
 
   std::vector<int> pure_swing_node_ids_;
+
+  int lin_constraint_count_;
+  int ang_constraint_count_;
 };
 
 } /* namespace towr_plus */

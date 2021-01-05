@@ -36,43 +36,74 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-SwingConstraint::SwingConstraint(std::string ee_motion)
-    : ConstraintSet(kSpecifyLater, "swing-" + ee_motion) {
-  ee_motion_id_ = ee_motion;
+SwingConstraint::SwingConstraint(std::string ee_motion_linear_id,
+                                 std::string ee_motion_angular_id,
+                                 double t_swing_avg)
+    : ConstraintSet(kSpecifyLater, "swing-" + ee_motion_linear_id) {
+  ee_motion_linear_id_ = ee_motion_linear_id;
+  ee_motion_angular_id_ = ee_motion_angular_id;
+  t_swing_avg_ = t_swing_avg;
 }
 
 void towr_plus::SwingConstraint::InitVariableDependedQuantities(
     const VariablesPtr &x) {
-  ee_motion_ = x->GetComponent<NodesVariablesPhaseBased>(ee_motion_id_);
+  ee_motion_linear_ =
+      x->GetComponent<NodesVariablesPhaseBased>(ee_motion_linear_id_);
+  ee_motion_angular_ =
+      x->GetComponent<NodesVariablesPhaseBased>(ee_motion_angular_id_);
 
-  pure_swing_node_ids_ = ee_motion_->GetIndicesOfNonConstantNodes();
+  pure_swing_node_ids_ = ee_motion_linear_->GetIndicesOfNonConstantNodes();
 
-  // constrain xy position and velocity of every swing node
-  int constraint_count =
+  // constrain xy position and velocity of every swing linear node
+  lin_constraint_count_ =
       pure_swing_node_ids_.size() * Node::n_derivatives * k2D;
+  // constrain xyz position and velocity of every swing angular node
+  ang_constraint_count_ =
+      pure_swing_node_ids_.size() * Node::n_derivatives * k3D;
 
-  SetRows(constraint_count);
+  SetRows(lin_constraint_count_ + ang_constraint_count_);
 }
 
 Eigen::VectorXd SwingConstraint::GetValues() const {
+  // x, xdot, y, ydot, x, xdot, y, ydot, z, zdot
   VectorXd g(GetRows());
 
   int row = 0;
-  auto nodes = ee_motion_->GetNodes();
+  auto lin_nodes = ee_motion_linear_->GetNodes();
   for (int node_id : pure_swing_node_ids_) {
+    // Linear Node
     // assumes two splines per swingphase and starting and ending in stance
-    auto curr = nodes.at(node_id);
+    auto curr_lin_node = lin_nodes.at(node_id);
 
-    Vector2d prev = nodes.at(node_id - 1).p().topRows<k2D>();
-    Vector2d next = nodes.at(node_id + 1).p().topRows<k2D>();
+    Vector2d prev_lin = lin_nodes.at(node_id - 1).p().topRows<k2D>();
+    Vector2d next_lin = lin_nodes.at(node_id + 1).p().topRows<k2D>();
 
-    Vector2d distance_xy = next - prev;
-    Vector2d xy_center = prev + 0.5 * distance_xy;
+    Vector2d distance_xy = next_lin - prev_lin;
+    Vector2d xy_center = prev_lin + 0.5 * distance_xy;
     Vector2d des_vel_center =
         distance_xy / t_swing_avg_; // linear interpolation not accurate
     for (auto dim : {X, Y}) {
-      g(row++) = curr.p()(dim) - xy_center(dim);
-      g(row++) = curr.v()(dim) - des_vel_center(dim);
+      g(row++) = curr_lin_node.p()(dim) - xy_center(dim);
+      g(row++) = curr_lin_node.v()(dim) - des_vel_center(dim);
+    }
+  }
+
+  auto ang_nodes = ee_motion_angular_->GetNodes();
+  for (int node_id : pure_swing_node_ids_) {
+    // Angular Node
+    // assumes two splines per swingphase and starting and ending in stance
+
+    auto curr_ang_node = ang_nodes.at(node_id);
+
+    Eigen::Vector3d prev_ang = ang_nodes.at(node_id - 1).p();
+    Eigen::Vector3d next_ang = ang_nodes.at(node_id + 1).p();
+    Eigen::Vector3d distance_xyz = next_ang - prev_ang;
+    Eigen::Vector3d xyz_center = prev_ang + 0.5 * distance_xyz;
+    Eigen::Vector3d des_vel_center =
+        distance_xyz / t_swing_avg_; // linear interpolation not accurate
+    for (auto dim : {X, Y, Z}) {
+      g(row++) = curr_ang_node.p()(dim) - xyz_center(dim);
+      g(row++) = curr_ang_node.v()(dim) - des_vel_center(dim);
     }
   }
 
@@ -85,27 +116,70 @@ SwingConstraint::VecBound SwingConstraint::GetBounds() const {
 
 void SwingConstraint::FillJacobianBlock(std::string var_set,
                                         Jacobian &jac) const {
-  if (var_set == ee_motion_->GetName()) {
+  if (var_set == ee_motion_linear_->GetName()) {
     int row = 0;
     for (int node_id : pure_swing_node_ids_) {
       for (auto dim : {X, Y}) {
         // position constraint
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id, kPos, dim))) = 1.0; // current node
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id + 1, kPos, dim))) = -0.5; // next node
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id - 1, kPos, dim))) = -0.5; // previous node
+        jac.coeffRef(row,
+                     ee_motion_linear_->GetOptIndex(
+                         NodesVariables::NodeValueInfo(node_id, kPos, dim))) =
+            1.0; // current node
+        jac.coeffRef(
+            row, ee_motion_linear_->GetOptIndex(NodesVariables::NodeValueInfo(
+                     node_id + 1, kPos, dim))) = -0.5; // next node
+        jac.coeffRef(
+            row, ee_motion_linear_->GetOptIndex(NodesVariables::NodeValueInfo(
+                     node_id - 1, kPos, dim))) = -0.5; // previous node
         row++;
 
         // velocity constraint
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id, kVel, dim))) = 1.0; // current node
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id + 1, kPos, dim))) =
+        jac.coeffRef(row,
+                     ee_motion_linear_->GetOptIndex(
+                         NodesVariables::NodeValueInfo(node_id, kVel, dim))) =
+            1.0; // current node
+        jac.coeffRef(
+            row, ee_motion_linear_->GetOptIndex(
+                     NodesVariables::NodeValueInfo(node_id + 1, kPos, dim))) =
             -1.0 / t_swing_avg_; // next node
-        jac.coeffRef(row, ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(
-                              node_id - 1, kPos, dim))) =
+        jac.coeffRef(
+            row, ee_motion_linear_->GetOptIndex(
+                     NodesVariables::NodeValueInfo(node_id - 1, kPos, dim))) =
+            +1.0 / t_swing_avg_; // previous node
+        row++;
+      }
+    }
+  }
+
+  if (var_set == ee_motion_angular_->GetName()) {
+    int row = lin_constraint_count_;
+    for (int node_id : pure_swing_node_ids_) {
+      for (auto dim : {X, Y, Z}) {
+        // position constraint
+        jac.coeffRef(row,
+                     ee_motion_angular_->GetOptIndex(
+                         NodesVariables::NodeValueInfo(node_id, kPos, dim))) =
+            1.0; // current node
+        jac.coeffRef(
+            row, ee_motion_angular_->GetOptIndex(NodesVariables::NodeValueInfo(
+                     node_id + 1, kPos, dim))) = -0.5; // next node
+        jac.coeffRef(
+            row, ee_motion_angular_->GetOptIndex(NodesVariables::NodeValueInfo(
+                     node_id - 1, kPos, dim))) = -0.5; // previous node
+        row++;
+
+        // velocity constraint
+        jac.coeffRef(row,
+                     ee_motion_angular_->GetOptIndex(
+                         NodesVariables::NodeValueInfo(node_id, kVel, dim))) =
+            1.0; // current node
+        jac.coeffRef(
+            row, ee_motion_angular_->GetOptIndex(
+                     NodesVariables::NodeValueInfo(node_id + 1, kPos, dim))) =
+            -1.0 / t_swing_avg_; // next node
+        jac.coeffRef(
+            row, ee_motion_angular_->GetOptIndex(
+                     NodesVariables::NodeValueInfo(node_id - 1, kPos, dim))) =
             +1.0 / t_swing_avg_; // previous node
         row++;
       }

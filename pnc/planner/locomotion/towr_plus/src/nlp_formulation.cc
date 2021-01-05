@@ -363,7 +363,9 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const {
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto swing = std::make_shared<SwingConstraint>(id::EEMotionLinNodes(ee));
+    auto swing = std::make_shared<SwingConstraint>(
+        id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee),
+        params_.ee_phase_durations_.at(ee)[1]);
     constraints.push_back(swing);
   }
 

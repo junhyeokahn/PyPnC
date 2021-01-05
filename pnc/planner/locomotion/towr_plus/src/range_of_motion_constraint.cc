@@ -213,6 +213,12 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
            ee_motion_angular_.DerivOfRotVecMult(t, v3, false);
     jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
 
+    std::cout << "[Range Of Motion] jac size: " << std::endl;
+    std::cout << jac_rot.rows() << std::endl;
+    std::cout << jac_rot.cols() << std::endl;
+    std::cout << jac.cols() << std::endl;
+    exit(0);
+
     jac.middleRows(row_start + k3D, 1) = jac_rot;
   }
 
@@ -244,6 +250,12 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
         S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * S1__ * b_R_w *
         ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v3, false);
     jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
+
+    std::cout << "[Range Of Motion] jac size: " << std::endl;
+    std::cout << jac_rot.rows() << std::endl;
+    std::cout << jac_rot.cols() << std::endl;
+    std::cout << jac.cols() << std::endl;
+    exit(0);
 
     jac.middleRows(row_start + k3D, 1) = jac_rot;
   }
