@@ -96,20 +96,20 @@ void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
 
   g.middleRows(GetRow(k, X), k3D) = vector_base_to_ee_B; // X, Y, Z
 
-  Eigen::MatrixXd num_mat =
+  Eigen::MatrixXd frnt_mtx =
       (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
-  Eigen::MatrixXd den_mat = (S2__.transpose() * ee_R_w * w_R_b *
+  Eigen::MatrixXd bck_mtx = (S2__.transpose() * ee_R_w * w_R_b *
                              S1__.transpose() * S1__ * b_R_w * w_R_ee * S2__);
-  double num = num_mat(0, 0);
-  double den = den_mat(0, 0);
+  double frnt = frnt_mtx(0, 0);
+  double bck = bck_mtx(0, 0);
 
-  std::cout << "num, den: " << std::endl;
-  std::cout << num << std::endl;
-  std::cout << den << std::endl;
+  std::cout << "front, bck: " << std::endl;
+  std::cout << frnt_mtx << std::endl;
+  std::cout << bck_mtx << std::endl;
   exit(0);
   Eigen::VectorXd val_rot(1);
-  val_rot << num / den;
-  g.middleRows(GetRow(k, 3), 1) = val_rot; // Rot
+  val_rot << frnt * std::pow(bck, -0.5);
+  g.middleRows(GetRow(k, k3D), 1) = val_rot; // Rot
 }
 
 void RangeOfMotionConstraint::UpdateBoundsAtInstance(double t, int k,
@@ -133,37 +133,38 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
                                                        std::string var_set,
                                                        Jacobian &jac) const {
 
+  EulerConverter::MatrixSXd w_R_b =
+      base_angular_.GetRotationMatrixBaseToWorld(t);
+  EulerConverter::MatrixSXd b_R_w =
+      base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+  EulerConverter::MatrixSXd w_R_ee =
+      ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
+  EulerConverter::MatrixSXd ee_R_w =
+      ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+
   int row_start = GetRow(k, X);
 
   if (var_set == id::base_lin_nodes) {
-    EulerConverter::MatrixSXd b_R_w =
-        base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
     jac.middleRows(row_start, k3D) =
         -1 * b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::base_ang_nodes) {
+    // X, Y, Z
     Vector3d base_W = base_linear_->GetPoint(t).p();
     Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
     Vector3d r_W = ee_pos_W - base_W;
+
     jac.middleRows(row_start, k3D) =
         base_angular_.DerivOfRotVecMult(t, r_W, true);
 
-    EulerConverter::MatrixSXd w_R_b =
-        base_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd b_R_w =
-        base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-    EulerConverter::MatrixSXd w_R_ee =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd ee_R_w =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-
-    Eigen::MatrixXd num_mat =
+    // Rot
+    Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
-    Eigen::MatrixXd den_mat = (S2__.transpose() * ee_R_w * w_R_b *
+    Eigen::MatrixXd bck_mtx = (S2__.transpose() * ee_R_w * w_R_b *
                                S1__.transpose() * S1__ * b_R_w * w_R_ee * S2__);
-    double num = num_mat(0, 0);
-    double den = den_mat(0, 0);
+    double frnt = frnt_mtx(0, 0);
+    double bck = bck_mtx(0, 0);
 
     Jacobian jac_rot, jac1, jac2, jac3;
     Eigen::Vector3d v1 = S1_.transpose() * local_x_;
@@ -171,12 +172,12 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
     Eigen::Vector3d v3 = w_R_ee * S2_;
 
     jac1 = S2__.transpose() * ee_R_w *
-           base_angular_.DerivOfRotVecMult(t, v1, false);
+           base_angular_.DerivOfRotVecMult(t, v1, false) * std::pow(bck, -0.5);
     jac2 = S2__.transpose() * ee_R_w *
            base_angular_.DerivOfRotVecMult(t, v2, false);
     jac3 = S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * S1__ *
            base_angular_.DerivOfRotVecMult(t, v3, true);
-    jac_rot = (jac1 * den - num * (jac2 + jac3)) / std::pow(den, 2);
+    jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
     std::cout << "[Range Of Motion] jac size: " << std::endl;
     std::cout << jac_rot.rows() << std::endl;
     std::cout << jac_rot.cols() << std::endl;
@@ -186,83 +187,64 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
   }
 
   if (var_set == id::EEMotionLinNodes(ee_)) {
-    EulerConverter::MatrixSXd b_R_w =
-        base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
     jac.middleRows(row_start, k3D) =
         b_R_w * ee_motion_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::EEMotionAngNodes(ee_)) {
 
-    EulerConverter::MatrixSXd w_R_b =
-        base_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd b_R_w =
-        base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-    EulerConverter::MatrixSXd w_R_ee =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd ee_R_w =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-
-    Eigen::MatrixXd num_mat =
+    Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
-    Eigen::MatrixXd den_mat = (S2__.transpose() * ee_R_w * w_R_b *
+    Eigen::MatrixXd bck_mtx = (S2__.transpose() * ee_R_w * w_R_b *
                                S1__.transpose() * S1__ * b_R_w * w_R_ee * S2__);
-    double num = num_mat(0, 0);
-    double den = den_mat(0, 0);
+    double frnt = frnt_mtx(0, 0);
+    double bck = bck_mtx(0, 0);
 
     Jacobian jac_rot, jac1, jac2, jac3;
     Eigen::Vector3d v1 = w_R_b * S1_.transpose() * local_x_;
     Eigen::Vector3d v2 = w_R_b * S1_.transpose() * S1_ * b_R_w * w_R_ee * S2_;
     Eigen::Vector3d v3 = S2_;
 
-    jac1 = S2__.transpose() * ee_motion_angular_.DerivOfRotVecMult(t, v1, true);
+    jac1 = S2__.transpose() *
+           ee_motion_angular_.DerivOfRotVecMult(t, v1, true) *
+           std::pow(bck, -0.5);
     jac2 = S2__.transpose() * ee_motion_angular_.DerivOfRotVecMult(t, v2, true);
     jac3 = S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * S1__ * b_R_w *
            ee_motion_angular_.DerivOfRotVecMult(t, v3, false);
-    jac_rot = (jac1 * den - num * (jac2 + jac3)) / std::pow(den, 2);
+    jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
+
     jac.middleRows(row_start + k3D, 1) = jac_rot;
   }
 
   if (var_set == id::EESchedule(ee_)) {
 
-    EulerConverter::MatrixSXd w_R_b =
-        base_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd b_R_w =
-        base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-    EulerConverter::MatrixSXd w_R_ee =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
-    EulerConverter::MatrixSXd ee_R_w =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-
     jac.middleRows(row_start, k3D) =
         b_R_w * ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
 
-    Eigen::MatrixXd num_mat =
+    Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
-    Eigen::MatrixXd den_mat = (S2__.transpose() * ee_R_w * w_R_b *
+    Eigen::MatrixXd bck_mtx = (S2__.transpose() * ee_R_w * w_R_b *
                                S1__.transpose() * S1__ * b_R_w * w_R_ee * S2__);
-    double num = num_mat(0, 0);
-    double den = den_mat(0, 0);
+    double frnt = frnt_mtx(0, 0);
+    double bck = bck_mtx(0, 0);
 
     Jacobian jac_rot, jac1, jac2, jac3;
     Eigen::Vector3d v1 = w_R_b * S1_.transpose() * local_x_;
     Eigen::Vector3d v2 = w_R_b * S1_.transpose() * S1_ * b_R_w * w_R_ee * S2_;
     Eigen::Vector3d v3 = S2_;
+
     jac1 =
         S2__.transpose() *
-        ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v1, true);
+        ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v1, true) *
+        std::pow(bck, -0.5);
     jac2 =
         S2__.transpose() *
         ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v2, true);
     jac3 =
         S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * S1__ * b_R_w *
         ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v3, false);
-    jac_rot = (jac1 * den - num * (jac2 + jac3)) / std::pow(den, 2);
-    std::cout << "[Range Of Motion] jac size" << std::endl;
-    std::cout << jac_rot.rows() << std::endl;
-    std::cout << jac_rot.cols() << std::endl;
-    std::cout << jac.cols() << std::endl;
-    exit(0);
+    jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
+
     jac.middleRows(row_start + k3D, 1) = jac_rot;
   }
 }
