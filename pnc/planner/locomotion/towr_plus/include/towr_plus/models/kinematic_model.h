@@ -61,6 +61,8 @@ public:
   KinematicModel(int n_ee) {
     nominal_stance_.resize(n_ee);
     max_dev_from_nominal_.setZero();
+    foot_half_length_ = 0.15;
+    foot_half_width_ = 0.07;
   }
 
   virtual ~KinematicModel() = default;
@@ -84,9 +86,14 @@ public:
    */
   int GetNumberOfEndeffectors() const { return nominal_stance_.size(); }
 
+  double GetFootHalfLength() { return foot_half_length_; }
+  double GetFootHalfWidth() { return foot_half_width_; }
+
 protected:
   EEPos nominal_stance_;
   Vector3d max_dev_from_nominal_;
+  double foot_half_length_;
+  double foot_half_width_;
 };
 
 } /* namespace towr_plus */

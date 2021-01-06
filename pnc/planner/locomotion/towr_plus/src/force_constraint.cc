@@ -33,28 +33,42 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 #include <towr_plus/constraints/force_constraint.h>
 #include <towr_plus/variables/variable_names.h>
+#include <util/util.hpp>
 
 #include <iostream>
 
 namespace towr_plus {
 
 ForceConstraint::ForceConstraint(const HeightMap::Ptr &terrain,
-                                 double force_limit, EE ee)
+                                 double force_limit, double x, double y, EE ee,
+                                 const SplineHolder &spline_holder)
     : ifopt::ConstraintSet(kSpecifyLater, "force-" + id::EEWrenchLinNodes(ee)) {
   terrain_ = terrain;
   fn_max_ = force_limit;
   mu_ = terrain->GetFrictionCoeff();
   ee_ = ee;
 
-  n_constraints_per_node_ =
-      1 + 2 * k2D; // positive normal force + 4 friction pyramid constraints
+  x_ = x;
+  y_ = y;
+  ee_motion_angular_ = EulerConverter(spline_holder.ee_motion_angular_.at(ee));
+  phase_durations_ = spline_holder.phase_durations_.at(ee);
+
+  Uf_ = Eigen::MatrixXd::Zero(17, 3);
+  Utau_ = Eigen::MatrixXd::Zero(17, 3);
+  _set_U();
+
+  n_constraints_per_node_ = 17;
 }
 
 void ForceConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
   ee_force_ =
       x->GetComponent<NodesVariablesPhaseBased>(id::EEWrenchLinNodes(ee_));
-  ee_motion_ =
+  ee_trq_ =
+      x->GetComponent<NodesVariablesPhaseBased>(id::EEWrenchAngNodes(ee_));
+  ee_motion_lin_ =
       x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionLinNodes(ee_));
+  ee_motion_lin_ =
+      x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionAngNodes(ee_));
 
   pure_stance_force_node_ids_ = ee_force_->GetIndicesOfNonConstantNodes();
 
@@ -66,28 +80,40 @@ void ForceConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
 Eigen::VectorXd ForceConstraint::GetValues() const {
   VectorXd g(GetRows());
 
-  int row = 0;
+  int idx(0);
   auto force_nodes = ee_force_->GetNodes();
+  auto trq_nodes = ee_trq_->GetNodes();
   for (int f_node_id : pure_stance_force_node_ids_) {
     int phase = ee_force_->GetPhase(f_node_id);
-    Vector3d p = ee_motion_->GetValueAtStartOfPhase(
-        phase); // doesn't change during stance phase
-    Vector3d n = terrain_->GetNormalizedBasis(HeightMap::Normal, p.x(), p.y());
+    double t(0.);
+    std::vector<double> pds = phase_durations_->GetPhaseDurations();
+    for (int i = 0; i < pds.size(); ++i) {
+      if (i < phase) {
+        t += pds[i];
+      }
+    }
+    std::cout << "t in force constraint" << std::endl;
+    std::cout << t << std::endl;
+    exit(0);
+
+    Eigen::Vector3d euler_xyz = ee_motion_ang_->GetValueAtStartOfPhase(phase);
+    Eigen::Matrix3d w_R_ee = euler_xyz_to_rot(euler_xyz);
+    Eigen::Matrix3d w_R_ee_2 =
+        ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
+    std::cout << "from node directly" << std::endl;
+    std::cout << w_R_ee << std::endl;
+    std::cout << "from spline holder" << std::endl;
+    std::cout << w_R_ee_2 << std::endl;
+    std::cout << "in force constraint, should be same" << std::endl;
+    exit(0);
+
     Vector3d f = force_nodes.at(f_node_id).p();
+    Vector3d tau = trq_nodes.at(f_node_id).p();
 
-    // unilateral force
-    g(row++) = f.transpose() * n; // >0 (unilateral forces)
-
-    // frictional pyramid
-    Vector3d t1 =
-        terrain_->GetNormalizedBasis(HeightMap::Tangent1, p.x(), p.y());
-    g(row++) = f.transpose() * (t1 - mu_ * n); // t1 < mu*n
-    g(row++) = f.transpose() * (t1 + mu_ * n); // t1 > -mu*n
-
-    Vector3d t2 =
-        terrain_->GetNormalizedBasis(HeightMap::Tangent2, p.x(), p.y());
-    g(row++) = f.transpose() * (t2 - mu_ * n); // t2 < mu*n
-    g(row++) = f.transpose() * (t2 + mu_ * n); // t2 > -mu*n
+    Eigen::VectorXd val =
+        Uf_ * w_R_ee.transpose() * f + Utau_ * w_R_ee.transpose() * tau;
+    g.segment(idx * n_constraints_per_node_, n_constraints_per_node_) = val;
+    idx += 1;
   }
 
   return g;
@@ -96,12 +122,9 @@ Eigen::VectorXd ForceConstraint::GetValues() const {
 ForceConstraint::VecBound ForceConstraint::GetBounds() const {
   VecBound bounds;
 
-  for (int f_node_id : pure_stance_force_node_ids_) {
-    bounds.push_back(ifopt::Bounds(0.0, fn_max_)); // unilateral forces
-    bounds.push_back(ifopt::BoundSmallerZero);     // f_t1 <  mu*n
-    bounds.push_back(ifopt::BoundGreaterZero);     // f_t1 > -mu*n
-    bounds.push_back(ifopt::BoundSmallerZero);     // f_t2 <  mu*n
-    bounds.push_back(ifopt::BoundGreaterZero);     // f_t2 > -mu*n
+  for (int i = 0;
+       i < pure_stance_force_node_ids_.size() * n_constraints_per_node_; ++i) {
+    bounds.push_back(ifopt::BoundGreaterZero);
   }
 
   return bounds;
@@ -109,75 +132,165 @@ ForceConstraint::VecBound ForceConstraint::GetBounds() const {
 
 void ForceConstraint::FillJacobianBlock(std::string var_set,
                                         Jacobian &jac) const {
+
   if (var_set == ee_force_->GetName()) {
-    int row = 0;
+    int idx = 0;
     for (int f_node_id : pure_stance_force_node_ids_) {
-      // unilateral force
       int phase = ee_force_->GetPhase(f_node_id);
-      Vector3d p = ee_motion_->GetValueAtStartOfPhase(
-          phase); // doesn't change during phase
-      Vector3d n =
-          terrain_->GetNormalizedBasis(HeightMap::Normal, p.x(), p.y());
-      Vector3d t1 =
-          terrain_->GetNormalizedBasis(HeightMap::Tangent1, p.x(), p.y());
-      Vector3d t2 =
-          terrain_->GetNormalizedBasis(HeightMap::Tangent2, p.x(), p.y());
+      Eigen::Vector3d euler_xyz = ee_motion_ang_->GetValueAtStartOfPhase(phase);
+      Eigen::Matrix3d w_R_ee = euler_xyz_to_rot(euler_xyz);
+      Eigen::MatrixXd Uf_times_ee_R_w = Uf_ * w_R_ee.transpose();
 
-      for (auto dim : {X, Y, Z}) {
-        int idx = ee_force_->GetOptIndex(
-            NodesVariables::NodeValueInfo(f_node_id, kPos, dim));
-
-        int row_reset = row;
-
-        jac.coeffRef(row_reset++, idx) = n(dim); // unilateral force
-        jac.coeffRef(row_reset++, idx) = t1(dim) - mu_ * n(dim); // f_t1 <  mu*n
-        jac.coeffRef(row_reset++, idx) = t1(dim) + mu_ * n(dim); // f_t1 > -mu*n
-        jac.coeffRef(row_reset++, idx) = t2(dim) - mu_ * n(dim); // f_t2 <  mu*n
-        jac.coeffRef(row_reset++, idx) = t2(dim) + mu_ * n(dim); // f_t2 > -mu*n
+      int row = n_constraints_per_node_ * idx;
+      for (int i = 0; i < n_constraints_per_node_; ++i) {
+        for (auto dim : {X, Y, Z}) {
+          int idx = ee_force_->GetOptIndex(
+              NodesVariables::NodeValueInfo(f_node_id, kPos, dim));
+          jac.coeffRef(row++, idx) = Uf_times_ee_R_w(i, dim);
+        }
       }
-
-      row += n_constraints_per_node_;
+      idx += 1;
     }
   }
 
-  if (var_set == ee_motion_->GetName()) {
-    int row = 0;
+  if (var_set == ee_trq_->GetName()) {
+    int idx = 0;
+    for (int f_node_id : pure_stance_force_node_ids_) {
+      int phase = ee_trq_->GetPhase(f_node_id);
+      Eigen::Vector3d euler_xyz = ee_motion_ang_->GetValueAtStartOfPhase(phase);
+      Eigen::Matrix3d w_R_ee = euler_xyz_to_rot(euler_xyz);
+      Eigen::MatrixXd Utau_times_ee_R_w = Utau_ * w_R_ee.transpose();
+
+      int row = n_constraints_per_node_ * idx;
+      for (int i = 0; i < n_constraints_per_node_; ++i) {
+        for (auto dim : {X, Y, Z}) {
+          int idx = ee_trq_->GetOptIndex(
+              NodesVariables::NodeValueInfo(f_node_id, kPos, dim));
+          jac.coeffRef(row++, idx) = Utau_times_ee_R_w(i, dim);
+        }
+      }
+      idx += 1;
+    }
+  }
+
+  if (var_set == ee_motion_ang_->GetName()) {
+    int idx = 0;
     auto force_nodes = ee_force_->GetNodes();
+    auto trq_nodes = ee_trq_->GetNodes();
+
     for (int f_node_id : pure_stance_force_node_ids_) {
       int phase = ee_force_->GetPhase(f_node_id);
-      int ee_node_id = ee_motion_->GetNodeIDAtStartOfPhase(phase);
-
-      Vector3d p = ee_motion_->GetValueAtStartOfPhase(
-          phase); // doesn't change during pahse
-      Vector3d f = force_nodes.at(f_node_id).p();
-
-      for (auto dim : {X_, Y_}) {
-        Vector3d dn = terrain_->GetDerivativeOfNormalizedBasisWrt(
-            HeightMap::Normal, dim, p.x(), p.y());
-        Vector3d dt1 = terrain_->GetDerivativeOfNormalizedBasisWrt(
-            HeightMap::Tangent1, dim, p.x(), p.y());
-        Vector3d dt2 = terrain_->GetDerivativeOfNormalizedBasisWrt(
-            HeightMap::Tangent2, dim, p.x(), p.y());
-
-        int idx = ee_motion_->GetOptIndex(
-            NodesVariables::NodeValueInfo(ee_node_id, kPos, dim));
-        int row_reset = row;
-
-        // unilateral force
-        jac.coeffRef(row_reset++, idx) = f.transpose() * dn;
-
-        // friction force tangent 1 derivative
-        jac.coeffRef(row_reset++, idx) = f.transpose() * (dt1 - mu_ * dn);
-        jac.coeffRef(row_reset++, idx) = f.transpose() * (dt1 + mu_ * dn);
-
-        // friction force tangent 2 derivative
-        jac.coeffRef(row_reset++, idx) = f.transpose() * (dt2 - mu_ * dn);
-        jac.coeffRef(row_reset++, idx) = f.transpose() * (dt2 + mu_ * dn);
+      double t(0.);
+      std::vector<double> pds = phase_durations_->GetPhaseDurations();
+      for (int i = 0; i < pds.size(); ++i) {
+        if (i < phase) {
+          t += pds[i];
+        }
       }
 
-      row += n_constraints_per_node_;
+      Vector3d frc = force_nodes.at(f_node_id).p();
+      Vector3d tau = trq_nodes.at(f_node_id).p();
+
+      Jacobian jac1, jac2;
+      jac1 =
+          Uf_.sparseView() * ee_motion_angular_.DerivOfRotVecMult(t, frc, true);
+      jac1 = Utau_.sparseView() *
+             ee_motion_angular_.DerivOfRotVecMult(t, tau, true);
+      std::cout << "jac size in force_constraint" << std::endl;
+      std::cout << jac1.rows() << std::endl;
+      std::cout << jac2.cols() << std::endl;
+      exit(0);
+
+      jac.middleRows(n_constraints_per_node_ * idx, n_constraints_per_node_) =
+          jac1 + jac2;
+      idx += 1;
     }
   }
+}
+
+void ForceConstraint::_set_U() {
+  Eigen::MatrixXd U = Eigen::MatrixXd::Zero(17, 6);
+  U(0, 5) = 1.;
+
+  U(1, 3) = 1.;
+  U(1, 5) = mu_;
+  U(2, 3) = -1.;
+  U(2, 5) = mu_;
+
+  U(3, 4) = 1.;
+  U(3, 5) = mu_;
+  U(4, 4) = -1.;
+  U(4, 5) = mu_;
+
+  U(5, 0) = 1.;
+  U(5, 5) = y_;
+  U(6, 0) = -1.;
+  U(6, 5) = y_;
+
+  U(7, 1) = 1.;
+  U(7, 5) = x_;
+  U(8, 1) = -1.;
+  U(8, 5) = x_;
+
+  // Tau
+  U(9, 0) = -mu_;
+  U(9, 1) = -mu_;
+  U(9, 2) = 1;
+  U(9, 3) = y_;
+  U(9, 4) = x_;
+  U(9, 5) = (x_ + y_) * mu_;
+
+  U(10, 0) = -mu_;
+  U(10, 1) = mu_;
+  U(10, 2) = 1;
+  U(10, 3) = y_;
+  U(10, 4) = -x_;
+  U(10, 5) = (x_ + y_) * mu_;
+
+  U(11, 0) = mu_;
+  U(11, 1) = -mu_;
+  U(11, 2) = 1;
+  U(11, 3) = -y_;
+  U(11, 4) = x_;
+  U(11, 5) = (x_ + y_) * mu_;
+
+  U(12, 0) = mu_;
+  U(12, 1) = mu_;
+  U(12, 2) = 1;
+  U(12, 3) = -y_;
+  U(12, 4) = -x_;
+  U(12, 5) = (x_ + y_) * mu_;
+  /////////////////////////////////////////////////
+  U(13, 0) = -mu_;
+  U(13, 1) = -mu_;
+  U(13, 2) = -1;
+  U(13, 3) = -y_;
+  U(13, 4) = -x_;
+  U(13, 5) = (x_ + y_) * mu_;
+
+  U(14, 0) = -mu_;
+  U(14, 1) = mu_;
+  U(14, 2) = -1;
+  U(14, 3) = -y_;
+  U(14, 4) = x_;
+  U(14, 5) = (x_ + y_) * mu_;
+
+  U(15, 0) = mu_;
+  U(15, 1) = -mu_;
+  U(15, 2) = -1;
+  U(15, 3) = y_;
+  U(15, 4) = -x_;
+  U(15, 5) = (x_ + y_) * mu_;
+
+  U(16, 0) = mu_;
+  U(16, 1) = mu_;
+  U(16, 2) = -1;
+  U(16, 3) = y_;
+  U(16, 4) = x_;
+  U(16, 5) = (x_ + y_) * mu_;
+
+  Uf_ = U.block(0, 3, 17, 3);
+  Utau_ = U.block(0, 0, 17, 3);
 }
 
 } /* namespace towr_plus */

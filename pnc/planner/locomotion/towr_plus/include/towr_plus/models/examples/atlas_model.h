@@ -13,6 +13,9 @@ public:
     const double y_nominal_b = 0.111;
     const double z_nominal_b = -0.765;
 
+    foot_half_length_ = 0.11;
+    foot_half_width_ = 0.065;
+
     nominal_stance_.at(L) << x_nominal_b, y_nominal_b, z_nominal_b;
     nominal_stance_.at(R) << x_nominal_b, -y_nominal_b, z_nominal_b;
 

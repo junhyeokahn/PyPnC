@@ -130,7 +130,7 @@ private:
   ContraintPtrVec MakeRangeOfMotionBoxConstraint(const SplineHolder &s) const;
   ContraintPtrVec MakeTotalTimeConstraint() const;
   ContraintPtrVec MakeTerrainConstraint() const;
-  ContraintPtrVec MakeForceConstraint() const;
+  ContraintPtrVec MakeForceConstraint(const SplineHolder &s) const;
   ContraintPtrVec MakeSwingConstraint() const;
   ContraintPtrVec MakeBaseRangeOfMotionConstraint(const SplineHolder &s) const;
   ContraintPtrVec MakeBaseAccConstraint(const SplineHolder &s) const;

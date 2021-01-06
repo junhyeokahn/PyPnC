@@ -284,7 +284,7 @@ NlpFormulation::GetConstraint(Parameters::ConstraintName name,
   case Parameters::Terrain:
     return MakeTerrainConstraint();
   case Parameters::Force:
-    return MakeForceConstraint();
+    return MakeForceConstraint(s);
   case Parameters::Swing:
     return MakeSwingConstraint();
   case Parameters::BaseAcc:
@@ -347,12 +347,15 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const {
   return constraints;
 }
 
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeForceConstraint() const {
+NlpFormulation::ContraintPtrVec
+NlpFormulation::MakeForceConstraint(const SplineHolder &s) const {
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto c = std::make_shared<ForceConstraint>(
-        terrain_, params_.force_limit_in_normal_direction_, ee);
+        terrain_, params_.force_limit_in_normal_direction_,
+        model_.kinematic_model_->GetFootHalfLength(),
+        model_.kinematic_model_->GetFootHalfWidth(), ee, s);
     constraints.push_back(c);
   }
 

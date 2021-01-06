@@ -36,7 +36,10 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 #include <ifopt/constraint_set.h>
 #include <towr_plus/terrain/height_map.h> // for friction cone
+#include <towr_plus/variables/euler_converter.h>
 #include <towr_plus/variables/nodes_variables_phase_based.h>
+#include <towr_plus/variables/spline.h>
+#include <towr_plus/variables/spline_holder.h>
 
 namespace towr_plus {
 
@@ -68,7 +71,8 @@ public:
    * @param endeffector_id Which endeffector force should be constrained.
    */
   ForceConstraint(const HeightMap::Ptr &terrain,
-                  double force_limit_in_normal_direction, EE endeffector_id);
+                  double force_limit_in_normal_direction, double x, double y,
+                  EE endeffector_id, const SplineHolder &spline_holder);
   virtual ~ForceConstraint() = default;
 
   void InitVariableDependedQuantities(const VariablesPtr &x) override;
@@ -78,8 +82,10 @@ public:
   void FillJacobianBlock(std::string var_set, Jacobian &) const override;
 
 private:
-  NodesVariablesPhaseBased::Ptr ee_force_;  ///< the current xyz foot forces.
-  NodesVariablesPhaseBased::Ptr ee_motion_; ///< the current xyz foot positions.
+  NodesVariablesPhaseBased::Ptr ee_force_;
+  NodesVariablesPhaseBased::Ptr ee_trq_;
+  NodesVariablesPhaseBased::Ptr ee_motion_lin_;
+  NodesVariablesPhaseBased::Ptr ee_motion_ang_;
 
   HeightMap::Ptr terrain_; ///< gradient information at every position (x,y).
   double fn_max_;          ///< force limit in normal direction.
@@ -92,6 +98,16 @@ private:
    * stance phases, while all the others are already set to zero force (swing)
    **/
   std::vector<int> pure_stance_force_node_ids_;
+
+  double x_;
+  double y_;
+  Eigen::MatrixXd Uf_;
+  Eigen::MatrixXd Utau_;
+
+  void _set_U();
+
+  EulerConverter ee_motion_angular_;
+  PhaseDurations::Ptr phase_durations_;
 };
 
 } /* namespace towr_plus */
