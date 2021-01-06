@@ -103,17 +103,17 @@ HeightMap::GetProjectionToTerrain(double x, double y,
                                   const HeightMap::Vector3d &vec,
                                   bool b_normalize) const {
 
-  Eigen::Vector3d ret1, ret2;
+  Eigen::Vector3d ret;
 
-  ret1(X) = vec(X);
-  ret1(Y) = vec(Y);
-  ret1(Z) = vec(X) * GetDerivativeOfHeightWrt(X_, x, y) +
-            vec(Y) * GetDerivativeOfHeightWrt(Y_, x, y);
+  ret(X) = vec(X);
+  ret(Y) = vec(Y);
+  ret(Z) = vec(X) * GetDerivativeOfHeightWrt(X_, x, y) +
+           vec(Y) * GetDerivativeOfHeightWrt(Y_, x, y);
 
   if (b_normalize) {
-    return ret1.normalized();
+    return ret.normalized();
   }
-  return ret1;
+  return ret;
 }
 
 HeightMap::Vector3d

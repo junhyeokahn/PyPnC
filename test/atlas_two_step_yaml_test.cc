@@ -30,12 +30,15 @@ int main() {
   // Solve
   ifopt::Problem nlp;
   SplineHolder solution;
-  for (auto c : formulation.GetVariableSets(solution))
+  for (auto c : formulation.GetVariableSets(solution)) {
     nlp.AddVariableSet(c);
-  for (auto c : formulation.GetConstraints(solution))
+  }
+  for (auto c : formulation.GetConstraints(solution)) {
     nlp.AddConstraintSet(c);
-  for (auto c : formulation.GetCosts())
+  }
+  for (auto c : formulation.GetCosts()) {
     nlp.AddCostSet(c);
+  }
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("jacobian_approximation", "exact");

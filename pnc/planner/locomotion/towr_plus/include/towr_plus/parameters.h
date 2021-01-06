@@ -144,14 +144,14 @@ public:
    * optimization problem.
    */
   enum ConstraintName {
-    Dynamic,        ///< sets DynamicConstraint
-    EndeffectorRom, ///< sets RangeOfMotionConstraint
-    TotalTime,      ///< sets TotalDurationConstraint
-    Terrain,        ///< sets TerrainConstraint
-    Force,          ///< sets ForceConstraint
-    Swing,          ///< sets SwingConstraint
-    BaseRom,        ///< sets BaseMotionConstraint
-    BaseAcc         ///< sets SplineAccConstraint
+    Dynamic = 0,        ///< sets DynamicConstraint
+    EndeffectorRom = 1, ///< sets RangeOfMotionConstraint
+    TotalTime = 2,      ///< sets TotalDurationConstraint
+    Terrain = 3,        ///< sets TerrainConstraint
+    Force = 4,          ///< sets ForceConstraint
+    Swing = 5,          ///< sets SwingConstraint
+    BaseRom = 6,        ///< sets BaseMotionConstraint
+    BaseAcc = 7         ///< sets SplineAccConstraint
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization

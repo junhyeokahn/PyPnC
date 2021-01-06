@@ -42,7 +42,8 @@ namespace towr_plus {
 ForceConstraint::ForceConstraint(const HeightMap::Ptr &terrain,
                                  double force_limit, double x, double y, EE ee,
                                  const SplineHolder &spline_holder)
-    : ifopt::ConstraintSet(kSpecifyLater, "force-" + id::EEWrenchLinNodes(ee)) {
+    : ifopt::ConstraintSet(kSpecifyLater,
+                           "wrench-" + id::EEWrenchLinNodes(ee)) {
   terrain_ = terrain;
   fn_max_ = force_limit;
   mu_ = terrain->GetFrictionCoeff();

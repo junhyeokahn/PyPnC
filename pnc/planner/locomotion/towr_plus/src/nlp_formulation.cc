@@ -98,6 +98,7 @@ NlpFormulation::GetVariableSets(SplineHolder &spline_holder) {
                                ee_wrench_lin, // linear
                                ee_wrench_ang, // angular
                                contact_schedule, params_.IsOptimizeTimings());
+
   return vars;
 }
 
@@ -194,9 +195,6 @@ NlpFormulation::MakeEEMotionAngVariables() const {
     foot_rot.col(0) = foot_x_axis;
     foot_rot.col(1) = foot_y_axis;
     foot_rot.col(2) = foot_z_axis;
-    std::cout << "foot_rot_final" << std::endl;
-    std::cout << foot_rot << std::endl;
-    exit(0);
     Eigen::Vector3d final_foot_euler_angles;
     // Little detail: Eigen returns zyx order
     final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
@@ -262,9 +260,11 @@ NlpFormulation::MakeContactScheduleVariables() const {
 NlpFormulation::ContraintPtrVec
 NlpFormulation::GetConstraints(const SplineHolder &spline_holder) const {
   ContraintPtrVec constraints;
-  for (auto name : params_.constraints_)
-    for (auto c : GetConstraint(name, spline_holder))
+  for (auto name : params_.constraints_) {
+    for (auto c : GetConstraint(name, spline_holder)) {
       constraints.push_back(c);
+    }
+  }
 
   return constraints;
 }
@@ -390,9 +390,11 @@ NlpFormulation::MakeBaseAccConstraint(const SplineHolder &s) const {
 
 NlpFormulation::ContraintPtrVec NlpFormulation::GetCosts() const {
   ContraintPtrVec costs;
-  for (const auto &pair : params_.costs_)
-    for (auto c : GetCost(pair.first, pair.second))
+  for (const auto &pair : params_.costs_) {
+    for (auto c : GetCost(pair.first, pair.second)) {
       costs.push_back(c);
+    }
+  }
 
   return costs;
 }

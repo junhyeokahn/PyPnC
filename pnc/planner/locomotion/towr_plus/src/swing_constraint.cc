@@ -39,7 +39,8 @@ namespace towr_plus {
 SwingConstraint::SwingConstraint(std::string ee_motion_linear_id,
                                  std::string ee_motion_angular_id,
                                  double t_swing_avg)
-    : ConstraintSet(kSpecifyLater, "swing-" + ee_motion_linear_id) {
+    : ConstraintSet(kSpecifyLater, "swing-" + ee_motion_linear_id + " / " +
+                                       ee_motion_angular_id) {
   ee_motion_linear_id_ = ee_motion_linear_id;
   ee_motion_angular_id_ = ee_motion_angular_id;
   t_swing_avg_ = t_swing_avg;
