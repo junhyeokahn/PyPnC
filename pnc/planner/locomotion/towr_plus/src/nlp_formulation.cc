@@ -340,7 +340,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const {
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto c = std::make_shared<TerrainConstraint>(
-        terrain_, id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee));
+        terrain_, ee, id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee));
     constraints.push_back(c);
   }
 
@@ -367,7 +367,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const {
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto swing = std::make_shared<SwingConstraint>(
-        id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee),
+        ee, id::EEMotionLinNodes(ee), id::EEMotionAngNodes(ee),
         params_.ee_phase_durations_.at(ee)[1]);
     constraints.push_back(swing);
   }

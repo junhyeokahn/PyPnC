@@ -85,8 +85,6 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
 
   // sensitivity of dynamic constraint w.r.t base variables.
   if (var_set == id::base_lin_nodes) {
-    std::cout << "[dynamic constraints] jacobian" << std::endl;
-    std::cout << "base lin" << std::endl;
     Jacobian jac_base_lin_pos = base_linear_->GetJacobianWrtNodes(t, kPos);
     Jacobian jac_base_lin_acc = base_linear_->GetJacobianWrtNodes(t, kAcc);
 
@@ -101,36 +99,24 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
   // sensitivity of dynamic constraint w.r.t. endeffector variables
   for (int ee = 0; ee < model_->GetEECount(); ++ee) {
     if (var_set == id::EEWrenchLinNodes(ee)) {
-      std::cout << "[dynamic constraints] jacobian" << std::endl;
-      std::cout << "frc" << std::endl;
-      std::cout << "ee : " << ee << std::endl;
       Jacobian jac_ee_force =
           ee_wrench_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
       jac_model = model_->GetJacobianWrtForce(jac_ee_force, ee);
     }
 
     if (var_set == id::EEWrenchAngNodes(ee)) {
-      std::cout << "[dynamic constraints] jacobian" << std::endl;
-      std::cout << "wrench" << std::endl;
-      std::cout << "ee : " << ee << std::endl;
       Jacobian jac_ee_wrench =
           ee_wrench_angular_.at(ee)->GetJacobianWrtNodes(t, kPos);
       jac_model = model_->GetJacobianWrtTrq(jac_ee_wrench);
     }
 
     if (var_set == id::EEMotionLinNodes(ee)) {
-      std::cout << "[dynamic constraints] jacobian" << std::endl;
-      std::cout << "lin motion" << std::endl;
-      std::cout << "ee : " << ee << std::endl;
       Jacobian jac_ee_pos =
           ee_motion_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
       jac_model = model_->GetJacobianWrtEEPos(jac_ee_pos, ee);
     }
 
     if (var_set == id::EESchedule(ee)) {
-      std::cout << "[dynamic constraints] jacobian" << std::endl;
-      std::cout << "schedule" << std::endl;
-      std::cout << "ee : " << ee << std::endl;
       Jacobian jac_f_dT =
           ee_wrench_linear_.at(ee)->GetJacobianOfPosWrtDurations(t);
       jac_model += model_->GetJacobianWrtForce(jac_f_dT, ee);

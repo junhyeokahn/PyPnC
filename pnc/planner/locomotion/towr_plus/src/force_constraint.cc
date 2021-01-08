@@ -68,7 +68,7 @@ void ForceConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
       x->GetComponent<NodesVariablesPhaseBased>(id::EEWrenchAngNodes(ee_));
   ee_motion_lin_ =
       x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionLinNodes(ee_));
-  ee_motion_lin_ =
+  ee_motion_ang_ =
       x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionAngNodes(ee_));
 
   pure_stance_force_node_ids_ = ee_force_->GetIndicesOfNonConstantNodes();
@@ -80,35 +80,13 @@ void ForceConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
 
 Eigen::VectorXd ForceConstraint::GetValues() const {
   VectorXd g(GetRows());
-  std::cout << "[frc constraint] get value" << std::endl;
-  std::cout << "ee: " << ee_ << std::endl;
-
   int idx(0);
   auto force_nodes = ee_force_->GetNodes();
   auto trq_nodes = ee_trq_->GetNodes();
   for (int f_node_id : pure_stance_force_node_ids_) {
     int phase = ee_force_->GetPhase(f_node_id);
-    double t(0.);
-    std::vector<double> pds = phase_durations_->GetPhaseDurations();
-    for (int i = 0; i < pds.size(); ++i) {
-      if (i < phase) {
-        t += pds[i];
-      }
-    }
-    std::cout << "t in force constraint" << std::endl;
-    std::cout << t << std::endl;
-    exit(0);
-
     Eigen::Vector3d euler_xyz = ee_motion_ang_->GetValueAtStartOfPhase(phase);
     Eigen::Matrix3d w_R_ee = euler_xyz_to_rot(euler_xyz);
-    Eigen::Matrix3d w_R_ee_2 =
-        ee_motion_angular_.GetRotationMatrixBaseToWorld(t);
-    std::cout << "from node directly" << std::endl;
-    std::cout << w_R_ee << std::endl;
-    std::cout << "from spline holder" << std::endl;
-    std::cout << w_R_ee_2 << std::endl;
-    std::cout << "in force constraint, should be same" << std::endl;
-    exit(0);
 
     Vector3d f = force_nodes.at(f_node_id).p();
     Vector3d tau = trq_nodes.at(f_node_id).p();
@@ -124,8 +102,6 @@ Eigen::VectorXd ForceConstraint::GetValues() const {
 
 ForceConstraint::VecBound ForceConstraint::GetBounds() const {
   VecBound bounds;
-  std::cout << "[frc constraint] get bounds" << std::endl;
-  std::cout << "ee: " << ee_ << std::endl;
 
   for (int i = 0;
        i < pure_stance_force_node_ids_.size() * n_constraints_per_node_; ++i) {
@@ -137,11 +113,7 @@ ForceConstraint::VecBound ForceConstraint::GetBounds() const {
 
 void ForceConstraint::FillJacobianBlock(std::string var_set,
                                         Jacobian &jac) const {
-
   if (var_set == ee_force_->GetName()) {
-    std::cout << "[force constraint] jacobian" << std::endl;
-    std::cout << "ee: " << ee_ << std::endl;
-    std::cout << "frc" << std::endl;
     int idx = 0;
     for (int f_node_id : pure_stance_force_node_ids_) {
       int phase = ee_force_->GetPhase(f_node_id);
@@ -154,17 +126,15 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
         for (auto dim : {X, Y, Z}) {
           int idx = ee_force_->GetOptIndex(
               NodesVariables::NodeValueInfo(f_node_id, kPos, dim));
-          jac.coeffRef(row++, idx) = Uf_times_ee_R_w(i, dim);
+          jac.coeffRef(row, idx) = Uf_times_ee_R_w(i, dim);
         }
+        row += 1;
       }
       idx += 1;
     }
   }
 
   if (var_set == ee_trq_->GetName()) {
-    std::cout << "[force constraint] jacobian" << std::endl;
-    std::cout << "ee: " << ee_ << std::endl;
-    std::cout << "trq" << std::endl;
     int idx = 0;
     for (int f_node_id : pure_stance_force_node_ids_) {
       int phase = ee_trq_->GetPhase(f_node_id);
@@ -177,17 +147,15 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
         for (auto dim : {X, Y, Z}) {
           int idx = ee_trq_->GetOptIndex(
               NodesVariables::NodeValueInfo(f_node_id, kPos, dim));
-          jac.coeffRef(row++, idx) = Utau_times_ee_R_w(i, dim);
+          jac.coeffRef(row, idx) = Utau_times_ee_R_w(i, dim);
         }
+        row += 1;
       }
       idx += 1;
     }
   }
 
   if (var_set == ee_motion_ang_->GetName()) {
-    std::cout << "[force constraint] jacobian" << std::endl;
-    std::cout << "ee: " << ee_ << std::endl;
-    std::cout << "base ang" << std::endl;
     int idx = 0;
     auto force_nodes = ee_force_->GetNodes();
     auto trq_nodes = ee_trq_->GetNodes();
@@ -208,12 +176,8 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
       Jacobian jac1, jac2;
       jac1 =
           Uf_.sparseView() * ee_motion_angular_.DerivOfRotVecMult(t, frc, true);
-      jac1 = Utau_.sparseView() *
+      jac2 = Utau_.sparseView() *
              ee_motion_angular_.DerivOfRotVecMult(t, tau, true);
-      std::cout << "jac size in force_constraint" << std::endl;
-      std::cout << jac1.rows() << std::endl;
-      std::cout << jac2.cols() << std::endl;
-      exit(0);
 
       jac.middleRows(n_constraints_per_node_ * idx, n_constraints_per_node_) =
           jac1 + jac2;

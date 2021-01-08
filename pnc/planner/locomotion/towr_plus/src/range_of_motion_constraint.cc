@@ -50,7 +50,7 @@ RangeOfMotionConstraint::RangeOfMotionConstraint(
 
   max_deviation_from_nominal_ = model->GetMaximumDeviationFromNominal();
   max_cos_ = cos(0.);
-  min_cos_ = cos(3.14 / 4.);
+  min_cos_ = cos(M_PI / 4.);
   nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
   ee_ = ee;
 
@@ -79,6 +79,7 @@ int RangeOfMotionConstraint::GetRow(int node, int dim) const {
 
 void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
                                                          VectorXd &g) const {
+
   Vector3d base_W = base_linear_->GetPoint(t).p();
   Vector3d pos_ee_W = ee_motion_linear_->GetPoint(t).p();
 
@@ -103,13 +104,9 @@ void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
   double frnt = frnt_mtx(0, 0);
   double bck = bck_mtx(0, 0);
 
-  std::cout << "front, bck: " << std::endl;
-  std::cout << frnt_mtx << std::endl;
-  std::cout << bck_mtx << std::endl;
-  exit(0);
   Eigen::VectorXd val_rot(1);
   val_rot << frnt * std::pow(bck, -0.5);
-  g.middleRows(GetRow(k, k3D), 1) = val_rot; // Rot
+  g.middleRows(GetRow(k, k3D), 1) = val_rot; // cos(yaw)
 }
 
 void RangeOfMotionConstraint::UpdateBoundsAtInstance(double t, int k,
@@ -145,15 +142,11 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
   int row_start = GetRow(k, X);
 
   if (var_set == id::base_lin_nodes) {
-    std::cout << "[rom] jacobian" << std::endl;
-    std::cout << "base lin" << std::endl;
     jac.middleRows(row_start, k3D) =
         -1 * b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::base_ang_nodes) {
-    std::cout << "[rom] jacobian" << std::endl;
-    std::cout << "base ang" << std::endl;
     // X, Y, Z
     Vector3d base_W = base_linear_->GetPoint(t).p();
     Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
@@ -187,17 +180,11 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
   }
 
   if (var_set == id::EEMotionLinNodes(ee_)) {
-    std::cout << "[rom] jacobian" << std::endl;
-    std::cout << "ee motion lin" << std::endl;
-    std::cout << "ee : " << ee_ << std::endl;
     jac.middleRows(row_start, k3D) =
         b_R_w * ee_motion_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::EEMotionAngNodes(ee_)) {
-    std::cout << "[rom] jacobian" << std::endl;
-    std::cout << "ee motion ang" << std::endl;
-    std::cout << "ee : " << ee_ << std::endl;
 
     Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
@@ -224,9 +211,6 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
 
   if (var_set == id::EESchedule(ee_)) {
 
-    std::cout << "[rom] jacobian" << std::endl;
-    std::cout << "ee schedule " << std::endl;
-    std::cout << "ee : " << ee_ << std::endl;
     jac.middleRows(row_start, k3D) =
         b_R_w * ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
 

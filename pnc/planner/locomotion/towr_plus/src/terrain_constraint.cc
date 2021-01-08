@@ -38,11 +38,10 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-TerrainConstraint::TerrainConstraint(const HeightMap::Ptr &terrain,
+TerrainConstraint::TerrainConstraint(const HeightMap::Ptr &terrain, int id,
                                      std::string ee_motion_lin,
                                      std::string ee_motion_ang)
-    : ConstraintSet(kSpecifyLater,
-                    "terrain-" + ee_motion_lin + " / " + ee_motion_ang) {
+    : ConstraintSet(kSpecifyLater, "terrain-" + std::to_string(id)) {
   ee_motion_lin_id_ = ee_motion_lin;
   ee_motion_ang_id_ = ee_motion_ang;
   terrain_ = terrain;
@@ -66,6 +65,7 @@ void TerrainConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
 
   n_lin_ = lin_node_ids_.size();
   n_ang_ = 3 * contact_nodes_ids_.size();
+
   SetRows(n_lin_ + n_ang_);
 }
 
@@ -91,6 +91,9 @@ Eigen::VectorXd TerrainConstraint::GetValues() const {
     }
   }
 
+  std::cout << "-----------------------------" << std::endl;
+  std::cout << ee_motion_lin_id_ << std::endl;
+  std::cout << g << std::endl;
   return g;
 }
 
@@ -99,6 +102,7 @@ TerrainConstraint::VecBound TerrainConstraint::GetBounds() const {
   double max_distance_above_terrain = 1e20; // [m]
 
   int row = 0;
+  // Foot Height
   for (int id : lin_node_ids_) {
     if (ee_motion_lin_->IsConstantNode(id)) {
       bounds.at(row) = ifopt::BoundZero;
@@ -108,6 +112,7 @@ TerrainConstraint::VecBound TerrainConstraint::GetBounds() const {
     row++;
   }
 
+  // Foot Orientation
   for (int id : contact_nodes_ids_) {
     for (int i = 0; i < 3; ++i) {
       bounds.at(row++) = ifopt::BoundZero;

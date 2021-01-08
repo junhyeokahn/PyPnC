@@ -37,11 +37,10 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 namespace towr_plus {
 
-SwingConstraint::SwingConstraint(std::string ee_motion_linear_id,
+SwingConstraint::SwingConstraint(int ee, std::string ee_motion_linear_id,
                                  std::string ee_motion_angular_id,
                                  double t_swing_avg)
-    : ConstraintSet(kSpecifyLater, "swing-" + ee_motion_linear_id + " / " +
-                                       ee_motion_angular_id) {
+    : ConstraintSet(kSpecifyLater, "swing-" + std::to_string(ee)) {
   ee_motion_linear_id_ = ee_motion_linear_id;
   ee_motion_angular_id_ = ee_motion_angular_id;
   t_swing_avg_ = t_swing_avg;
@@ -119,9 +118,6 @@ SwingConstraint::VecBound SwingConstraint::GetBounds() const {
 void SwingConstraint::FillJacobianBlock(std::string var_set,
                                         Jacobian &jac) const {
   if (var_set == ee_motion_linear_->GetName()) {
-    std::cout << "[swing] jacobian" << std::endl;
-    std::cout << "ee motion lin" << std::endl;
-    std::cout << "ee : " << ee_motion_linear_ << std::endl;
     int row = 0;
     for (int node_id : pure_swing_node_ids_) {
       for (auto dim : {X, Y}) {
@@ -157,9 +153,6 @@ void SwingConstraint::FillJacobianBlock(std::string var_set,
   }
 
   if (var_set == ee_motion_angular_->GetName()) {
-    std::cout << "[swing] jacobian" << std::endl;
-    std::cout << "ee motion ang" << std::endl;
-    std::cout << "ee : " << ee_motion_linear_ << std::endl;
 
     int row = lin_constraint_count_;
     for (int node_id : pure_swing_node_ids_) {

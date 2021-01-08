@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
+#include <iostream>
+
 #include <towr_plus/constraints/spline_acc_constraint.h>
 
 namespace towr_plus {

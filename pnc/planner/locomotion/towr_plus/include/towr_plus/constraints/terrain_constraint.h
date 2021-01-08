@@ -60,8 +60,8 @@ public:
    * @param terrain  The terrain height value and slope for each position x,y.
    * @param ee_motion_id The name of the endeffector variable set.
    */
-  TerrainConstraint(const HeightMap::Ptr &terrain, std::string ee_motion_lin,
-                    std::string ee_motion_ang);
+  TerrainConstraint(const HeightMap::Ptr &terrain, int ee,
+                    std::string ee_motion_lin, std::string ee_motion_ang);
   virtual ~TerrainConstraint() = default;
 
   void InitVariableDependedQuantities(const VariablesPtr &x) override;

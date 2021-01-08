@@ -57,7 +57,7 @@ public:
    * @brief Links the swing constraint with current foot variables.
    * @param ee_motion_id  The name of the foot variables in the optimization.
    */
-  SwingConstraint(std::string ee_motion_linear_id,
+  SwingConstraint(int ee, std::string ee_motion_linear_id,
                   std::string ee_motion_angular_id, double t_swing_avg = 0.5);
   virtual ~SwingConstraint() = default;
 
