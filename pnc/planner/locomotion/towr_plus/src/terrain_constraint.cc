@@ -91,9 +91,6 @@ Eigen::VectorXd TerrainConstraint::GetValues() const {
     }
   }
 
-  std::cout << "-----------------------------" << std::endl;
-  std::cout << ee_motion_lin_id_ << std::endl;
-  std::cout << g << std::endl;
   return g;
 }
 
@@ -116,6 +113,7 @@ TerrainConstraint::VecBound TerrainConstraint::GetBounds() const {
   for (int id : contact_nodes_ids_) {
     for (int i = 0; i < 3; ++i) {
       bounds.at(row++) = ifopt::BoundZero;
+      // bounds.at(row++) = ifopt::Bounds(-0.05, 0.05);
     }
   }
 
