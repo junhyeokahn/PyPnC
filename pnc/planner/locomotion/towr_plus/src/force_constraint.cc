@@ -80,6 +80,8 @@ void ForceConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
 
 Eigen::VectorXd ForceConstraint::GetValues() const {
   VectorXd g(GetRows());
+  std::cout << "[frc constraint] get value" << std::endl;
+  std::cout << "ee: " << ee_ << std::endl;
 
   int idx(0);
   auto force_nodes = ee_force_->GetNodes();
@@ -122,6 +124,8 @@ Eigen::VectorXd ForceConstraint::GetValues() const {
 
 ForceConstraint::VecBound ForceConstraint::GetBounds() const {
   VecBound bounds;
+  std::cout << "[frc constraint] get bounds" << std::endl;
+  std::cout << "ee: " << ee_ << std::endl;
 
   for (int i = 0;
        i < pure_stance_force_node_ids_.size() * n_constraints_per_node_; ++i) {
@@ -135,6 +139,9 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
                                         Jacobian &jac) const {
 
   if (var_set == ee_force_->GetName()) {
+    std::cout << "[force constraint] jacobian" << std::endl;
+    std::cout << "ee: " << ee_ << std::endl;
+    std::cout << "frc" << std::endl;
     int idx = 0;
     for (int f_node_id : pure_stance_force_node_ids_) {
       int phase = ee_force_->GetPhase(f_node_id);
@@ -155,6 +162,9 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
   }
 
   if (var_set == ee_trq_->GetName()) {
+    std::cout << "[force constraint] jacobian" << std::endl;
+    std::cout << "ee: " << ee_ << std::endl;
+    std::cout << "trq" << std::endl;
     int idx = 0;
     for (int f_node_id : pure_stance_force_node_ids_) {
       int phase = ee_trq_->GetPhase(f_node_id);
@@ -175,6 +185,9 @@ void ForceConstraint::FillJacobianBlock(std::string var_set,
   }
 
   if (var_set == ee_motion_ang_->GetName()) {
+    std::cout << "[force constraint] jacobian" << std::endl;
+    std::cout << "ee: " << ee_ << std::endl;
+    std::cout << "base ang" << std::endl;
     int idx = 0;
     auto force_nodes = ee_force_->GetNodes();
     auto trq_nodes = ee_trq_->GetNodes();

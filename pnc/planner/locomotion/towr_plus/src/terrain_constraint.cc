@@ -64,12 +64,6 @@ void TerrainConstraint::InitVariableDependedQuantities(const VariablesPtr &x) {
     }
   }
 
-  // TODO : TEST This API is right one to use
-  for (int i = 0; i < contact_nodes_ids_.size(); ++i) {
-    std::cout << contact_nodes_ids_[i] << std::endl;
-  }
-  exit(0);
-
   n_lin_ = lin_node_ids_.size();
   n_ang_ = 3 * contact_nodes_ids_.size();
   SetRows(n_lin_ + n_ang_);
@@ -85,10 +79,6 @@ Eigen::VectorXd TerrainConstraint::GetValues() const {
     Vector3d p = lin_nodes.at(id).p();
     g(row++) = p.z() - terrain_->GetHeight(p.x(), p.y());
   }
-  std::cout << "row: " << row << std::endl;
-  std::cout << "n_lin_: " << n_lin_ << std::endl;
-  std::cout << "should be same in get values" << std::endl;
-  exit(0);
 
   for (int id : contact_nodes_ids_) {
     Vector3d lin_p = lin_nodes.at(id).p();
@@ -117,11 +107,6 @@ TerrainConstraint::VecBound TerrainConstraint::GetBounds() const {
     }
     row++;
   }
-
-  std::cout << "row: " << row << std::endl;
-  std::cout << "n_lin_: " << n_lin_ << std::endl;
-  std::cout << "should be same in get bounds" << std::endl;
-  exit(0);
 
   for (int id : contact_nodes_ids_) {
     for (int i = 0; i < 3; ++i) {
@@ -152,11 +137,6 @@ void TerrainConstraint::FillJacobianBlock(std::string var_set,
       }
       row++;
     }
-
-    std::cout << "row: " << row << std::endl;
-    std::cout << "n_lin_: " << n_lin_ << std::endl;
-    std::cout << "should be same in get bounds" << std::endl;
-    exit(0);
 
     // Orientation Constraints
     for (int id : contact_nodes_ids_) {

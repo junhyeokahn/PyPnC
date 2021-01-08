@@ -229,10 +229,6 @@ EulerConverter::Jacobian EulerConverter::DerivOfRotVecMultWrtScheduleVariables(
     double t, const Vector3d &v, bool inverse) const {
   JacRowMatrix Rd = GetDerivativeOfRotationMatrixWrtScheduleVariables(t);
   Jacobian jac = Jacobian(k3D, Rd.at(X).at(X).size());
-  std::cout << "jac size in euler converter:" << std::endl;
-  std::cout << jac.cols() << std::endl;
-  std::cout << jac.rows() << std::endl;
-  exit(0);
 
   for (int row : {X, Y, Z}) {
     for (int col : {X, Y, Z}) {
