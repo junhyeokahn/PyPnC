@@ -37,7 +37,7 @@ motion_label = [
 xyz_label = [r'$x$', r'$y$', r'$z$']
 dxdydz_label = [r'$\dot{x}$', r'$\dot{y}$', r'$\dot{z}$']
 frc_label = [r'$f_x$', r'$f_y$', r'$f_z$']
-trq_label = ['$\tau_x$', r'$\tau_y$', r'$\tau_z$']
+trq_label = [r'$\tau_x$', r'$\tau_y$', r'$\tau_z$']
 
 
 def set_axes_equal(ax):
@@ -162,12 +162,18 @@ def main(args):
             base_lin = np.array(data["trajectory"]["base_lin"])
             base_ang = np.array(data["trajectory"]["base_ang"])
             ee_motion_lin = dict()
+            ee_motion_ang = dict()
             ee_wrench_lin = dict()
+            ee_wrench_ang = dict()
             for ee in range(2):
                 ee_motion_lin[ee] = np.array(
                     data["trajectory"]["ee_motion_lin"][ee])
+                ee_motion_ang[ee] = np.array(
+                    data["trajectory"]["ee_motion_ang"][ee])
                 ee_wrench_lin[ee] = np.array(
                     data["trajectory"]["ee_wrench_lin"][ee])
+                ee_wrench_ang[ee] = np.array(
+                    data["trajectory"]["ee_wrench_ang"][ee])
 
             # Read Node and Contact Schedule
             node_base_lin = np.array(data["node"]["base_lin"]["value"])
@@ -186,8 +192,12 @@ def main(args):
 
             node_ee_motion_lin = dict()
             node_ee_motion_lin_time = dict()
+            node_ee_motion_ang = dict()
+            node_ee_motion_ang_time = dict()
             node_ee_wrench_lin = dict()
             node_ee_wrench_lin_time = dict()
+            node_ee_wrench_ang = dict()
+            node_ee_wrench_ang_time = dict()
             contact_schedule = dict()
             for ee in range(2):
                 node_ee_motion_lin[ee] = np.array(
@@ -198,6 +208,15 @@ def main(args):
                     sum(node_ee_motion_lin_time[ee][0:i + 1])
                     for i in range(len(node_ee_motion_lin_time[ee]))
                 ])
+                node_ee_motion_ang[ee] = np.array(
+                    data["node"]["ee_motion_ang"][ee]["value"])
+                node_ee_motion_ang_time[ee] = data["node"]["ee_motion_ang"][
+                    ee]["duration"]
+                node_ee_motion_ang_time[ee] = np.array([0] + [
+                    sum(node_ee_motion_ang_time[ee][0:i + 1])
+                    for i in range(len(node_ee_motion_ang_time[ee]))
+                ])
+
                 node_ee_wrench_lin[ee] = np.array(
                     data["node"]["ee_wrench_lin"][ee]["value"])
                 node_ee_wrench_lin_time[ee] = data["node"]["ee_wrench_lin"][
@@ -205,6 +224,14 @@ def main(args):
                 node_ee_wrench_lin_time[ee] = np.array([0] + [
                     sum(node_ee_wrench_lin_time[ee][0:i + 1])
                     for i in range(len(node_ee_wrench_lin_time[ee]))
+                ])
+                node_ee_wrench_ang[ee] = np.array(
+                    data["node"]["ee_wrench_ang"][ee]["value"])
+                node_ee_wrench_ang_time[ee] = data["node"]["ee_wrench_ang"][
+                    ee]["duration"]
+                node_ee_wrench_ang_time[ee] = np.array([0] + [
+                    sum(node_ee_wrench_ang_time[ee][0:i + 1])
+                    for i in range(len(node_ee_wrench_ang_time[ee]))
                 ])
 
                 contact_schedule[ee] = np.array(data["contact_schedule"][ee])
@@ -291,7 +318,38 @@ def main(args):
         axes[i, 1].set_ylabel(motion_label[i])
         for ee in range(2):
             if i < 3:
-                pass
+                # Draw EE Ang Motion
+                axes[i, 2 + ee].plot(time,
+                                     ee_motion_ang[ee][:, i],
+                                     color='b',
+                                     linewidth=3)
+                axes[i, 2 + ee].scatter(node_ee_motion_ang_time[ee],
+                                        node_ee_motion_ang[ee][:, i],
+                                        s=50,
+                                        c='skyblue',
+                                        linewidths=2,
+                                        edgecolors='b')
+                axes[i, 2 + ee].tick_params('y', colors='b')
+                axes[i, 2 + ee].spines['left'].set_color('b')
+                if ee == 0:
+                    axes[i, 2 + ee].set_ylabel(xyz_label[i])
+                    axes[i, 2 + ee].yaxis.label.set_color('b')
+                # Draw EE Ang Wrench
+                trq_ax = add_twinx(axes[i, 2 + ee], time,
+                                   ee_wrench_ang[ee][:, i], 'r', 3)
+                trq_ax.scatter(node_ee_wrench_ang_time[ee],
+                               node_ee_wrench_ang[ee][:, i],
+                               s=50,
+                               c='lightpink',
+                               linewidths=2,
+                               edgecolors='r')
+                if ee == 1:
+                    trq_ax.set_ylabel(trq_label[i - 3])
+                    trq_ax.tick_params('y', colors='r')
+
+                # Fill Phase
+                fill_phase(axes[i, 2 + ee], contact_schedule[ee],
+                           itertools.cycle(facecolors[0:2]))
             else:
                 # Draw EE Lin Motion
                 axes[i, 2 + ee].plot(time,

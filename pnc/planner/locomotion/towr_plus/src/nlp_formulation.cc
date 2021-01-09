@@ -112,8 +112,9 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
 
   double x = final_base_.lin.p().x();
   double y = final_base_.lin.p().y();
-  double z = terrain_->GetHeight(x, y) -
-             model_.kinematic_model_->GetNominalStanceInBase().front().z();
+  // double z = terrain_->GetHeight(x, y) -
+  // model_.kinematic_model_->GetNominalStanceInBase().front().z();
+  double z = terrain_->GetHeight(x, y) + final_base_.lin.p().z();
   Vector3d final_pos(x, y, z);
 
   spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
@@ -577,8 +578,9 @@ NlpFormulation::MakeFinalBaseLinCost(Dx dx,
   if (dx == Dx::kPos) {
     double x = final_base_.lin.p().x();
     double y = final_base_.lin.p().y();
-    double z = terrain_->GetHeight(x, y) -
-               model_.kinematic_model_->GetNominalStanceInBase().front().z();
+    // double z = terrain_->GetHeight(x, y) -
+    // model_.kinematic_model_->GetNominalStanceInBase().front().z();
+    double z = terrain_->GetHeight(x, y) + final_base_.lin.p().z();
     Eigen::Vector3d final_base_lin_pos(x, y, z);
     for (int i = 0; i < 3; ++i) {
       cost.push_back(std::make_shared<FinalNodeCost>(

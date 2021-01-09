@@ -38,5 +38,13 @@ target_link_libraries(atlas_two_step_yaml_test
     my_yaml
 )
 
+add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
+target_link_libraries(atlas_no_step_yaml_test
+    PRIVATE
+    towr_plus
+    ifopt::ifopt_ipopt
+    my_yaml
+)
+
 SET (THIS_COM "${PROJECT_SOURCE_DIR}/" )
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config.h.cmake ${PROJECT_SOURCE_DIR}/configuration.h)

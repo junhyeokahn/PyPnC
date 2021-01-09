@@ -37,12 +37,18 @@ public:
 private:
   std::string name_;
 
+  // ===========================================================================
+  // Planning Parameters to Initialize Variables
+  // ===========================================================================
   double duration_base_polynomial_;
   int force_polynomials_per_stance_phase_;
   int ee_polynomials_per_swing_phase_; // Assume this is always 2
   bool b_optimize_timings_;
   std::vector<std::vector<double>> ee_phase_durations_;
 
+  // ===========================================================================
+  // For Constructing Splines
+  // ===========================================================================
   int parsing_idx_;
   Eigen::VectorXd one_hot_vector_;
   Eigen::VectorXd one_hot_base_lin_;
@@ -53,13 +59,18 @@ private:
   std::vector<Eigen::VectorXd> one_hot_ee_wrench_ang_;
   std::vector<Eigen::VectorXd> one_hot_ee_contact_schedule_;
 
+  SplineHolder spline_holder_;
+  // ===========================================================================
+  // For Saving
+  // ===========================================================================
   int n_base_nodes_;
   int n_base_vars_;
   Eigen::MatrixXd base_lin_nodes_;
   Eigen::MatrixXd base_ang_nodes_;
 
   std::vector<int> n_ee_motion_nodes_;
-  std::vector<int> n_ee_motion_vars_;
+  std::vector<int> n_ee_motion_lin_vars_;
+  std::vector<int> n_ee_motion_ang_vars_;
   std::vector<Eigen::MatrixXd> ee_motion_lin_nodes_;
   std::vector<Eigen::MatrixXd> ee_motion_ang_nodes_;
 
@@ -70,16 +81,20 @@ private:
 
   std::vector<std::vector<double>> ee_schedules_;
 
+  // ===========================================================================
+  // Helper Functions to Initialize Variables
+  // ===========================================================================
   std::vector<double> _get_base_poly_duration();
   double _get_total_time();
+  Eigen::MatrixXd _transpose(Eigen::MatrixXd mat, std::vector<int> order,
+                             std::string col_or_row);
 
-  SplineHolder spline_holder_;
-
+  // ===========================================================================
+  // Methods for Parsing One Hot Encoded Solution
+  // ===========================================================================
   void _set_base_nodes();
   void _set_ee_motion_nodes();
   void _set_ee_wrench_nodes();
   void _set_ee_schedule_variables();
   void _set_splines();
-  Eigen::MatrixXd _transpose(Eigen::MatrixXd mat, std::vector<int> order,
-                             std::string col_or_row);
 };

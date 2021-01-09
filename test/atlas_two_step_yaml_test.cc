@@ -43,9 +43,7 @@ int main() {
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("jacobian_approximation", "exact");
   solver->SetOption("max_cpu_time", 500.0);
-  // solver->SetOption("max_cpu_time", 50.0);
   solver->Solve(nlp);
-  // solver->Solve(nlp);
 
   nlp.PrintCurrent();
 
