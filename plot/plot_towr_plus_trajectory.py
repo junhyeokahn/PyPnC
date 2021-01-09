@@ -28,7 +28,7 @@ line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
 colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
 line_colors = {0: 'cornflowerblue', 1: 'sandybrown', 2: 'seagreen', 3: 'gold'}
 facecolors = [
-    'cornflowerblue', 'darkorange', 'lightgray', 'rosybrown', 'seagreen',
+    'darkorange', 'cornflowerblue', 'lightgray', 'rosybrown', 'seagreen',
     'gold', 'lightpink', 'slategrey'
 ]
 motion_label = [
