@@ -23,6 +23,7 @@ include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/locomotion/towr_plus/incl
 add_subdirectory(util)
 add_subdirectory(pnc/planner/locomotion/towr_plus)
 
+# Add Executables
 add_executable(atlas_two_step_test test/atlas_two_step_test.cc)
 target_link_libraries(atlas_two_step_test
     PRIVATE
@@ -40,6 +41,14 @@ target_link_libraries(atlas_two_step_yaml_test
 
 add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
 target_link_libraries(atlas_no_step_yaml_test
+    PRIVATE
+    towr_plus
+    ifopt::ifopt_ipopt
+    my_yaml
+)
+
+add_executable(atlas_one_step_yaml_test test/atlas_one_step_yaml_test.cc)
+target_link_libraries(atlas_one_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt

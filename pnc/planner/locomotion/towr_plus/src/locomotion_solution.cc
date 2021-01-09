@@ -335,7 +335,7 @@ void LocomotionSolution::_set_ee_motion_nodes() {
           }
         }
         node_idx += 1;
-        variable_idx += 5;
+        variable_idx += 6;
       }
     }
   }

@@ -68,8 +68,23 @@ def set_axes_equal(ax):
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
 
-def euler_to_rot(seq, euler_angle, degrees=False):
-    return (R.from_euler(seq, euler_angle, degrees=degrees)).as_matrix()
+def euler_to_rot(angles):
+    # Euler ZYX to Rot
+    # Note that towr has (x, y, z) order
+    x = angles[0]
+    y = angles[1]
+    z = angles[2]
+    ret = np.array([
+        np.cos(y) * np.cos(z),
+        np.cos(z) * np.sin(x) * np.sin(y) - np.cos(x) * np.sin(z),
+        np.sin(x) * np.sin(z) + np.cos(x) * np.cos(z) * np.sin(y),
+        np.cos(y) * np.sin(z),
+        np.cos(x) * np.cos(z) + np.sin(x) * np.sin(y) * np.sin(z),
+        np.cos(x) * np.sin(y) * np.sin(z) - np.cos(z) * np.sin(x), -np.sin(y),
+        np.cos(y) * np.sin(x),
+        np.cos(x) * np.cos(y)
+    ]).reshape(3, 3)
+    return ret
 
 
 def quat2mat(quat):
@@ -88,7 +103,7 @@ def compute_arrow_vec(euler_xyz):
     n_points = euler_xyz.shape[0]
     arrow_ends = np.zeros([n_points, 3])
     for i in range(n_points):
-        R = euler_to_rot("zyx", euler_xyz[i], False)
+        R = euler_to_rot(euler_xyz[i])
         arrow_ends[i] = np.dot(R, np.array([1., 0., 0.]))
     return arrow_ends
 
@@ -96,7 +111,8 @@ def compute_arrow_vec(euler_xyz):
 def plot_foot(ax, pos, ori, color, text):
     if text:
         ax.text(pos[0], pos[1] + 0.03, pos[2] + 0.05, text, color=color)
-    rmat = euler_to_rot('zyx', ori)
+    rmat = euler_to_rot(ori)
+    __import__('ipdb').set_trace()
     normal = np.array([rmat[0, 2], rmat[1, 2], rmat[2, 2]])
     d = -pos.dot(normal)
     xx, yy = np.meshgrid(np.linspace(pos[0] - 0.11, pos[0] + 0.11, 2),
@@ -249,9 +265,10 @@ def main(args):
                 contact_schedule[ee] = np.array(data["contact_schedule"][ee])
                 contact_time_instance[ee] = []
                 for idx, dur in enumerate(contact_schedule[ee]):
-                    contact_time_instance[ee].append(
-                        contact_schedule[ee][0:idx].sum() +
-                        contact_schedule[ee][idx] / 2.)
+                    if idx % 2 == 0:
+                        contact_time_instance[ee].append(
+                            contact_schedule[ee][0:idx].sum() +
+                            contact_schedule[ee][idx] / 2.)
                 contact_pos[ee] = []
                 contact_ori[ee] = []
                 for ct in contact_time_instance[ee]:
@@ -303,12 +320,12 @@ def main(args):
                     color='cornflowerblue')
     # plot right foot
     for i, (pos, ori) in enumerate(zip(contact_pos[1], contact_ori[1])):
-        plot_foot(com_motion, pos, ori, 'b', "RF" + str(i))
+        plot_foot(com_motion, pos, ori, 'r', "RF" + str(i))
     com_motion.plot(xs=ee_motion_lin[1][:, 0],
                     ys=ee_motion_lin[1][:, 1],
                     zs=ee_motion_lin[1][:, 2],
                     linewidth=3,
-                    color='cornflowerblue')
+                    color='tomato')
 
     com_motion.set_xlabel(r"$x$")
     com_motion.set_ylabel(r"$y$")
