@@ -112,7 +112,6 @@ def plot_foot(ax, pos, ori, color, text):
     if text:
         ax.text(pos[0], pos[1] + 0.03, pos[2] + 0.05, text, color=color)
     rmat = euler_to_rot(ori)
-    __import__('ipdb').set_trace()
     normal = np.array([rmat[0, 2], rmat[1, 2], rmat[2, 2]])
     d = -pos.dot(normal)
     xx, yy = np.meshgrid(np.linspace(pos[0] - 0.11, pos[0] + 0.11, 2),
@@ -150,30 +149,6 @@ def get_idx(time, t):
             break
         idx += 1
     return idx
-
-
-def add_twinx(ax, x, y, color, linewidth):
-    ax2 = ax.twinx()
-    ax.spines['right'].set_color(color)
-    ax2.plot(x, y, color=color, linewidth=linewidth)
-    ax2.tick_params('y', colors=color)
-    ax2.yaxis.label.set_color(color)
-
-    def _adjust_grid(event):
-        ylim1 = ax.get_ylim()
-        len1 = ylim1[1] - ylim1[0]
-        yticks1 = ax.get_yticks()
-        rel_dist = [(y - ylim1[0]) / len1 for y in yticks1]
-        ylim2 = ax2.get_ylim()
-        len2 = ylim2[1] - ylim2[0]
-        yticks2 = [ry * len2 + ylim2[0] for ry in rel_dist]
-        ax2.set_yticks(yticks2)
-        ax2.set_ylim(ylim2)
-
-    fig = ax.get_figure()
-    fig.canvas.mpl_connect('resize_event', _adjust_grid)
-
-    return ax2
 
 
 def main(args):
@@ -336,11 +311,13 @@ def main(args):
     # Plot Trajectory
     # ==========================================================================
 
-    fig, axes = plt.subplots(6, 4, constrained_layout=True)
+    fig, axes = plt.subplots(6, 6, constrained_layout=True)
     axes[0, 0].set_title('base lin')
     axes[0, 1].set_title('base ang')
-    axes[0, 2].set_title('left foot')
-    axes[0, 3].set_title('right foot')
+    axes[0, 2].set_title('lf motion')
+    axes[0, 3].set_title('rf motion')
+    axes[0, 4].set_title('lf wrench')
+    axes[0, 5].set_title('rf wrench')
     for i in range(6):
         axes[i, 0].plot(time, base_lin[:, i], color='k', linewidth=3)
         axes[i, 0].scatter(node_base_lin_time,
@@ -363,67 +340,63 @@ def main(args):
                 # Draw EE Ang Motion
                 axes[i, 2 + ee].plot(time,
                                      ee_motion_ang[ee][:, i],
-                                     color='b',
+                                     color='k',
                                      linewidth=3)
                 axes[i, 2 + ee].scatter(node_ee_motion_ang_time[ee],
                                         node_ee_motion_ang[ee][:, i],
                                         s=50,
-                                        c='skyblue',
+                                        c='lightgray',
                                         linewidths=2,
-                                        edgecolors='b')
-                axes[i, 2 + ee].tick_params('y', colors='b')
-                axes[i, 2 + ee].spines['left'].set_color('b')
-                if ee == 0:
-                    axes[i, 2 + ee].set_ylabel(xyz_label[i])
-                    axes[i, 2 + ee].yaxis.label.set_color('b')
+                                        edgecolors='k')
+                axes[i, 2 + ee].set_ylabel(xyz_label[i])
                 # Draw EE Ang Wrench
-                trq_ax = add_twinx(axes[i, 2 + ee], time,
-                                   ee_wrench_ang[ee][:, i], 'r', 3)
-                trq_ax.scatter(node_ee_wrench_ang_time[ee],
-                               node_ee_wrench_ang[ee][:, i],
-                               s=50,
-                               c='lightpink',
-                               linewidths=2,
-                               edgecolors='r')
-                if ee == 1:
-                    trq_ax.set_ylabel(trq_label[i - 3])
-                    trq_ax.tick_params('y', colors='r')
+                axes[i, 4 + ee].plot(time,
+                                     ee_wrench_ang[ee][:, i],
+                                     color='k',
+                                     linewidth=3)
+                axes[i, 4 + ee].scatter(node_ee_wrench_ang_time[ee],
+                                        node_ee_wrench_ang[ee][:, i],
+                                        s=50,
+                                        c='lightgray',
+                                        linewidths=2,
+                                        edgecolors='k')
+                axes[i, 4 + ee].set_ylabel(trq_label[i])
 
                 # Fill Phase
                 fill_phase(axes[i, 2 + ee], contact_schedule[ee],
+                           itertools.cycle(facecolors[0:2]))
+                fill_phase(axes[i, 4 + ee], contact_schedule[ee],
                            itertools.cycle(facecolors[0:2]))
             else:
                 # Draw EE Lin Motion
                 axes[i, 2 + ee].plot(time,
                                      ee_motion_lin[ee][:, i - 3],
-                                     color='b',
+                                     color='k',
                                      linewidth=3)
                 axes[i, 2 + ee].scatter(node_ee_motion_lin_time[ee],
                                         node_ee_motion_lin[ee][:, i - 3],
                                         s=50,
-                                        c='skyblue',
+                                        c='lightgray',
                                         linewidths=2,
-                                        edgecolors='b')
-                axes[i, 2 + ee].tick_params('y', colors='b')
-                axes[i, 2 + ee].spines['left'].set_color('b')
-                if ee == 0:
-                    axes[i, 2 + ee].set_ylabel(xyz_label[i - 3])
-                    axes[i, 2 + ee].yaxis.label.set_color('b')
-                # Draw EE Lin Wrench
-                frc_ax = add_twinx(axes[i, 2 + ee], time,
-                                   ee_wrench_lin[ee][:, i - 3], 'r', 3)
-                frc_ax.scatter(node_ee_wrench_lin_time[ee],
-                               node_ee_wrench_lin[ee][:, i - 3],
-                               s=50,
-                               c='lightpink',
-                               linewidths=2,
-                               edgecolors='r')
-                if ee == 1:
-                    frc_ax.set_ylabel(frc_label[i - 3])
-                    frc_ax.tick_params('y', colors='r')
+                                        edgecolors='k')
+                axes[i, 2 + ee].set_ylabel(xyz_label[i - 3])
+                # Draw EE Ang Motion
+                axes[i, 4 + ee].plot(time,
+                                     ee_wrench_lin[ee][:, i - 3],
+                                     color='k',
+                                     linewidth=3)
+                axes[i, 4 + ee].scatter(node_ee_wrench_lin_time[ee],
+                                        node_ee_wrench_lin[ee][:, i - 3],
+                                        s=50,
+                                        c='lightgray',
+                                        linewidths=2,
+                                        edgecolors='k')
+                axes[i, 4 + ee].set_ylabel(frc_label[i - 3])
 
                 # Fill Phase
                 fill_phase(axes[i, 2 + ee], contact_schedule[ee],
+                           itertools.cycle(facecolors[0:2]))
+                fill_phase(axes[i, 4 + ee], contact_schedule[ee],
                            itertools.cycle(facecolors[0:2]))
 
     plt.show()
