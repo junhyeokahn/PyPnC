@@ -96,7 +96,7 @@ def compute_arrow_vec(euler_xyz):
 def plot_foot(ax, pos, ori, color, text):
     if text:
         ax.text(pos[0], pos[1] + 0.03, pos[2] + 0.05, text, color=color)
-    rmat = quat2mat(ori)
+    rmat = euler_to_rot('zyx', ori)
     normal = np.array([rmat[0, 2], rmat[1, 2], rmat[2, 2]])
     d = -pos.dot(normal)
     xx, yy = np.meshgrid(np.linspace(pos[0] - 0.11, pos[0] + 0.11, 2),
@@ -125,6 +125,15 @@ def fill_phase(ax, ph_durations, facecolor_iter):
                         facecolor=next(facecolor_iter),
                         alpha=shading)
         t_start = t_end
+
+
+def get_idx(time, t):
+    idx = 0
+    for _t in time:
+        if _t >= t:
+            break
+        idx += 1
+    return idx
 
 
 def add_twinx(ax, x, y, color, linewidth):
@@ -199,6 +208,9 @@ def main(args):
             node_ee_wrench_ang = dict()
             node_ee_wrench_ang_time = dict()
             contact_schedule = dict()
+            contact_time_instance = dict()
+            contact_pos = dict()
+            contact_ori = dict()
             for ee in range(2):
                 node_ee_motion_lin[ee] = np.array(
                     data["node"]["ee_motion_lin"][ee]["value"])
@@ -235,6 +247,17 @@ def main(args):
                 ])
 
                 contact_schedule[ee] = np.array(data["contact_schedule"][ee])
+                contact_time_instance[ee] = []
+                for idx, dur in enumerate(contact_schedule[ee]):
+                    contact_time_instance[ee].append(
+                        contact_schedule[ee][0:idx].sum() +
+                        contact_schedule[ee][idx] / 2.)
+                contact_pos[ee] = []
+                contact_ori[ee] = []
+                for ct in contact_time_instance[ee]:
+                    idx = get_idx(time, ct)
+                    contact_pos[ee].append(ee_motion_lin[ee][idx][0:3])
+                    contact_ori[ee].append(ee_motion_ang[ee][idx][0:3])
 
             # Read Parameter
             force_polynomials_per_stance_phase = np.array(
@@ -258,7 +281,7 @@ def main(args):
                     ys=base_lin[:, 1],
                     zs=base_lin[:, 2],
                     linewidth=3,
-                    color='darkorange')
+                    color='black')
     num_interval = 50
     com_motion.quiver(base_lin[::num_interval, 0],
                       base_lin[::num_interval, 1],
@@ -268,22 +291,24 @@ def main(args):
                       arrow_ends[::num_interval, 2],
                       length=0.07,
                       linewidth=3,
-                      color='red')
-    # plot foot
-    for ee in range(2):
-        com_motion.plot(xs=ee_motion_lin[ee][:, 0],
-                        ys=ee_motion_lin[ee][:, 1],
-                        zs=ee_motion_lin[ee][:, 2],
-                        linewidth=3,
-                        color='cornflowerblue')
-    # plot_foot(com_motion, np.squeeze(curr_rfoot_contact_pos),
-    # np.squeeze(curr_rfoot_contact_ori), colors[0], "InitRF")
-    # plot_foot(com_motion, np.squeeze(curr_lfoot_contact_pos),
-    # np.squeeze(curr_lfoot_contact_ori), colors[1], "InitLF")
-    # for i, (pos, ori) in enumerate(zip(rfoot_contact_pos, rfoot_contact_ori)):
-    # plot_foot(com_motion, pos, ori, colors[0], "RF" + str(i))
-    # for i, (pos, ori) in enumerate(zip(lfoot_contact_pos, lfoot_contact_ori)):
-    # plot_foot(com_motion, pos, ori, colors[1], "LF" + str(i))
+                      color='slategrey')
+
+    # plot left foot
+    for i, (pos, ori) in enumerate(zip(contact_pos[0], contact_ori[0])):
+        plot_foot(com_motion, pos, ori, 'b', "LF" + str(i))
+    com_motion.plot(xs=ee_motion_lin[0][:, 0],
+                    ys=ee_motion_lin[0][:, 1],
+                    zs=ee_motion_lin[0][:, 2],
+                    linewidth=3,
+                    color='cornflowerblue')
+    # plot right foot
+    for i, (pos, ori) in enumerate(zip(contact_pos[1], contact_ori[1])):
+        plot_foot(com_motion, pos, ori, 'b', "RF" + str(i))
+    com_motion.plot(xs=ee_motion_lin[1][:, 0],
+                    ys=ee_motion_lin[1][:, 1],
+                    zs=ee_motion_lin[1][:, 2],
+                    linewidth=3,
+                    color='cornflowerblue')
 
     com_motion.set_xlabel(r"$x$")
     com_motion.set_ylabel(r"$y$")
