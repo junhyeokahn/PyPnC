@@ -819,6 +819,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   for (int i = 0; i < n_base_nodes; ++i) {
     std::cout << "t : " << t << std::endl;
     dcm_planner_.get_ref_com(t, tmp_vec3);
+    std::cout << tmp_vec3 << std::endl;
     dcm_planner_.get_ref_com_vel(t, tmp_vec3);
     dcm_planner_.get_ref_ori_ang_vel_acc(t, tmp_quat, tmp_vec3, tmp_vec33);
     if (i != (n_base_nodes - 1))
