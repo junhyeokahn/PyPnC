@@ -26,7 +26,7 @@ locomotion_param:
     dt_constraint_dynamic: 0.1
     dt_constraint_base_motion: 0.025
     b_optimize_timings: true
-    bound_phase_duration: [0.45, 1.65]
+    bound_phase_duration: [0.07, 0.07]
 
     ee_phase_durations:
         0: [0.45, 0.75, 1.65]

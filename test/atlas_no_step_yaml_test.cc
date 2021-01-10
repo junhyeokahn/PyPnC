@@ -18,8 +18,8 @@ int main() {
   task.from_yaml(cfg["locomotion_task"]);
 
   // Locomotion Solution
-  LocomotionSolution sol = LocomotionSolution("atlas_no_step_yaml_test");
-  sol.initialize(cfg["locomotion_param"]);
+  LocomotionSolution sol =
+      LocomotionSolution("atlas_no_step_yaml_test", cfg["locomotion_param"]);
 
   // Construct NLP from locomotion task
   NlpFormulation formulation;

@@ -7,7 +7,8 @@
 #include <towr_plus/locomotion_solution.h>
 #include <towr_plus/models/endeffector_mappings.h>
 
-LocomotionSolution::LocomotionSolution(const std::string &name) {
+LocomotionSolution::LocomotionSolution(const std::string &name,
+                                       const YAML::Node &node) {
   name_ = name;
   int num_leg(2);
   ee_phase_durations_.resize(num_leg);
@@ -27,15 +28,7 @@ LocomotionSolution::LocomotionSolution(const std::string &name) {
   one_hot_ee_wrench_lin_.resize(2);
   one_hot_ee_wrench_ang_.resize(2);
   one_hot_ee_contact_schedule_.resize(2);
-}
 
-LocomotionSolution::~LocomotionSolution() {}
-
-void LocomotionSolution::print_info() {
-  std::cout << "Locomotion Solution for " << name_ << std::endl;
-}
-
-void LocomotionSolution::initialize(const YAML::Node &node) {
   Eigen::VectorXd tmp_vec;
   bool tmp_bool;
   try {
@@ -57,6 +50,12 @@ void LocomotionSolution::initialize(const YAML::Node &node) {
               << __FILE__ << "]" << std::endl
               << std::endl;
   }
+}
+
+LocomotionSolution::~LocomotionSolution() {}
+
+void LocomotionSolution::print_info() {
+  std::cout << "Locomotion Solution for " << name_ << std::endl;
 }
 
 void LocomotionSolution::print_solution(double dt) {
@@ -177,8 +176,8 @@ void LocomotionSolution::_set_splines() {
     ee_wrench_ang.at(ee)->SetVariables(one_hot_ee_wrench_ang_.at(ee));
 
     ee_phase_dur.at(ee) = std::make_shared<PhaseDurations>(
-        ee, ee_phase_durations_.at(ee), true, -100.,
-        100.); // bound_phase_duration isn't important here
+        ee, ee_phase_durations_.at(ee), true, 0.,
+        0.); // bound_phase_duration isn't important here
     ee_phase_dur.at(ee)->SetVariables(one_hot_ee_contact_schedule_.at(ee));
   }
 

@@ -127,7 +127,10 @@ private:
 
   double t_total_;
   bool initial_contact_state_; ///< true if first phase in contact
-  ifopt::Bounds phase_duration_bounds_;
+  // The variable will be bounded by
+  // i.v - lhs_bound_buffer <= value <= i.v + rhs_bound_buffer_
+  double lhs_bound_buffer_;
+  double rhs_bound_buffer_;
 
   std::vector<PhaseDurationsObserver *> observers_;
   void UpdateObservers() const;

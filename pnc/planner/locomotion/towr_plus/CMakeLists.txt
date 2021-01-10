@@ -33,6 +33,8 @@ add_library(towr_plus SHARED
   src/monoped_gait_generator.cc
   src/biped_gait_generator.cc
   src/quadruped_gait_generator.cc
+  src/footstep.cpp
+  src/dcm_planner.cpp
   # terrain
   src/height_map_examples.cc
   src/height_map.cc
@@ -51,5 +53,5 @@ add_library(towr_plus SHARED
   src/locomotion_solution.cc
 )
 
-target_link_libraries(towr_plus PUBLIC ifopt::ifopt_core my_util)
+target_link_libraries(towr_plus PUBLIC ifopt::ifopt_core my_util dubins)
 

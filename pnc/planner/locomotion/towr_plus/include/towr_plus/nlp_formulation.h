@@ -37,6 +37,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <ifopt/constraint_set.h>
 #include <ifopt/cost_term.h>
 #include <ifopt/variable_set.h>
+#include <towr_plus/initialization/dcm_planner.hpp>
 #include <towr_plus/locomotion_task.h>
 #include <towr_plus/models/robot_model.h>
 #include <towr_plus/parameters.h>
@@ -113,6 +114,8 @@ public:
   Parameters params_;
 
   void from_locomotion_task(const LocomotionTask &task);
+  // traj_type : "dubins"
+  void initialize_from_dcm_planner(const std::string &traj_type);
 
 private:
   // variables
@@ -156,6 +159,18 @@ private:
 
   CostPtrVec MakeWrenchLinVelDiffCost(const Eigen::VectorXd &weight) const;
   CostPtrVec MakeWrenchAngVelDiffCost(const Eigen::VectorXd &weight) const;
+
+  // warm starting
+  bool b_initialize_;
+
+  DCMPlanner dcm_planner_;
+
+  Eigen::VectorXd one_hot_base_lin_;
+  Eigen::VectorXd one_hot_base_ang_;
+  std::vector<Eigen::VectorXd> one_hot_ee_motion_lin_;
+  std::vector<Eigen::VectorXd> one_hot_ee_motion_ang_;
+  std::vector<Eigen::VectorXd> one_hot_ee_wrench_lin_;
+  std::vector<Eigen::VectorXd> one_hot_ee_wrench_ang_;
 };
 
 } /* namespace towr_plus */

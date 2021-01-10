@@ -20,7 +20,7 @@ using namespace towr_plus;
 // Usage: initialize --> from_one_hot_vector
 class LocomotionSolution {
 public:
-  LocomotionSolution(const std::string &name);
+  LocomotionSolution(const std::string &name, const YAML::Node &node);
   virtual ~LocomotionSolution();
 
   // ===========================================================================
@@ -29,7 +29,6 @@ public:
   void from_one_hot_vector(
       const Eigen::VectorXd &one_hot_vec); // Initialize nodes and splines from
                                            // one hot vector
-  void initialize(const YAML::Node &node); // Initialize variables
   void print_info();                       // Print solution information
   void print_solution(double dt = 0.05);   // Print solution
   void to_yaml(double dt = 0.01);          // Save solution to yaml

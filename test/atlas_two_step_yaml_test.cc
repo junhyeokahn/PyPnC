@@ -18,14 +18,15 @@ int main() {
   task.from_yaml(cfg["locomotion_task"]);
 
   // Locomotion Solution
-  LocomotionSolution sol = LocomotionSolution("atlas_two_step_yaml_test");
-  sol.initialize(cfg["locomotion_param"]);
+  LocomotionSolution sol =
+      LocomotionSolution("atlas_two_step_yaml_test", cfg["locomotion_param"]);
 
   // Construct NLP from locomotion task
   NlpFormulation formulation;
   formulation.model_ = RobotModel(RobotModel::Atlas);
   formulation.params_.from_yaml(cfg["locomotion_param"]);
   formulation.from_locomotion_task(task);
+  formulation.initialize_from_dcm_planner("dubins");
 
   // Solve
   ifopt::Problem nlp;

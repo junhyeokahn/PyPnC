@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
+#include <iostream>
+
 #include <towr_plus/variables/phase_durations.h>
 #include <towr_plus/variables/spline.h> // for Spline::GetSegmentID()
 #include <towr_plus/variables/variable_names.h>
@@ -41,14 +43,15 @@ namespace towr_plus {
 
 PhaseDurations::PhaseDurations(EndeffectorID ee, const VecDurations &timings,
                                bool is_first_phase_in_contact,
-                               double min_duration, double max_duration)
+                               double lhs_bound_buffer, double rhs_bound_buffer)
     // -1 since last phase-duration is not optimized over, but comes from total
     // time
     : VariableSet(timings.size() - 1, id::EESchedule(ee)) {
   durations_ = timings;
   t_total_ = std::accumulate(timings.begin(), timings.end(), 0.0);
-  phase_duration_bounds_ = ifopt::Bounds(min_duration, max_duration);
   initial_contact_state_ = is_first_phase_in_contact;
+  lhs_bound_buffer_ = lhs_bound_buffer;
+  rhs_bound_buffer_ = rhs_bound_buffer;
 }
 
 void PhaseDurations::AddObserver(PhaseDurationsObserver *const o) {
@@ -94,8 +97,11 @@ void PhaseDurations::SetVariables(const VectorXd &x) {
 PhaseDurations::VecBound PhaseDurations::GetBounds() const {
   VecBound bounds;
 
-  for (int i = 0; i < GetRows(); ++i)
-    bounds.push_back(phase_duration_bounds_);
+  for (int i = 0; i < GetRows(); ++i) {
+    ifopt::Bounds b = ifopt::Bounds(durations_[i] - lhs_bound_buffer_,
+                                    durations_[i] + rhs_bound_buffer_);
+    bounds.push_back(b);
+  }
 
   return bounds;
 }

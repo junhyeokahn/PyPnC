@@ -19,17 +19,16 @@ endif()
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/util")
 include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/locomotion/towr_plus/include")
+include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/dubins")
 
 add_subdirectory(util)
 add_subdirectory(pnc/planner/locomotion/towr_plus)
+add_subdirectory(pnc/planner/dubins)
 
 # Add Executables
-add_executable(atlas_two_step_test test/atlas_two_step_test.cc)
-target_link_libraries(atlas_two_step_test
-    PRIVATE
-    towr_plus
-    ifopt::ifopt_ipopt
-)
+
+add_executable(dubins_test test/dubins.cc)
+target_link_libraries(dubins_test PRIVATE dubins)
 
 add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
 target_link_libraries(atlas_two_step_yaml_test
