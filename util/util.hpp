@@ -31,9 +31,11 @@ void readParameter(const YAML::Node &node, const std::string &name,
 // =============================================================================
 // Rotations
 // =============================================================================
-// Euler ZYX to Rotation Matrix
-Eigen::Matrix3d euler_xyz_to_rot(Eigen::Vector3d euler_xyz);
-Eigen::Quaternion<double> euler_xyz_to_quat(Eigen::Vector3d euler_xyz);
+// Convention here for euler angle is to rotate in Z-Y-X order and represent
+// euler angles in (x,y,z) order
+Eigen::Matrix3d euler_xyz_to_rot(const Eigen::Vector3d &euler_xyz);
+Eigen::Quaternion<double> euler_xyz_to_quat(const Eigen::Vector3d &euler_xyz);
+Eigen::Vector3d quat_to_euler_xyz(const Eigen::Quaternion<double> &quat);
 
 // =============================================================================
 // Pretty Print

@@ -3,7 +3,7 @@
 // =============================================================================
 // Rotations
 // =============================================================================
-Eigen::Matrix3d euler_xyz_to_rot(Eigen::Vector3d euler_xyz) {
+Eigen::Matrix3d euler_xyz_to_rot(const Eigen::Vector3d &euler_xyz) {
   Eigen::Matrix3d ret;
   double x = euler_xyz(0);
   double y = euler_xyz(1);
@@ -26,10 +26,18 @@ Eigen::Matrix3d euler_xyz_to_rot(Eigen::Vector3d euler_xyz) {
   // return ret;
 };
 
-Eigen::Quaternion<double> euler_xyz_to_quat(Eigen::Vector3d euler_xyz) {
+Eigen::Quaternion<double> euler_xyz_to_quat(const Eigen::Vector3d &euler_xyz) {
   Eigen::Quaternion<double> ret(euler_xyz_to_rot(euler_xyz));
   return ret;
 };
+
+Eigen::Vector3d quat_to_euler_xyz(const Eigen::Quaternion<double> &quat) {
+  Eigen::Vector3d eigen_order_euler_angles =
+      quat.toRotationMatrix().eulerAngles(2, 1, 0);
+  Eigen::Vector3d ret(eigen_order_euler_angles[2], eigen_order_euler_angles[1],
+                      eigen_order_euler_angles[0]);
+  return ret;
+}
 
 // =============================================================================
 // Pretty Prints

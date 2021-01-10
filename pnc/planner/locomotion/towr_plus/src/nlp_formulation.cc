@@ -808,26 +808,96 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   // ===========================================================================
   // Get solutions and fill one-hot vectors
   // ===========================================================================
+  // Base Vars
   int n_base_nodes = params_.GetBasePolyDurations().size() + 1;
   int n_base_vars = n_base_nodes * 6;
   one_hot_base_lin_ = Eigen::VectorXd::Zero(n_base_vars);
   one_hot_base_ang_ = Eigen::VectorXd::Zero(n_base_vars);
-  Eigen::Vector3d tmp_vec3;
-  Eigen::Vector3d tmp_vec33;
-  Eigen::Quaternion<double> tmp_quat;
   double t(0.);
   for (int i = 0; i < n_base_nodes; ++i) {
-    std::cout << "t : " << t << std::endl;
-    dcm_planner_.get_ref_com(t, tmp_vec3);
-    std::cout << tmp_vec3 << std::endl;
-    dcm_planner_.get_ref_com_vel(t, tmp_vec3);
-    dcm_planner_.get_ref_ori_ang_vel_acc(t, tmp_quat, tmp_vec3, tmp_vec33);
+    Eigen::Vector3d com_pos, com_vel, base_ang_vel, base_ang_acc;
+    Eigen::Quaternion<double> base_quat;
+    dcm_planner_.get_ref_com(t, com_pos);
+    dcm_planner_.get_ref_com_vel(t, com_vel);
+    dcm_planner_.get_ref_ori_ang_vel_acc(t, base_quat, base_ang_vel,
+                                         base_ang_acc);
+    one_hot_base_lin_.segment(i * 6, 3) = com_pos;
+    one_hot_base_lin_.segment(i * 6 + 3, 3) = com_vel;
+    one_hot_base_ang_.segment(i * 6, 3) = quat_to_euler_xyz(base_quat);
+    one_hot_base_ang_.segment(i * 6 + 3, 3) = base_ang_vel;
     if (i != (n_base_nodes - 1))
       t += params_.GetBasePolyDurations()[i];
   }
-  exit(0);
+
+  // Motion Vars
+  std::vector<int> n_ee_motion_lin_vars_(2);
+  std::vector<int> n_ee_motion_ang_vars_(2);
+  // First (Contact)
+  std::vector<Eigen::Vector3d> prev_pos(2);
+  std::vector<Eigen::Vector3d> prev_euler_angles(2);
+  for (auto ee : {L, R}) {
+    n_ee_motion_lin_vars_.at(ee) =
+        3 * (params_.ee_phase_durations_.at(ee).size() + 1) / 2 +
+        5 * (params_.ee_phase_durations_.at(ee).size() - 1) / 2;
+    n_ee_motion_ang_vars_.at(ee) =
+        3 * (params_.ee_phase_durations_.at(ee).size() + 1) / 2 +
+        6 * (params_.ee_phase_durations_.at(ee).size() - 1) / 2;
+    one_hot_ee_motion_lin_.at(ee) =
+        Eigen::VectorXd::Zero(n_ee_motion_lin_vars_.at(ee));
+    one_hot_ee_motion_ang_.at(ee) =
+        Eigen::VectorXd::Zero(n_ee_motion_ang_vars_.at(ee));
+    Eigen::Vector3d pos, euler_angle;
+    if (ee == L) {
+      pos = left_foot_start.position;
+      euler_angle = quat_to_euler_xyz(left_foot_start.orientation);
+    } else {
+      pos = right_foot_start.position;
+      euler_angle = quat_to_euler_xyz(right_foot_start.orientation);
+    }
+    one_hot_ee_motion_lin_.at(ee).segment(0, 3) = pos;
+    one_hot_ee_motion_ang_.at(ee).segment(0, 3) = euler_angle;
+    prev_pos.at(ee) = pos;
+    prev_euler_angles.at(ee) = euler_angle;
+  }
+  // Rest (Swing Contact)
+  double swing_height = 0.05;
+  double t_avg_swing = params_.ee_phase_durations_.at(0)[1];
+  int ee = 0;
+  std::vector<int> id(2, 0);
+  for (int i = 0; i < footstep_list.size(); ++i) {
+    int robot_side = footstep_list[i].robot_side;
+    if (robot_side == LEFT_ROBOT_SIDE) {
+      ee = 0;
+    } else {
+      ee = 1;
+    }
+    Eigen::Vector3d pos = footstep_list[i].position;
+    Eigen::Vector3d euler_angles =
+        quat_to_euler_xyz(footstep_list[i].orientation);
+    Eigen::VectorXd lin_var = Eigen::VectorXd::Zero(8);
+    Eigen::VectorXd ang_var = Eigen::VectorXd::Zero(9);
+    Eigen::Vector3d mid_pos = (prev_pos.at(ee) + pos) / 2.;
+    Eigen::Vector3d mid_vel = (pos - prev_pos.at(ee)) / t_avg_swing;
+    Eigen::Vector3d mid_ang = (prev_euler_angles.at(ee) + euler_angles) / 2.;
+    Eigen::Vector3d mid_ang_vel =
+        (euler_angles - prev_euler_angles.at(ee)) / t_avg_swing;
+    // (X, DX, Y, DY, Z, X, Y, Z)
+    lin_var << mid_pos[0], mid_vel[0], mid_pos[1], mid_vel[1], swing_height,
+        pos[0], pos[1], pos[2];
+    // (X, DX, Y, DY, Z, DZ, X, Y, Z)
+    ang_var << mid_ang[0], mid_ang_vel[0], mid_ang[1], mid_ang_vel[1],
+        mid_ang[2], mid_ang_vel[2], euler_angles[0], euler_angles[1],
+        euler_angles[2];
+    one_hot_ee_motion_lin_.at(ee).segment(3 + id.at(ee) * 8, 8) = lin_var;
+    one_hot_ee_motion_ang_.at(ee).segment(3 + id.at(ee)++ * 9, 9) = ang_var;
+
+    prev_pos.at(ee) = pos;
+    prev_euler_angles.at(ee) = euler_angles;
+  }
 
   b_initialize_ = true;
+
+  // Reaction Force Vars
 
   //////////////////////////////////////////////////////////////////////////////
   // TEST : Will be deleted
