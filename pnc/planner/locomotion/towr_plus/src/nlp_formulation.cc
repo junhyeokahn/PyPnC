@@ -122,9 +122,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
 
   double x = final_base_.lin.p().x();
   double y = final_base_.lin.p().y();
-  // double z = terrain_->GetHeight(x, y) -
-  // model_.kinematic_model_->GetNominalStanceInBase().front().z();
-  double z = terrain_->GetHeight(x, y) + final_base_.lin.p().z();
+  double z = terrain_->GetHeight(x, y) -
+             model_.kinematic_model_->GetNominalStanceInBase().front().z();
   Vector3d final_pos(x, y, z);
 
   spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
@@ -161,8 +160,13 @@ NlpFormulation::MakeEEMotionLinVariables() const {
                                      final_base_.ang.p().z());
     Eigen::Matrix3d w_R_b =
         EulerConverter::GetRotationMatrixBaseToWorld(final_base_euler);
+    double com_x = final_base_.lin.p().x();
+    double com_y = final_base_.lin.p().y();
+    double com_z = final_base_.lin.p().z();
+    Eigen::Vector3d final_base_pos(com_x, com_y,
+                                   terrain_->GetHeight(com_x, com_y) + com_z);
     Vector3d final_ee_motion_lin =
-        final_base_.lin.p() +
+        final_base_pos +
         w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
     double x = final_ee_motion_lin.x();
     double y = final_ee_motion_lin.y();
@@ -192,8 +196,13 @@ NlpFormulation::MakeEEMotionAngVariables() const {
                                    final_base_.ang.p().y(),
                                    final_base_.ang.p().z());
     Eigen::Matrix3d base_rot = euler_xyz_to_rot(base_euler_xyz);
+    double com_x = final_base_.lin.p().x();
+    double com_y = final_base_.lin.p().y();
+    double com_z = final_base_.lin.p().z();
+    Eigen::Vector3d final_base_pos(com_x, com_y,
+                                   terrain_->GetHeight(com_x, com_y) + com_z);
     Vector3d final_ee_motion_lin =
-        final_base_.lin.p() +
+        final_base_pos +
         base_rot * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
     double x = final_ee_motion_lin(0);
     double y = final_ee_motion_lin(1);
@@ -689,7 +698,9 @@ void NlpFormulation::from_locomotion_task(const LocomotionTask &task) {
 }
 
 void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
+  // ===========================================================================
   // Initialize DCM Planner
+  // ===========================================================================
   double nominal_com_height =
       -model_.kinematic_model_->GetNominalStanceInBase().at(0)[2];
   dcm_planner_.t_transfer = 0.;
@@ -710,7 +721,9 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
       Eigen::Vector3d(final_base_.ang.at(kPos)[0], final_base_.ang.at(kPos)[1],
                       final_base_.ang.at(kPos)[2])));
 
+  // ===========================================================================
   // Fill footstep_list based on the trjectory type
+  // ===========================================================================
   std::vector<Footstep> footstep_list;
   if (traj_type == "dubins") {
     DubinsPath dp;
@@ -748,8 +761,10 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
 
       } else {
         // Final Recovery Steps
-        base_pos << final_base_.lin.p().x(), final_base_.lin.p().y(),
-            final_base_.lin.p().z();
+        double com_x = final_base_.lin.p().x();
+        double com_y = final_base_.lin.p().y();
+        double com_z = final_base_.lin.p().z();
+        base_pos << com_x, com_y, terrain_->GetHeight(com_x, com_y) + com_z;
         w_R_b = euler_xyz_to_rot(Eigen::Vector3d(final_base_.ang.p().x(),
                                                  final_base_.ang.p().y(),
                                                  final_base_.ang.p().z()));
@@ -790,12 +805,31 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   dcm_planner_.initialize_footsteps_rvrp(footstep_list, left_foot_start,
                                          right_foot_start, dcm_pos_start,
                                          dcm_vel_start);
+  // ===========================================================================
   // Get solutions and fill one-hot vectors
+  // ===========================================================================
+  int n_base_nodes = params_.GetBasePolyDurations().size() + 1;
+  int n_base_vars = n_base_nodes * 6;
+  one_hot_base_lin_ = Eigen::VectorXd::Zero(n_base_vars);
+  one_hot_base_ang_ = Eigen::VectorXd::Zero(n_base_vars);
+  Eigen::Vector3d tmp_vec3;
+  Eigen::Vector3d tmp_vec33;
+  Eigen::Quaternion<double> tmp_quat;
+  double t(0.);
+  for (int i = 0; i < n_base_nodes; ++i) {
+    std::cout << "t : " << t << std::endl;
+    dcm_planner_.get_ref_com(t, tmp_vec3);
+    dcm_planner_.get_ref_com_vel(t, tmp_vec3);
+    dcm_planner_.get_ref_ori_ang_vel_acc(t, tmp_quat, tmp_vec3, tmp_vec33);
+    if (i != (n_base_nodes - 1))
+      t += params_.GetBasePolyDurations()[i];
+  }
+  exit(0);
 
   b_initialize_ = true;
 
   //////////////////////////////////////////////////////////////////////////////
-  // TEST
+  // TEST : Will be deleted
   try {
     double t_start = dcm_planner_.getInitialTime();
     double t_end = t_start + dcm_planner_.get_total_trajectory_time();

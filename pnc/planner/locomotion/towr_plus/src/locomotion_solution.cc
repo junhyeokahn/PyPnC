@@ -191,7 +191,7 @@ void LocomotionSolution::_set_splines() {
 void LocomotionSolution::_set_base_nodes() {
 
   n_base_nodes_ = _get_base_poly_duration().size() + 1;
-  n_base_vars_ = n_base_nodes_ * 6.;
+  n_base_vars_ = n_base_nodes_ * 6;
 
   one_hot_base_lin_ = one_hot_vector_.segment(parsing_idx_, n_base_vars_);
   parsing_idx_ += n_base_vars_;
