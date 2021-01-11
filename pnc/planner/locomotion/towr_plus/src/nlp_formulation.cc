@@ -126,16 +126,24 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
              model_.kinematic_model_->GetNominalStanceInBase().front().z();
   Vector3d final_pos(x, y, z);
 
-  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
-                                       params_.GetTotalTime());
+  if (b_initialize_) {
+    spline_lin->SetVariables(one_hot_base_lin_);
+  } else {
+    spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
+                                         params_.GetTotalTime());
+  }
   spline_lin->AddStartBound(kPos, {X, Y, Z}, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, {X, Y, Z}, initial_base_.lin.v());
   vars.push_back(spline_lin);
 
   auto spline_ang =
       std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
-  spline_ang->SetByLinearInterpolation(
-      initial_base_.ang.p(), final_base_.ang.p(), params_.GetTotalTime());
+  if (b_initialize_) {
+    spline_ang->SetVariables(one_hot_base_ang_);
+  } else {
+    spline_ang->SetByLinearInterpolation(
+        initial_base_.ang.p(), final_base_.ang.p(), params_.GetTotalTime());
+  }
   spline_ang->AddStartBound(kPos, {X, Y, Z}, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, {X, Y, Z}, initial_base_.ang.v());
   vars.push_back(spline_ang);
@@ -171,8 +179,13 @@ NlpFormulation::MakeEEMotionLinVariables() const {
     double x = final_ee_motion_lin.x();
     double y = final_ee_motion_lin.y();
     double z = terrain_->GetHeight(x, y);
-    lin_nodes->SetByLinearInterpolation(initial_ee_motion_lin_.at(ee),
-                                        Vector3d(x, y, z), T);
+
+    if (b_initialize_) {
+      lin_nodes->SetVariables(one_hot_ee_motion_lin_.at(ee));
+    } else {
+      lin_nodes->SetByLinearInterpolation(initial_ee_motion_lin_.at(ee),
+                                          Vector3d(x, y, z), T);
+    }
 
     lin_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
     vars.push_back(lin_nodes);
@@ -220,9 +233,13 @@ NlpFormulation::MakeEEMotionAngVariables() const {
     final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
         foot_rot.eulerAngles(2, 1, 0)(1), foot_rot.eulerAngles(2, 1, 0)(0);
 
-    ang_nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
-                                        final_foot_euler_angles,
-                                        params_.GetTotalTime());
+    if (b_initialize_) {
+      ang_nodes->SetVariables(one_hot_ee_motion_ang_.at(ee));
+    } else {
+      ang_nodes->SetByLinearInterpolation(initial_ee_motion_ang_.at(ee),
+                                          final_foot_euler_angles,
+                                          params_.GetTotalTime());
+    }
     ang_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_ang_.at(ee));
     vars.push_back(ang_nodes);
   }
@@ -242,8 +259,12 @@ NlpFormulation::MakeWrenchLinVariables() const {
     double g = model_.dynamic_model_->g();
 
     Vector3d f_stance(0.0, 0.0, m * g / params_.GetEECount());
-    lin_nodes->SetByLinearInterpolation(f_stance, f_stance,
-                                        T); // stay constant
+    if (b_initialize_) {
+      lin_nodes->SetVariables(one_hot_ee_wrench_lin_.at(ee));
+    } else {
+      lin_nodes->SetByLinearInterpolation(f_stance, f_stance,
+                                          T); // stay constant
+    }
     vars.push_back(lin_nodes);
   }
   return vars;

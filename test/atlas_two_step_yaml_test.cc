@@ -40,6 +40,9 @@ int main() {
   for (auto c : formulation.GetCosts()) {
     nlp.AddCostSet(c);
   }
+  Eigen::VectorXd initial_vars = nlp.GetVariableValues();
+  pretty_print(initial_vars, std::cout, "initial_vars");
+  exit(0);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("jacobian_approximation", "exact");
