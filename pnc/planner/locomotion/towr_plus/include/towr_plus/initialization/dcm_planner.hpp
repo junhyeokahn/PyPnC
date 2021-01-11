@@ -145,7 +145,8 @@ public:
   // computes the CoM reaction force / leg reaction force given mass, CoM
   // position and the r_vrp
   void get_reaction_force(const double mass, const Eigen::Vector3d &com_pos,
-                          const Eigen::Vector3d &r_vrp, Eigen::Vector3d fr_out);
+                          const Eigen::Vector3d &r_vrp,
+                          Eigen::Vector3d &fr_out);
   // computes the current r_vrp given
   //   -the DCM dynamics time constant b,
   //  - the current dcm

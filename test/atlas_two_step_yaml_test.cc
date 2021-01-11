@@ -41,7 +41,8 @@ int main() {
     nlp.AddCostSet(c);
   }
   Eigen::VectorXd initial_vars = nlp.GetVariableValues();
-  pretty_print(initial_vars, std::cout, "initial_vars");
+  sol.from_one_hot_vector(initial_vars);
+  sol.to_yaml();
   exit(0);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();

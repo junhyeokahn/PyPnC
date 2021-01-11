@@ -801,7 +801,7 @@ void DCMPlanner::get_com_vel(const Eigen::Vector3d &com_pos,
 void DCMPlanner::get_reaction_force(const double mass,
                                     const Eigen::Vector3d &com_pos,
                                     const Eigen::Vector3d &r_vrp,
-                                    Eigen::Vector3d fr_out) {
+                                    Eigen::Vector3d &fr_out) {
   Eigen::Vector3d r_ecmp_c = (r_vrp - Eigen::Vector3d(0.0, 0.0, z_vrp));
   fr_out = (mass * gravity / z_vrp) * (com_pos - r_ecmp_c);
 }
