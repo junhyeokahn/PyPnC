@@ -131,6 +131,7 @@ public:
   void get_ref_com_vel(const double t, Eigen::Vector3d &com_vel_out);
   void get_ref_r_vrp(const double t, Eigen::Vector3d &r_vrvp_out);
   void get_ref_reaction_force(const double t, Eigen::Vector3d &f_out);
+  void get_ref_reaction_force_dot(const double t, Eigen::Vector3d &fdot_out);
 
   // Global reference quat, ang vel and ang acc
   void get_ref_ori_ang_vel_acc(const double t, Eigen::Quaterniond &quat_out,

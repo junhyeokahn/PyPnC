@@ -651,6 +651,15 @@ void DCMPlanner::get_ref_reaction_force(const double t,
   get_reaction_force(robot_mass, com_pos_ref, r_vrp_ref, f_out);
 }
 
+void DCMPlanner::get_ref_reaction_force_dot(const double t,
+                                            Eigen::Vector3d &fdot_out) {
+  double dt(0.001);
+  Eigen::Vector3d prev_force, curr_force;
+  get_ref_reaction_force(t - dt, prev_force);
+  get_ref_reaction_force(t, curr_force);
+  fdot_out = (curr_force - prev_force) / dt;
+}
+
 int DCMPlanner::get_r_vrp_type(const int step_index) {
   // clamp step index
   int index = clampINT(step_index, 0, rvrp_type_list.size() - 1);
