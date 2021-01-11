@@ -323,6 +323,7 @@ void DCMPlanner::computeDCM_states() {
       computeDCMacc_eoDS_i(0, t_transfer + alpha_ds * t_ds);
 
   // printBoundaryConditions();
+  // exit(0);
 
   // compute polynomial interpolator matrix
   double Ts = t_ds; // set transfer duration time
@@ -644,20 +645,83 @@ void DCMPlanner::get_ref_r_vrp(const double t, Eigen::Vector3d &r_vrvp_out) {
 }
 
 void DCMPlanner::get_ref_reaction_force(const double t,
-                                        Eigen::Vector3d &f_out) {
+                                        Eigen::VectorXd &lf_wrench_out,
+                                        Eigen::VectorXd &rf_wrench_out) {
+  std::cout << "--------------------------" << std::endl;
+  std::cout << "time : " << t << std::endl;
+  Eigen::Vector3d ext_frc;
+  get_ref_ext_frc(t, ext_frc);
+
+  double lf(0.);
+  double rf(0.);
+
+  double time = clampDOUBLE(t - t_start, 0.0, t_end);
+  double t_settle = -b * log(1.0 - percentage_settle);
+  int step_index = which_step_index_to_use(time);
+
+  if (time <= get_double_support_t_end(step_index) ||
+      time >= t_end - t_settle) {
+    double curr_ratio =
+        clampDOUBLE((time - get_double_support_t_start(step_index)) /
+                        (get_double_support_t_end(step_index) -
+                         get_double_support_t_start(step_index)),
+                    0., 1.);
+    // Double Support
+    if (rvrp_type_list[step_index] == DCMPlanner::DCM_TRANSFER_VRP_TYPE) {
+      // For the first step check this with the next foot
+      if (rvrp_type_list[step_index + 1] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
+        lf = curr_ratio * 0.5 + 0.5;
+        rf = 1. - lf;
+      } else if (rvrp_type_list[step_index + 1] ==
+                 DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
+        rf = curr_ratio * 0.5 + 0.5;
+        lf = 1. - rf;
+      } else {
+        std::cout << "Error Raised in DCM Planner" << std::endl;
+        exit(0);
+      }
+    } else if (rvrp_type_list[step_index] ==
+               DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
+      lf = curr_ratio;
+      rf = 1. - lf;
+    } else if (rvrp_type_list[step_index] ==
+               DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
+      rf = curr_ratio;
+      lf = 1. - rf;
+    } else if (rvrp_type_list[step_index] == DCMPlanner::DCM_END_VRP_TYPE) {
+      if (rvrp_type_list[step_index - 1] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
+        rf = curr_ratio * 0.5;
+        lf = 1. - rf;
+      } else if (rvrp_type_list[step_index - 1] ==
+                 DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
+        lf = curr_ratio * 0.5;
+        rf = 1. - lf;
+      } else {
+        std::cout << "Error Raised in DCM Planner" << std::endl;
+        exit(0);
+      }
+    }
+    std::cout << "lfoot max reaction force: " << lf << std::endl;
+    std::cout << "rfoot max reaction force: " << rf << std::endl;
+  } else {
+    // Single Support
+    std::cout << "Single Support" << std::endl;
+    if (rvrp_type_list[step_index] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
+      std::cout << "right foot swinging" << std::endl;
+    } else if (rvrp_type_list[step_index] ==
+               DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
+      std::cout << "left foot swinging" << std::endl;
+    }
+  }
+
+  // Wrench Distribution
+}
+
+void DCMPlanner::get_ref_ext_frc(const double t, Eigen::Vector3d &f_out) {
   Eigen::Vector3d r_vrp_ref, com_pos_ref;
   get_ref_r_vrp(t, r_vrp_ref);
   get_ref_com(t, com_pos_ref);
-  get_reaction_force(robot_mass, com_pos_ref, r_vrp_ref, f_out);
-}
-
-void DCMPlanner::get_ref_reaction_force_dot(const double t,
-                                            Eigen::Vector3d &fdot_out) {
-  double dt(0.001);
-  Eigen::Vector3d prev_force, curr_force;
-  get_ref_reaction_force(t - dt, prev_force);
-  get_ref_reaction_force(t, curr_force);
-  fdot_out = (curr_force - prev_force) / dt;
+  get_ext_frc(robot_mass, com_pos_ref, r_vrp_ref, f_out);
 }
 
 int DCMPlanner::get_r_vrp_type(const int step_index) {
@@ -714,8 +778,8 @@ int DCMPlanner::which_step_index_to_use(const double t) {
   return rvrp_list.size() - 1;
 }
 
-// If step index is an rvrp swing type, returns true and populates the value of
-// swing start and end times
+// If step index is an rvrp swing type, returns true and populates the value
+// of swing start and end times
 bool DCMPlanner::get_t_swing_start_end(const int step_index,
                                        double &swing_start_time,
                                        double &swing_end_time) {
@@ -798,10 +862,9 @@ void DCMPlanner::get_com_vel(const Eigen::Vector3d &com_pos,
   com_vel_out = (-1.0 / b) * (com_pos - dcm);
 }
 
-void DCMPlanner::get_reaction_force(const double mass,
-                                    const Eigen::Vector3d &com_pos,
-                                    const Eigen::Vector3d &r_vrp,
-                                    Eigen::Vector3d &fr_out) {
+void DCMPlanner::get_ext_frc(const double mass, const Eigen::Vector3d &com_pos,
+                             const Eigen::Vector3d &r_vrp,
+                             Eigen::Vector3d &fr_out) {
   Eigen::Vector3d r_ecmp_c = (r_vrp - Eigen::Vector3d(0.0, 0.0, z_vrp));
   fr_out = (mass * gravity / z_vrp) * (com_pos - r_ecmp_c);
 }

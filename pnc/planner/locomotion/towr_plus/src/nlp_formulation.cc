@@ -918,99 +918,97 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
 
   // Reaction Force Vars
 
-  std::vector<int> n_ee_wrench_vars_(2);
-  for (auto ee : {L, R}) {
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "ee : " << ee << std::endl;
-    std::cout << "------------------------------------------" << std::endl;
-    n_ee_wrench_vars_.at(ee) =
-        6 * (2 * params_.force_polynomials_per_stance_phase_ +
-             (((params_.ee_phase_durations_.at(ee).size() + 1) / 2) - 2) *
-                 (params_.force_polynomials_per_stance_phase_ - 1));
-    one_hot_ee_wrench_lin_.at(ee) =
-        Eigen::VectorXd::Zero(n_ee_wrench_vars_.at(ee));
-    one_hot_ee_wrench_ang_.at(ee) =
-        Eigen::VectorXd::Zero(n_ee_wrench_vars_.at(ee));
+  // std::vector<int> n_ee_wrench_vars_(2);
+  // for (auto ee : {L, R}) {
+  // std::cout << "------------------------------------------" << std::endl;
+  // std::cout << "ee : " << ee << std::endl;
+  // std::cout << "------------------------------------------" << std::endl;
+  // n_ee_wrench_vars_.at(ee) =
+  // 6 * (2 * params_.force_polynomials_per_stance_phase_ +
+  //(((params_.ee_phase_durations_.at(ee).size() + 1) / 2) - 2) *
+  //(params_.force_polynomials_per_stance_phase_ - 1));
+  // one_hot_ee_wrench_lin_.at(ee) =
+  // Eigen::VectorXd::Zero(n_ee_wrench_vars_.at(ee));
+  // one_hot_ee_wrench_ang_.at(ee) =
+  // Eigen::VectorXd::Zero(n_ee_wrench_vars_.at(ee));
 
-    int starting_idx(0);
-    for (int j = 0; j < params_.ee_phase_durations_.at(ee).size(); ++j) {
-      if (j % 2 == 0) {
-        // contact phase
-        double t_so_far(0.);
-        for (int i = 0; i < j; ++i) {
-          t_so_far += params_.ee_phase_durations_.at(ee)[i];
-        }
-        std::vector<Eigen::Vector3d> frcs(4);
-        std::vector<Eigen::Vector3d> frcs_d(4);
-        for (int quarter_id = 0; quarter_id < 4; ++quarter_id) {
-          double t = t_so_far +
-                     quarter_id / 3. * params_.ee_phase_durations_.at(ee)[j];
-          dcm_planner_.get_ref_reaction_force(t, frcs[quarter_id]);
-          dcm_planner_.get_ref_reaction_force_dot(t, frcs_d[quarter_id]);
-          std::cout << "t : " << t << std::endl;
-          std::cout << "frcs : " << frcs[quarter_id] << std::endl;
-          std::cout << "dfrcs : " << frcs_d[quarter_id] << std::endl;
-        }
-        if (params_.ee_phase_durations_.at(ee).size() == 1) {
-          one_hot_ee_wrench_lin_.at(ee) << frcs.at(0)[0], frcs_d.at(0)[0],
-              frcs.at(0)[1], frcs_d.at(0)[1], frcs.at(0)[2], frcs_d.at(0)[2],
-              frcs.at(1)[0], frcs_d.at(1)[0], frcs.at(1)[1], frcs_d.at(1)[1],
-              frcs.at(1)[2], frcs_d.at(1)[2], frcs.at(2)[0], frcs_d.at(2)[0],
-              frcs.at(2)[1], frcs_d.at(2)[1], frcs.at(2)[2], frcs_d.at(2)[2],
-              frcs.at(3)[0], frcs_d.at(3)[0], frcs.at(3)[1], frcs_d.at(3)[1],
-              frcs.at(3)[2], frcs_d.at(3)[2];
-        } else if (j == 0) {
-          Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(18);
-          tmp_vec << frcs.at(0)[0], frcs_d.at(0)[0], frcs.at(0)[1],
-              frcs_d.at(0)[1], frcs.at(0)[2], frcs_d.at(0)[2], frcs.at(1)[0],
-              frcs_d.at(1)[0], frcs.at(1)[1], frcs_d.at(1)[1], frcs.at(1)[2],
-              frcs_d.at(1)[2], frcs.at(2)[0], frcs_d.at(2)[0], frcs.at(2)[1],
-              frcs_d.at(2)[1], frcs.at(2)[2], frcs_d.at(2)[2];
-          one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 18) = tmp_vec;
+  // int starting_idx(0);
+  // for (int j = 0; j < params_.ee_phase_durations_.at(ee).size(); ++j) {
+  // if (j % 2 == 0) {
+  // double t_so_far(0.);
+  // for (int i = 0; i < j; ++i) {
+  // t_so_far += params_.ee_phase_durations_.at(ee)[i];
+  //}
+  // std::vector<Eigen::Vector3d> frcs(4);
+  // std::vector<Eigen::Vector3d> frcs_d(4);
+  // for (int quarter_id = 0; quarter_id < 4; ++quarter_id) {
+  // double t = t_so_far +
+  // quarter_id / 3. * params_.ee_phase_durations_.at(ee)[j];
+  // dcm_planner_.get_ref_reaction_force(t, frcs[quarter_id]);
+  // dcm_planner_.get_ref_reaction_force_dot(t, frcs_d[quarter_id]);
+  // std::cout << "t : " << t << std::endl;
+  // std::cout << "frcs : " << frcs[quarter_id] << std::endl;
+  // std::cout << "dfrcs : " << frcs_d[quarter_id] << std::endl;
+  //}
+  // if (params_.ee_phase_durations_.at(ee).size() == 1) {
+  // one_hot_ee_wrench_lin_.at(ee) << frcs.at(0)[0], frcs_d.at(0)[0],
+  // frcs.at(0)[1], frcs_d.at(0)[1], frcs.at(0)[2], frcs_d.at(0)[2],
+  // frcs.at(1)[0], frcs_d.at(1)[0], frcs.at(1)[1], frcs_d.at(1)[1],
+  // frcs.at(1)[2], frcs_d.at(1)[2], frcs.at(2)[0], frcs_d.at(2)[0],
+  // frcs.at(2)[1], frcs_d.at(2)[1], frcs.at(2)[2], frcs_d.at(2)[2],
+  // frcs.at(3)[0], frcs_d.at(3)[0], frcs.at(3)[1], frcs_d.at(3)[1],
+  // frcs.at(3)[2], frcs_d.at(3)[2];
+  //} else if (j == 0) {
+  // Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(18);
+  // tmp_vec << frcs.at(0)[0], frcs_d.at(0)[0], frcs.at(0)[1],
+  // frcs_d.at(0)[1], frcs.at(0)[2], frcs_d.at(0)[2], frcs.at(1)[0],
+  // frcs_d.at(1)[0], frcs.at(1)[1], frcs_d.at(1)[1], frcs.at(1)[2],
+  // frcs_d.at(1)[2], frcs.at(2)[0], frcs_d.at(2)[0], frcs.at(2)[1],
+  // frcs_d.at(2)[1], frcs.at(2)[2], frcs_d.at(2)[2];
+  // one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 18) = tmp_vec;
 
-          std::cout << "first phase" << std::endl;
-          std::cout << starting_idx << std::endl;
-          std::cout << "tmp_vec" << std::endl;
-          std::cout << tmp_vec << std::endl;
+  // std::cout << "first phase" << std::endl;
+  // std::cout << starting_idx << std::endl;
+  // std::cout << "tmp_vec" << std::endl;
+  // std::cout << tmp_vec << std::endl;
 
-          starting_idx += 18;
-        } else if (j == params_.ee_phase_durations_.at(ee).size() - 1) {
-          Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(12);
-          tmp_vec << frcs.at(1)[0], frcs_d.at(1)[0], frcs.at(1)[1],
-              frcs_d.at(1)[1], frcs.at(1)[2], frcs_d.at(1)[2], frcs.at(2)[0],
-              frcs_d.at(2)[0], frcs.at(2)[1], frcs_d.at(2)[1], frcs.at(2)[2],
-              frcs_d.at(2)[2];
-          one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 12) = tmp_vec;
+  // starting_idx += 18;
+  //} else if (j == params_.ee_phase_durations_.at(ee).size() - 1) {
+  // Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(12);
+  // tmp_vec << frcs.at(1)[0], frcs_d.at(1)[0], frcs.at(1)[1],
+  // frcs_d.at(1)[1], frcs.at(1)[2], frcs_d.at(1)[2], frcs.at(2)[0],
+  // frcs_d.at(2)[0], frcs.at(2)[1], frcs_d.at(2)[1], frcs.at(2)[2],
+  // frcs_d.at(2)[2];
+  // one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 12) = tmp_vec;
 
-          std::cout << "interm phase" << std::endl;
-          std::cout << starting_idx << std::endl;
-          std::cout << "tmp_vec" << std::endl;
-          std::cout << tmp_vec << std::endl;
+  // std::cout << "interm phase" << std::endl;
+  // std::cout << starting_idx << std::endl;
+  // std::cout << "tmp_vec" << std::endl;
+  // std::cout << tmp_vec << std::endl;
 
-          starting_idx += 12;
-        } else {
-          Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(18);
-          one_hot_ee_wrench_lin_.at(ee) << frcs.at(1)[0], frcs_d.at(1)[0],
-              frcs.at(1)[1], frcs_d.at(1)[1], frcs.at(1)[2], frcs_d.at(1)[2],
-              frcs.at(2)[0], frcs_d.at(2)[0], frcs.at(2)[1], frcs_d.at(2)[1],
-              frcs.at(2)[2], frcs_d.at(2)[2], frcs.at(3)[0], frcs_d.at(3)[0],
-              frcs.at(3)[1], frcs_d.at(3)[1], frcs.at(3)[2], frcs_d.at(3)[2];
-          one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 18) = tmp_vec;
+  // starting_idx += 12;
+  //} else {
+  // Eigen::VectorXd tmp_vec = Eigen::VectorXd::Zero(18);
+  // one_hot_ee_wrench_lin_.at(ee) << frcs.at(1)[0], frcs_d.at(1)[0],
+  // frcs.at(1)[1], frcs_d.at(1)[1], frcs.at(1)[2], frcs_d.at(1)[2],
+  // frcs.at(2)[0], frcs_d.at(2)[0], frcs.at(2)[1], frcs_d.at(2)[1],
+  // frcs.at(2)[2], frcs_d.at(2)[2], frcs.at(3)[0], frcs_d.at(3)[0],
+  // frcs.at(3)[1], frcs_d.at(3)[1], frcs.at(3)[2], frcs_d.at(3)[2];
+  // one_hot_ee_wrench_lin_.at(ee).segment(starting_idx, 18) = tmp_vec;
 
-          std::cout << "final phase" << std::endl;
-          std::cout << starting_idx << std::endl;
-          std::cout << "tmp_vec" << std::endl;
-          std::cout << tmp_vec << std::endl;
+  // std::cout << "final phase" << std::endl;
+  // std::cout << starting_idx << std::endl;
+  // std::cout << "tmp_vec" << std::endl;
+  // std::cout << tmp_vec << std::endl;
 
-          starting_idx += 18;
-        }
-      } else {
-        // swing phase : Do nothing
-      }
-    }
-    pretty_print(one_hot_ee_wrench_lin_.at(ee), std::cout,
-                 "one_hot_ee_wrench_lin");
-  }
+  // starting_idx += 18;
+  //}
+  //} else {
+  //}
+  //}
+  // pretty_print(one_hot_ee_wrench_lin_.at(ee), std::cout,
+  //"one_hot_ee_wrench_lin");
+  //}
 
   b_initialize_ = true;
 
@@ -1114,6 +1112,8 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
 
     double t(t_start);
     Eigen::Vector3d v3;
+    Eigen::VectorXd lf_wrench = Eigen::VectorXd::Zero(6);
+    Eigen::VectorXd rf_wrench = Eigen::VectorXd::Zero(6);
     for (int i = 0; i < n_eval; ++i) {
       t_traj(i, 0) = t;
       dcm_planner_.get_ref_dcm(t, v3);
@@ -1140,8 +1140,10 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
       for (int j = 0; j < 3; ++j) {
         vrp_ref(i, j) = v3(j);
       }
+      dcm_planner_.get_ref_reaction_force(t, lf_wrench, rf_wrench);
       t += t_step;
     }
+    exit(0);
 
     cfg["reference"]["dcm_pos"] = dcm_pos_ref;
     cfg["reference"]["dcm_vel"] = dcm_vel_ref;

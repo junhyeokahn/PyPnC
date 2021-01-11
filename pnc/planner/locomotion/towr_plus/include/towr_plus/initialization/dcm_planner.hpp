@@ -130,8 +130,9 @@ public:
   void get_ref_com(const double t, Eigen::Vector3d &com_out);
   void get_ref_com_vel(const double t, Eigen::Vector3d &com_vel_out);
   void get_ref_r_vrp(const double t, Eigen::Vector3d &r_vrvp_out);
-  void get_ref_reaction_force(const double t, Eigen::Vector3d &f_out);
-  void get_ref_reaction_force_dot(const double t, Eigen::Vector3d &fdot_out);
+  void get_ref_ext_frc(const double t, Eigen::Vector3d &f_ext_out);
+  void get_ref_reaction_force(const double t, Eigen::VectorXd &lfoot_wrench_out,
+                              Eigen::VectorXd &rf_wrench_out);
 
   // Global reference quat, ang vel and ang acc
   void get_ref_ori_ang_vel_acc(const double t, Eigen::Quaterniond &quat_out,
@@ -144,9 +145,8 @@ public:
                    Eigen::Vector3d &com_vel_out);
   // computes the CoM reaction force / leg reaction force given mass, CoM
   // position and the r_vrp
-  void get_reaction_force(const double mass, const Eigen::Vector3d &com_pos,
-                          const Eigen::Vector3d &r_vrp,
-                          Eigen::Vector3d &fr_out);
+  void get_ext_frc(const double mass, const Eigen::Vector3d &com_pos,
+                   const Eigen::Vector3d &r_vrp, Eigen::Vector3d &fr_out);
   // computes the current r_vrp given
   //   -the DCM dynamics time constant b,
   //  - the current dcm

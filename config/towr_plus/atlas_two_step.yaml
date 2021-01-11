@@ -27,13 +27,22 @@ locomotion_param:
     dt_constraint_base_motion: 0.025
     b_optimize_timings: true
     bound_phase_duration: [0.45, 1.65]
-    #bound_phase_duration: [0.65, 2.2]
 
+    ## =========================================================================
+    ## Consistency with DCM Planner
+    ## =========================================================================
+    # The foot lifting first : 1.5*ds
+    # The foot lifting later : 2.5*ds + ss
+    # The foot landing first : 2*ds + ss + b
+    # The foot landing later : ds + b
+    # Middle swing foot : ss
+    # Middle landing foot : 2*ds + ss
+    # For example
+    # LF: {1.5ds, ss, 2ds+ss, ss, 2ds+ss, ss, ds+b}
+    # RF: {2.5ds+ss, ss, 2ds+ss, ss, 2ds+ss+b}
     ee_phase_durations:
         0: [0.45, 0.75, 1.65, 0.75, 0.45]
         1: [1.65, 0.75, 1.65]
-        #0: [0.7, 1.3, 1.65, 1.3, 0.7]
-        #1: [2.175, 1.3, 2.175]
     ee_in_contact_at_start:
         0: True
         1: True
