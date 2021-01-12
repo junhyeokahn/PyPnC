@@ -1042,6 +1042,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
 
   b_initialize_ = true;
 
+  /*
   //////////////////////////////////////////////////////////////////////////////
   // TEST : Will be deleted
   try {
@@ -1199,6 +1200,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   }
 
   // TEST END
+  */
   //////////////////////////////////////////////////////////////////////////////
 }
 

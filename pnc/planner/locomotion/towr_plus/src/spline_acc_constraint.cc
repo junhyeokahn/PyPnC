@@ -62,7 +62,6 @@ Eigen::VectorXd SplineAccConstraint::GetValues() const {
 
     g.segment(j * n_dim_, n_dim_) = acc_prev - acc_next;
   }
-
   return g;
 }
 

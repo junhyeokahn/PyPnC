@@ -32,6 +32,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
 #include <iostream>
+#include <util/util.hpp>
 
 #include <towr_plus/constraints/dynamic_constraint.h>
 #include <towr_plus/variables/cartesian_dimensions.h>

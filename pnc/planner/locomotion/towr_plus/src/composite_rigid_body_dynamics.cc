@@ -2,6 +2,8 @@
 Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
+#include <util/util.hpp>
+
 #include <towr_plus/models/composite_rigid_body_dynamics.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 
