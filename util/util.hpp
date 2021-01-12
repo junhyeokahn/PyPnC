@@ -36,10 +36,16 @@ void readParameter(const YAML::Node &node, const std::string &name,
 Eigen::Matrix3d euler_xyz_to_rot(const Eigen::Vector3d &euler_xyz);
 Eigen::Quaternion<double> euler_xyz_to_quat(const Eigen::Vector3d &euler_xyz);
 Eigen::Vector3d quat_to_euler_xyz(const Eigen::Quaternion<double> &quat);
+Eigen::MatrixXd adjoint(const Eigen::MatrixXd &R, const Eigen::Vector3d &p);
+Eigen::MatrixXd adjoint(const Eigen::Isometry3d &iso);
+Eigen::Matrix3d skew_symmetric(const Eigen::Vector3d &omg);
 
 // =============================================================================
 // Pretty Print
 // =============================================================================
+void pretty_print(Eigen::Isometry3d const &iso, std::ostream &os,
+                  std::string const &title, std::string const &prefix = "",
+                  bool nonl = false);
 void pretty_print(Eigen::VectorXd const &vv, std::ostream &os,
                   std::string const &title, std::string const &prefix = "",
                   bool nonl = false);

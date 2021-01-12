@@ -1,3 +1,4 @@
+#include <external_source/Goldfarb/QuadProg++.hh>
 #include <towr_plus/initialization/dcm_planner.hpp>
 
 int const DCMPlanner::DCM_RL_SWING_VRP_TYPE = 1;
@@ -230,11 +231,20 @@ void DCMPlanner::initialize_footsteps_rvrp(
 
   // Set the stance leg
   if (input_footstep_list[0].robot_side == LEFT_ROBOT_SIDE) {
+    // left swing first
     initialize_footsteps_rvrp(input_footstep_list, right_footstance,
                               initial_dcm);
+    full_footstep_list.push_back(initial_leftfoot_stance);
+    full_footstep_list.push_back(initial_rightfoot_stance);
   } else {
+    // right swing first
     initialize_footsteps_rvrp(input_footstep_list, left_footstance,
                               initial_dcm);
+    full_footstep_list.push_back(initial_rightfoot_stance);
+    full_footstep_list.push_back(initial_leftfoot_stance);
+  }
+  for (int i = 0; i < input_footstep_list.size(); ++i) {
+    full_footstep_list.push_back(input_footstep_list[i]);
   }
 }
 
@@ -647,74 +657,211 @@ void DCMPlanner::get_ref_r_vrp(const double t, Eigen::Vector3d &r_vrvp_out) {
 void DCMPlanner::get_ref_reaction_force(const double t,
                                         Eigen::VectorXd &lf_wrench_out,
                                         Eigen::VectorXd &rf_wrench_out) {
+  lf_wrench_out = Eigen::VectorXd::Zero(6);
+  rf_wrench_out = Eigen::VectorXd::Zero(6);
   std::cout << "--------------------------" << std::endl;
   std::cout << "time : " << t << std::endl;
   Eigen::Vector3d ext_frc;
   get_ref_ext_frc(t, ext_frc);
-
-  double lf(0.);
-  double rf(0.);
+  Eigen::VectorXd ext_wr = Eigen::VectorXd::Zero(6);
+  ext_wr.tail(3) = ext_frc;
 
   double time = clampDOUBLE(t - t_start, 0.0, t_end);
   double t_settle = -b * log(1.0 - percentage_settle);
   int step_index = which_step_index_to_use(time);
+  std::cout << "step_index : " << step_index << std::endl;
+
+  Eigen::Isometry3d base_iso;
+  Eigen::Vector3d com_pos, dummy;
+  Eigen::Quaternion<double> base_quat;
+  get_ref_com(t, com_pos);
+  get_ref_ori_ang_vel_acc(t, base_quat, dummy, dummy);
+  base_iso.linear() = base_quat.toRotationMatrix();
+  base_iso.translation() = com_pos;
 
   if (time <= get_double_support_t_end(step_index) ||
       time >= t_end - t_settle) {
+    // =========================================================================
+    // Double Support:
+    // Solve QP for wrench distribution
+    // 1. compute ratio, 2. compute T, 3. solve qp
+    // =========================================================================
+    Eigen::Isometry3d lf_iso, rf_iso;
+
+    if (step_index == 0) {
+      lf_iso.linear() = initial_leftfoot_stance.R_ori;
+      lf_iso.translation() = initial_leftfoot_stance.position;
+      rf_iso.linear() = initial_rightfoot_stance.R_ori;
+      rf_iso.translation() = initial_rightfoot_stance.position;
+    } else {
+      if (full_footstep_list[step_index].robot_side == LEFT_ROBOT_SIDE) {
+        assert(full_footstep_list[step_index - 1].robot_side ==
+               RIGHT_ROBOT_SIDE);
+        lf_iso.linear() = full_footstep_list[step_index].R_ori;
+        lf_iso.translation() = full_footstep_list[step_index].position;
+        rf_iso.linear() = full_footstep_list[step_index - 1].R_ori;
+        rf_iso.translation() = full_footstep_list[step_index - 1].position;
+      } else {
+        assert(full_footstep_list[step_index - 1].robot_side ==
+               LEFT_ROBOT_SIDE);
+        rf_iso.linear() = full_footstep_list[step_index].R_ori;
+        rf_iso.translation() = full_footstep_list[step_index].position;
+        lf_iso.linear() = full_footstep_list[step_index - 1].R_ori;
+        lf_iso.translation() = full_footstep_list[step_index - 1].position;
+      }
+    }
+
+    double lf_coeff(0.);
+    double rf_coeff(0.);
     double curr_ratio =
         clampDOUBLE((time - get_double_support_t_start(step_index)) /
                         (get_double_support_t_end(step_index) -
                          get_double_support_t_start(step_index)),
                     0., 1.);
-    // Double Support
     if (rvrp_type_list[step_index] == DCMPlanner::DCM_TRANSFER_VRP_TYPE) {
       // For the first step check this with the next foot
       if (rvrp_type_list[step_index + 1] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
-        lf = curr_ratio * 0.5 + 0.5;
-        rf = 1. - lf;
+        lf_coeff = curr_ratio * 0.5 + 0.5;
+        rf_coeff = 1. - lf_coeff;
       } else if (rvrp_type_list[step_index + 1] ==
                  DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
-        rf = curr_ratio * 0.5 + 0.5;
-        lf = 1. - rf;
+        rf_coeff = curr_ratio * 0.5 + 0.5;
+        lf_coeff = 1. - rf_coeff;
       } else {
-        std::cout << "Error Raised in DCM Planner" << std::endl;
-        exit(0);
+        assert(false);
       }
     } else if (rvrp_type_list[step_index] ==
                DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
-      lf = curr_ratio;
-      rf = 1. - lf;
+      lf_coeff = curr_ratio;
+      rf_coeff = 1. - lf_coeff;
     } else if (rvrp_type_list[step_index] ==
                DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
-      rf = curr_ratio;
-      lf = 1. - rf;
+      rf_coeff = curr_ratio;
+      lf_coeff = 1. - rf_coeff;
     } else if (rvrp_type_list[step_index] == DCMPlanner::DCM_END_VRP_TYPE) {
       if (rvrp_type_list[step_index - 1] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
-        rf = curr_ratio * 0.5;
-        lf = 1. - rf;
+        rf_coeff = curr_ratio * 0.5;
+        lf_coeff = 1. - rf_coeff;
       } else if (rvrp_type_list[step_index - 1] ==
                  DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
-        lf = curr_ratio * 0.5;
-        rf = 1. - lf;
+        lf_coeff = curr_ratio * 0.5;
+        rf_coeff = 1. - lf_coeff;
       } else {
-        std::cout << "Error Raised in DCM Planner" << std::endl;
-        exit(0);
+        assert(false);
       }
+    } else {
+      assert(false);
     }
-    std::cout << "lfoot max reaction force: " << lf << std::endl;
-    std::cout << "rfoot max reaction force: " << rf << std::endl;
+
+    int n_var(12);
+    int n_eq(6);
+    int n_ineq(36);
+    // Decision Varible
+    GolDIdnani::GVect<double> x;
+    x.resize(n_var);
+    Eigen::MatrixXd _G, _g0;
+    // Cost
+    GolDIdnani::GMatr<double> G;
+    GolDIdnani::GVect<double> g0;
+    G.resize(n_var, n_var);
+    g0.resize(n_var);
+
+    for (int i = 0; i < n_var; ++i) {
+      for (int j = 0; j < n_var; ++j) {
+        G[i][j] = 1.0;
+      }
+      g0[i] = 0.;
+    }
+    G[6][6] = 0.001;
+    G[12][12] = 0.001;
+
+    // Eq Constraint
+    // _CE x + _ce0 = 0
+    // [Ad_{T0b}.transpose() Ad_{T1b}.transpose()] x - wb = 0
+    Eigen::MatrixXd _CE;
+    Eigen::VectorXd _ce0;
+    _CE = Eigen::MatrixXd::Zero(n_eq, n_var);
+    _ce0 = Eigen::VectorXd::Zero(n_eq);
+
+    Eigen::Isometry3d lf_T_base = lf_iso.inverse() * base_iso;
+    Eigen::Isometry3d rf_T_base = rf_iso.inverse() * base_iso;
+    _CE.block(0, 0, 6, 6) = adjoint(lf_T_base).transpose();
+    _CE.block(0, 6, 6, 6) = adjoint(rf_T_base).transpose();
+    _ce0 = -ext_wr;
+
+    GolDIdnani::GMatr<double> CE;
+    GolDIdnani::GVect<double> ce0;
+    CE.resize(n_var, n_eq);
+    ce0.resize(n_eq);
+    for (int i = 0; i < n_eq; i++) {
+      for (int j = 0; j < n_var; j++) {
+        CE[j][i] = _CE(i, j);
+      }
+      ce0[i] = _ce0[i];
+    }
+    // Ineq Constraint
+    Eigen::MatrixXd _CI;
+    Eigen::VectorXd _ci0;
+    _CI = Eigen::MatrixXd::Zero(n_ineq, n_var);
+    _ci0 = Eigen::VectorXd::Zero(n_ineq);
+    Eigen::MatrixXd Utotal, U, Rfoot;
+    Utotal = Eigen::MatrixXd::Zero(n_ineq, n_var);
+    Rfoot = Eigen::MatrixXd::Zero(12, 12);
+    _setU(foot_half_length, foot_half_width, mu, U);
+    Utotal.block(0, 0, 18, 6) = U;
+    Utotal.block(18, 6, 18, 6) = U;
+    Rfoot.block(0, 0, 3, 3) = lf_iso.linear().transpose();
+    Rfoot.block(3, 3, 3, 3) = lf_iso.linear().transpose();
+    Rfoot.block(6, 6, 3, 3) = rf_iso.linear().transpose();
+    Rfoot.block(9, 9, 3, 3) = rf_iso.linear().transpose();
+    _CI = Utotal * Rfoot;
+    _ci0[17] = -fz_max * lf_coeff;
+    _ci0[35] = -fz_max * rf_coeff;
+    GolDIdnani::GMatr<double> CI;
+    GolDIdnani::GVect<double> ci0;
+    CI.resize(n_var, n_ineq);
+    ci0.resize(n_ineq);
+    for (int i = 0; i < n_ineq; i++) {
+      for (int j = 0; j < n_var; j++) {
+        CI[j][i] = _CI(i, j);
+      }
+      ci0[i] = _ci0[i];
+    }
+    double qp_result = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+    for (int i = 0; i < 6; ++i) {
+      lf_wrench_out[i] = x[i];
+      rf_wrench_out[i] = x[i + 6];
+    }
   } else {
+    // =========================================================================
     // Single Support
+    // Translate Wrench to the contact foot
+    // =========================================================================
     std::cout << "Single Support" << std::endl;
+    Eigen::Isometry3d lf_iso, rf_iso;
     if (rvrp_type_list[step_index] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
-      std::cout << "right foot swinging" << std::endl;
+      if (full_footstep_list[step_index].robot_side == LEFT_ROBOT_SIDE) {
+        lf_iso.linear() = full_footstep_list[step_index].R_ori;
+        lf_iso.translation() = full_footstep_list[step_index].position;
+        Eigen::Isometry3d base_T_lf = base_iso.inverse() * lf_iso;
+        lf_wrench_out = adjoint(base_T_lf).transpose() * ext_wr;
+      } else {
+        assert(false);
+      }
     } else if (rvrp_type_list[step_index] ==
                DCMPlanner::DCM_LL_SWING_VRP_TYPE) {
-      std::cout << "left foot swinging" << std::endl;
+      if (full_footstep_list[step_index].robot_side == RIGHT_ROBOT_SIDE) {
+        rf_iso.linear() = full_footstep_list[step_index].R_ori;
+        rf_iso.translation() = full_footstep_list[step_index].position;
+        Eigen::Isometry3d base_T_rf = base_iso.inverse() * rf_iso;
+        rf_wrench_out = adjoint(base_T_rf).transpose() * ext_wr;
+      } else {
+        assert(false);
+      }
+    } else {
+      assert(false);
     }
   }
-
-  // Wrench Distribution
 }
 
 void DCMPlanner::get_ref_ext_frc(const double t, Eigen::Vector3d &f_out) {
@@ -1023,4 +1170,89 @@ void DCMPlanner::get_ref_ori_ang_vel_acc(const double t,
 
   // std::cout << "t:" << time << " s:" << s << " ang_vel_out = " <<
   // ang_vel_out.transpose() << std::endl;
+}
+
+void DCMPlanner::_setU(double x, double y, double mu, Eigen::MatrixXd &U) {
+  U = Eigen::MatrixXd::Zero(16 + 2, 6);
+
+  U(0, 5) = 1.;
+
+  U(1, 3) = 1.;
+  U(1, 5) = mu;
+  U(2, 3) = -1.;
+  U(2, 5) = mu;
+
+  U(3, 4) = 1.;
+  U(3, 5) = mu;
+  U(4, 4) = -1.;
+  U(4, 5) = mu;
+
+  U(5, 0) = 1.;
+  U(5, 5) = y;
+  U(6, 0) = -1.;
+  U(6, 5) = y;
+
+  U(7, 1) = 1.;
+  U(7, 5) = x;
+  U(8, 1) = -1.;
+  U(8, 5) = x;
+
+  // Tau
+  U(9, 0) = -mu;
+  U(9, 1) = -mu;
+  U(9, 2) = 1;
+  U(9, 3) = y;
+  U(9, 4) = x;
+  U(9, 5) = (x + y) * mu;
+
+  U(10, 0) = -mu;
+  U(10, 1) = mu;
+  U(10, 2) = 1;
+  U(10, 3) = y;
+  U(10, 4) = -x;
+  U(10, 5) = (x + y) * mu;
+
+  U(11, 0) = mu;
+  U(11, 1) = -mu;
+  U(11, 2) = 1;
+  U(11, 3) = -y;
+  U(11, 4) = x;
+  U(11, 5) = (x + y) * mu;
+
+  U(12, 0) = mu;
+  U(12, 1) = mu;
+  U(12, 2) = 1;
+  U(12, 3) = -y;
+  U(12, 4) = -x;
+  U(12, 5) = (x + y) * mu;
+  /////////////////////////////////////////////////
+  U(13, 0) = -mu;
+  U(13, 1) = -mu;
+  U(13, 2) = -1;
+  U(13, 3) = -y;
+  U(13, 4) = -x;
+  U(13, 5) = (x + y) * mu;
+
+  U(14, 0) = -mu;
+  U(14, 1) = mu;
+  U(14, 2) = -1;
+  U(14, 3) = -y;
+  U(14, 4) = x;
+  U(14, 5) = (x + y) * mu;
+
+  U(15, 0) = mu;
+  U(15, 1) = -mu;
+  U(15, 2) = -1;
+  U(15, 3) = y;
+  U(15, 4) = -x;
+  U(15, 5) = (x + y) * mu;
+
+  U(16, 0) = mu;
+  U(16, 1) = mu;
+  U(16, 2) = -1;
+  U(16, 3) = y;
+  U(16, 4) = x;
+  U(16, 5) = (x + y) * mu;
+  // ////////////////////////////////////////////////////
+  U(17, 5) = -1.;
 }

@@ -39,6 +39,25 @@ Eigen::Vector3d quat_to_euler_xyz(const Eigen::Quaternion<double> &quat) {
   return ret;
 }
 
+Eigen::Matrix3d skew_symmetric(const Eigen::Vector3d &omg) {
+  Eigen::Matrix3d m_ret;
+  m_ret << 0, -omg(2), omg(1), omg(2), 0, -omg(0), -omg(1), omg(0), 0;
+  return m_ret;
+}
+
+Eigen::MatrixXd adjoint(const Eigen::MatrixXd &R, const Eigen::Vector3d &p) {
+  Eigen::MatrixXd ad_ret = Eigen::MatrixXd::Zero(6, 6);
+  Eigen::MatrixXd zeroes = Eigen::MatrixXd::Zero(3, 3);
+  ad_ret << R, zeroes, skew_symmetric(p) * R, R;
+  return ad_ret;
+}
+
+Eigen::MatrixXd adjoint(const Eigen::Isometry3d &iso) {
+  Eigen::MatrixXd rot = iso.linear();
+  Eigen::Vector3d p = iso.translation();
+  return adjoint(rot, p);
+}
+
 // =============================================================================
 // Pretty Prints
 // =============================================================================
@@ -46,6 +65,15 @@ void pretty_print(Eigen::VectorXd const &vv, std::ostream &os,
                   std::string const &title, std::string const &prefix,
                   bool nonl) {
   pretty_print((Eigen::MatrixXd const &)vv, os, title, prefix, true, nonl);
+}
+
+void pretty_print(Eigen::Isometry3d const &vv, std::ostream &os,
+                  std::string const &title, std::string const &prefix,
+                  bool nonl) {
+  pretty_print((Eigen::MatrixXd const &)(vv.linear()), os,
+               title + std::string(" rotation matrix"), prefix, false, nonl);
+  pretty_print((Eigen::MatrixXd const &)(vv.translation()), os,
+               title + std::string(" translation"), prefix, true, nonl);
 }
 
 void pretty_print(const std::vector<double> &_vec, const char *title) {

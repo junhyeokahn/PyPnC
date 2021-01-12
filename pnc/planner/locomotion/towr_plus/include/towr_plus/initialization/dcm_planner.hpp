@@ -21,6 +21,7 @@ public:
 
   std::vector<int> rvrp_type_list;     // List of type of virtual repelant point
   std::vector<Footstep> footstep_list; // Footstep list to generate pattern
+  std::vector<Footstep> full_footstep_list;
   std::vector<Eigen::Vector3d> rvrp_list;    // List of virtual repelant points.
   std::vector<Eigen::Vector3d> dcm_ini_list; // List of initial DCM states
   std::vector<Eigen::Vector3d> dcm_eos_list; // List of end-of-step DCM states
@@ -56,6 +57,12 @@ public:
       0.99; // 0.999; // percent to converge at the end of the trajectory
   double alpha_ds =
       0.5; // value between 0.0 and 1.0 for double support DCM interpolation
+
+  // Variables needs to be set for reaction force calculation
+  double fz_max = 1000.;
+  double mu = 0.5;
+  double foot_half_length = 0.11;
+  double foot_half_width = 0.065;
 
   void paramInitialization(const YAML::Node &node);
   void setRobotMass(double mass);
@@ -298,4 +305,5 @@ private:
 
   int clampINT(int input, int low_bound, int upper_bound);
   double clampDOUBLE(double input, double low_bound, double upper_bound);
+  void _setU(double x, double y, double mu, Eigen::MatrixXd &U);
 };

@@ -11,16 +11,17 @@ find_package(ifopt 2.0.1 REQUIRED)
 ## Build ##
 ###########
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE DEBUG)
 IF(NOT CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "CMAKE_BUILD_TYPE not set to Release -> impacts performance")
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}")
-include_directories("${PROJECT_SOURCE_DIR}/util")
+include_directories("${PROJECT_SOURCE_DIR}/external_source")
 include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/locomotion/towr_plus/include")
 include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/dubins")
 
+add_subdirectory(external_source)
 add_subdirectory(util)
 add_subdirectory(pnc/planner/locomotion/towr_plus)
 add_subdirectory(pnc/planner/dubins)

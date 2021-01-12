@@ -38,7 +38,7 @@ LocomotionSolution::LocomotionSolution(const std::string &name,
     readParameter(node, "ee_polynomials_per_swing_phase",
                   ee_polynomials_per_swing_phase_);
     readParameter(node, "b_optimize_timings", b_optimize_timings_);
-    assert(ee_polynomials_per_swing_phase == 2); // Assume this is always 2
+    assert(ee_polynomials_per_swing_phase_ == 2); // Assume this is always 2
     for (auto ee : {L, R}) {
       readParameter(node["ee_phase_durations"], std::to_string(ee), tmp_vec);
       for (int i = 0; i < tmp_vec.size(); ++i)
