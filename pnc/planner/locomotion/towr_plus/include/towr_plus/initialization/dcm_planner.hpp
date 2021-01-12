@@ -203,6 +203,10 @@ public:
     return t_settle;
   }
 
+  double get_z_vrp() { return z_vrp; }
+
+  double get_b() { return b; }
+
 private:
   // DCM parameters:
   double robot_mass = 50; // kg

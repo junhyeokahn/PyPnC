@@ -263,8 +263,7 @@ void LocomotionSolution::_set_ee_motion_nodes() {
           } else if (dim == 5) {
             ee_motion_lin_nodes_.at(ee)(node_idx, 5) = 0.;
           } else {
-            std::cout << "Wrong Dim" << std::endl;
-            exit(0);
+            assert(false);
           }
         }
         node_idx += 1;
@@ -329,8 +328,7 @@ void LocomotionSolution::_set_ee_motion_nodes() {
             ee_motion_ang_nodes_.at(ee)(node_idx, 5) =
                 one_hot_ee_motion_ang_.at(ee)(variable_idx + dim);
           } else {
-            std::cout << "Wrong Dim" << std::endl;
-            exit(0);
+            assert(false);
           }
         }
         node_idx += 1;
@@ -397,14 +395,13 @@ void LocomotionSolution::_set_ee_wrench_nodes() {
                   force_polynomials_per_stance_phase_, 6);
 
         } else {
-          // Intermediate Contact Phase
           ee_wrench_lin_nodes_.at(ee).block(
               node_idx + 1, 0, force_polynomials_per_stance_phase_ - 1, 6) =
               Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
                                        Eigen::RowMajor>>(
                   one_hot_ee_wrench_lin_.at(ee)
                       .segment(variable_idx,
-                               force_polynomials_per_stance_phase_ - 1 * 6)
+                               (force_polynomials_per_stance_phase_ - 1) * 6)
                       .data(),
                   force_polynomials_per_stance_phase_ - 1, 6);
           node_idx += (force_polynomials_per_stance_phase_ + 1);
@@ -477,7 +474,7 @@ void LocomotionSolution::_set_ee_wrench_nodes() {
                                        Eigen::RowMajor>>(
                   one_hot_ee_wrench_ang_.at(ee)
                       .segment(variable_idx,
-                               force_polynomials_per_stance_phase_ - 1 * 6)
+                               (force_polynomials_per_stance_phase_ - 1) * 6)
                       .data(),
                   force_polynomials_per_stance_phase_ - 1, 6);
           node_idx += (force_polynomials_per_stance_phase_ + 1);
@@ -572,8 +569,7 @@ Eigen::MatrixXd LocomotionSolution::_transpose(Eigen::MatrixXd mat,
       ret.row(i) = mat.row(order[i]);
     }
   } else {
-    std::cout << "Wrong Option" << std::endl;
-    exit(0);
+    assert(false);
   }
   return ret;
 }

@@ -659,8 +659,6 @@ void DCMPlanner::get_ref_reaction_force(const double t,
                                         Eigen::VectorXd &rf_wrench_out) {
   lf_wrench_out = Eigen::VectorXd::Zero(6);
   rf_wrench_out = Eigen::VectorXd::Zero(6);
-  std::cout << "--------------------------" << std::endl;
-  std::cout << "time : " << t << std::endl;
   Eigen::Vector3d ext_frc;
   get_ref_ext_frc(t, ext_frc);
   Eigen::VectorXd ext_wr = Eigen::VectorXd::Zero(6);
@@ -669,7 +667,6 @@ void DCMPlanner::get_ref_reaction_force(const double t,
   double time = clampDOUBLE(t - t_start, 0.0, t_end);
   double t_settle = -b * log(1.0 - percentage_settle);
   int step_index = which_step_index_to_use(time);
-  std::cout << "step_index : " << step_index << std::endl;
 
   Eigen::Isometry3d base_iso;
   Eigen::Vector3d com_pos, dummy;
@@ -759,7 +756,8 @@ void DCMPlanner::get_ref_reaction_force(const double t,
     // Decision Varible
     GolDIdnani::GVect<double> x;
     x.resize(n_var);
-    Eigen::MatrixXd _G, _g0;
+    int lf_fz_idx(5);
+    int rf_fz_idx(11);
     // Cost
     GolDIdnani::GMatr<double> G;
     GolDIdnani::GVect<double> g0;
@@ -768,16 +766,35 @@ void DCMPlanner::get_ref_reaction_force(const double t,
 
     for (int i = 0; i < n_var; ++i) {
       for (int j = 0; j < n_var; ++j) {
-        G[i][j] = 1.0;
+        G[i][j] = 0.;
       }
       g0[i] = 0.;
     }
-    G[6][6] = 0.001;
-    G[12][12] = 0.001;
+
+    for (int i = 0; i < 6; ++i) {
+      for (int j = 0; j < 6; ++j) {
+        if (i == j) {
+          G[i][j] = 1.0 * clampDOUBLE(lf_coeff, 0.01, 1.);
+        } else {
+          G[i][j] = 0.;
+        }
+      }
+      g0[i] = 0.;
+    }
+    G[lf_fz_idx][lf_fz_idx] = 0.001 * clampDOUBLE(lf_coeff, 0.01, 1.);
+    for (int i = 6; i < 12; ++i) {
+      for (int j = 6; j < 12; ++j) {
+        if (i == j) {
+          G[i][j] = 1.0 * clampDOUBLE(rf_coeff, 0.01, 1.0);
+        } else {
+          G[i][j] = 0.;
+        }
+      }
+      g0[i] = 0.;
+    }
+    G[rf_fz_idx][rf_fz_idx] = 0.001 * clampDOUBLE(rf_coeff, 0.01, 1.0);
 
     // Eq Constraint
-    // _CE x + _ce0 = 0
-    // [Ad_{T0b}.transpose() Ad_{T1b}.transpose()] x - wb = 0
     Eigen::MatrixXd _CE;
     Eigen::VectorXd _ce0;
     _CE = Eigen::MatrixXd::Zero(n_eq, n_var);
@@ -799,7 +816,10 @@ void DCMPlanner::get_ref_reaction_force(const double t,
       }
       ce0[i] = _ce0[i];
     }
+
     // Ineq Constraint
+    int lf_max_fz_idx(17);
+    int rf_max_fz_idx(35);
     Eigen::MatrixXd _CI;
     Eigen::VectorXd _ci0;
     _CI = Eigen::MatrixXd::Zero(n_ineq, n_var);
@@ -815,8 +835,8 @@ void DCMPlanner::get_ref_reaction_force(const double t,
     Rfoot.block(6, 6, 3, 3) = rf_iso.linear().transpose();
     Rfoot.block(9, 9, 3, 3) = rf_iso.linear().transpose();
     _CI = Utotal * Rfoot;
-    _ci0[17] = -fz_max * lf_coeff;
-    _ci0[35] = -fz_max * rf_coeff;
+    _ci0[lf_max_fz_idx] = fz_max * lf_coeff;
+    _ci0[rf_max_fz_idx] = fz_max * rf_coeff;
     GolDIdnani::GMatr<double> CI;
     GolDIdnani::GVect<double> ci0;
     CI.resize(n_var, n_ineq);
@@ -832,12 +852,24 @@ void DCMPlanner::get_ref_reaction_force(const double t,
       lf_wrench_out[i] = x[i];
       rf_wrench_out[i] = x[i + 6];
     }
+    // TEST: Constraint check
+    // pretty_print(lf_wrench_out, std::cout, "lf_wrench");
+    // pretty_print(rf_wrench_out, std::cout, "rf_wrench");
+    // Eigen::VectorXd sol(12);
+    // sol.head(6) = lf_wrench_out;
+    // sol.tail(6) = rf_wrench_out;
+    // Eigen::VectorXd ineq_violation = _CI * sol + _ci0;
+    // pretty_print(ineq_violation, std::cout,
+    //"ineq const value should be positive");
+    // Eigen::VectorXd eq_violation = _CE * sol + _ce0;
+    // pretty_print(eq_violation, std::cout, "eq const value should be zero");
+    // exit(0);
+    // TEST END
   } else {
     // =========================================================================
     // Single Support
     // Translate Wrench to the contact foot
     // =========================================================================
-    std::cout << "Single Support" << std::endl;
     Eigen::Isometry3d lf_iso, rf_iso;
     if (rvrp_type_list[step_index] == DCMPlanner::DCM_RL_SWING_VRP_TYPE) {
       if (full_footstep_list[step_index].robot_side == LEFT_ROBOT_SIDE) {
