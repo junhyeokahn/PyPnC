@@ -2,7 +2,9 @@
 #include <iostream>
 
 #include <ifopt/ipopt_solver.h>
+#if BUILD_WITH_SNOPT == 1
 #include <ifopt/snopt_solver.h>
+#endif
 
 #include <configuration.h>
 #include <towr_plus/locomotion_solution.h>
@@ -13,6 +15,14 @@
 int main() {
   YAML::Node cfg =
       YAML::LoadFile(THIS_COM "config/towr_plus/atlas_one_step.yaml");
+  std::string solver_type;
+  try {
+    readParameter(cfg, "solver", solver_type);
+  } catch (std::runtime_error &e) {
+    std::cout << "Error reading parameter [" << e.what() << "] at file: ["
+              << __FILE__ << "]" << std::endl
+              << std::endl;
+  }
 
   // Locomotion Task
   LocomotionTask task = LocomotionTask("atlas_one_step_yaml_test");
@@ -47,13 +57,22 @@ int main() {
   // nlp.PrintCurrent();
   // exit(0);
 
-  // auto solver = std::make_shared<ifopt::IpoptSolver>();
-  // solver->SetOption("jacobian_approximation", "exact");
-  // solver->SetOption("max_cpu_time", 500.0);
-  // solver->Solve(nlp);
-
-  auto solver = std::make_shared<ifopt::SnoptSolver>();
-  solver->Solve(nlp);
+  if (solver_type == "ipopt") {
+    auto solver = std::make_shared<ifopt::IpoptSolver>();
+    solver->SetOption("jacobian_approximation", "exact");
+    solver->SetOption("max_cpu_time", 500.0);
+    solver->Solve(nlp);
+  } else if (solver_type == "snopt") {
+#if BUILD_WITH_SNOPT == 1
+    auto solver = std::make_shared<ifopt::SnoptSolver>();
+    solver->Solve(nlp);
+#else
+    std::cout << "Snopt is not found" << std::endl;
+    assert(false);
+#endif
+  } else {
+    assert(false);
+  }
 
   nlp.PrintCurrent();
 

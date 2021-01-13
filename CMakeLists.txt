@@ -7,6 +7,12 @@ find_package(Eigen)
 include_directories(${EIGEN_INCLUDE_DIRS})
 find_package(ifopt 2.0.1 REQUIRED)
 
+if(ifopt::ifopt_snopt)
+    set(SNOPT_FOUND TRUE)
+else()
+    set(SNOPT_FOUND FALSE)
+endif()
+
 ###########
 ## Build ##
 ###########
@@ -31,32 +37,44 @@ add_subdirectory(pnc/planner/dubins)
 add_executable(dubins_test test/dubins.cc)
 target_link_libraries(dubins_test PRIVATE dubins)
 
+
 add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
 target_link_libraries(atlas_two_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
-    ifopt::ifopt_snopt
     my_yaml
 )
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_two_step_yaml_test ifopt::ifopt_snopt)
+endif()
 
 add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
 target_link_libraries(atlas_no_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
-    ifopt::ifopt_snopt
     my_yaml
 )
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_no_step_yaml_test ifopt::ifopt_snopt)
+endif()
 
 add_executable(atlas_one_step_yaml_test test/atlas_one_step_yaml_test.cc)
 target_link_libraries(atlas_one_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
-    ifopt::ifopt_snopt
     my_yaml
 )
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_one_step_yaml_test ifopt::ifopt_snopt)
+endif()
 
 SET (THIS_COM "${PROJECT_SOURCE_DIR}/" )
+if (SNOPT_FOUND)
+    SET(BUILD_WITH_SNOPT 1)
+else()
+    SET(BUILD_WITH_SNOPT 0)
+endif()
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config.h.cmake ${PROJECT_SOURCE_DIR}/configuration.h)
