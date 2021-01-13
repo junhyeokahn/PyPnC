@@ -51,7 +51,7 @@ Parameters::Parameters() {
 
   force_limit_in_normal_direction_ = 1000;
   dt_constraint_range_of_motion_ = 0.08;
-  dt_constraint_dynamic_ = 0.1;
+  dt_constraint_dynamic_ = 0.05;
   dt_constraint_base_motion_ = duration_base_polynomial_ / 4.;
   b_optimize_timings = true;
   bound_phase_duration_ = std::make_pair(0.2, 2.0);

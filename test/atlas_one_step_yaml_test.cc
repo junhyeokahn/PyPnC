@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <ifopt/ipopt_solver.h>
+#include <ifopt/snopt_solver.h>
 
 #include <configuration.h>
 #include <towr_plus/locomotion_solution.h>
@@ -46,9 +47,12 @@ int main() {
   // nlp.PrintCurrent();
   // exit(0);
 
-  auto solver = std::make_shared<ifopt::IpoptSolver>();
-  solver->SetOption("jacobian_approximation", "exact");
-  solver->SetOption("max_cpu_time", 500.0);
+  // auto solver = std::make_shared<ifopt::IpoptSolver>();
+  // solver->SetOption("jacobian_approximation", "exact");
+  // solver->SetOption("max_cpu_time", 500.0);
+  // solver->Solve(nlp);
+
+  auto solver = std::make_shared<ifopt::SnoptSolver>();
   solver->Solve(nlp);
 
   nlp.PrintCurrent();

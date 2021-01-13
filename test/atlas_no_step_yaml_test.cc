@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <ifopt/ipopt_solver.h>
+#include <ifopt/snopt_solver.h>
 
 #include <configuration.h>
 #include <towr_plus/locomotion_solution.h>
@@ -40,9 +41,14 @@ int main() {
     nlp.AddCostSet(c);
   }
 
-  auto solver = std::make_shared<ifopt::IpoptSolver>();
-  solver->SetOption("jacobian_approximation", "exact");
-  solver->SetOption("max_cpu_time", 500.0);
+  // IPOPT
+  // auto solver = std::make_shared<ifopt::IpoptSolver>();
+  // solver->SetOption("jacobian_approximation", "exact");
+  // solver->SetOption("max_cpu_time", 500.0);
+  // solver->Solve(nlp);
+
+  // SNOPT
+  auto solver = std::make_shared<ifopt::SnoptSolver>();
   solver->Solve(nlp);
 
   nlp.PrintCurrent();
@@ -54,67 +60,6 @@ int main() {
 
   using namespace std;
   cout.precision(4);
-
-  // Print Solution
-  cout << fixed;
-  cout << "\n====================\nAtlas "
-          "trajectory:\n====================\n";
-
-  double t = 0.0;
-  while (t <= solution.base_linear_->GetTotalTime() + 1e-5) {
-    cout << "t=" << t << "\n";
-    cout << "Base linear position x,y,z:   \t";
-    cout << solution.base_linear_->GetPoint(t).p().transpose() << "\t[m]"
-         << endl;
-
-    cout << "Base Euler roll, pitch, yaw:   \t";
-    Eigen::Vector3d rad = solution.base_angular_->GetPoint(t).p();
-    cout << (rad).transpose() << "\t[rad]" << endl;
-
-    cout << "Left Foot position x,y,z:   \t";
-    cout << solution.ee_motion_linear_.at(L)->GetPoint(t).p().transpose()
-         << "\t[m]" << endl;
-
-    cout << "Left Foot angular x,y,z:   \t";
-    cout << solution.ee_motion_angular_.at(L)->GetPoint(t).p().transpose()
-         << "\t[rad]" << endl;
-
-    cout << "Right Foot position x,y,z:   \t";
-    cout << solution.ee_motion_linear_.at(R)->GetPoint(t).p().transpose()
-         << "\t[m]" << endl;
-
-    cout << "Right Foot angular x,y,z:   \t";
-    cout << solution.ee_motion_angular_.at(R)->GetPoint(t).v().transpose()
-         << "\t[rad]" << endl;
-
-    cout << "Left Foot Contact force x,y,z:   \t";
-    cout << solution.ee_wrench_linear_.at(L)->GetPoint(t).p().transpose()
-         << "\t[N]" << endl;
-
-    cout << "Left Foot Contact trq x,y,z:   \t";
-    cout << solution.ee_wrench_angular_.at(L)->GetPoint(t).v().transpose()
-         << "\t[Nm]" << endl;
-
-    cout << "Right Foot Contact force x,y,z:   \t";
-    cout << solution.ee_wrench_linear_.at(R)->GetPoint(t).p().transpose()
-         << "\t[N]" << endl;
-
-    cout << "Right Foot Contact trq x,y,z:   \t";
-    cout << solution.ee_wrench_angular_.at(R)->GetPoint(t).v().transpose()
-         << "\t[Nm]" << endl;
-
-    // bool contact = solution.phase_durations_.at(L)->IsContactPhase(t);
-    // std::string foot_in_contact = contact ? "yes" : "no";
-    // cout << "Left Foot in contact:   \t" + foot_in_contact << endl;
-
-    // contact = solution.phase_durations_.at(R)->IsContactPhase(t);
-    // foot_in_contact = contact ? "yes" : "no";
-    // cout << "Right Foot in contact:   \t" + foot_in_contact << endl;
-
-    cout << endl;
-
-    t += 0.05;
-  }
 
   return 0;
 }

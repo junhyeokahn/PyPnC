@@ -36,6 +36,7 @@ target_link_libraries(atlas_two_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
+    ifopt::ifopt_snopt
     my_yaml
 )
 
@@ -44,6 +45,7 @@ target_link_libraries(atlas_no_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
+    ifopt::ifopt_snopt
     my_yaml
 )
 
@@ -52,6 +54,7 @@ target_link_libraries(atlas_one_step_yaml_test
     PRIVATE
     towr_plus
     ifopt::ifopt_ipopt
+    ifopt::ifopt_snopt
     my_yaml
 )
 

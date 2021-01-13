@@ -621,8 +621,6 @@ NlpFormulation::MakeFinalBaseLinCost(Dx dx,
   if (dx == Dx::kPos) {
     double x = final_base_.lin.p().x();
     double y = final_base_.lin.p().y();
-    // double z = terrain_->GetHeight(x, y) -
-    // model_.kinematic_model_->GetNominalStanceInBase().front().z();
     double z = terrain_->GetHeight(x, y) + final_base_.lin.p().z();
     Eigen::Vector3d final_base_lin_pos(x, y, z);
     for (int i = 0; i < 3; ++i) {
