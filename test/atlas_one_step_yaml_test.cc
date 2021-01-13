@@ -23,6 +23,8 @@ int main() {
               << __FILE__ << "]" << std::endl
               << std::endl;
   }
+  Clock clock = Clock();
+  double time_solving(0.);
 
   // Locomotion Task
   LocomotionTask task = LocomotionTask("atlas_one_step_yaml_test");
@@ -37,7 +39,7 @@ int main() {
   formulation.model_ = RobotModel(RobotModel::Atlas);
   formulation.params_.from_yaml(cfg["locomotion_param"]);
   formulation.from_locomotion_task(task);
-  formulation.initialize_from_dcm_planner("dubins");
+  // formulation.initialize_from_dcm_planner("dubins");
 
   // Solve
   ifopt::Problem nlp;
@@ -61,11 +63,15 @@ int main() {
     auto solver = std::make_shared<ifopt::IpoptSolver>();
     solver->SetOption("jacobian_approximation", "exact");
     solver->SetOption("max_cpu_time", 500.0);
+    clock.start();
     solver->Solve(nlp);
+    time_solving = clock.stop();
   } else if (solver_type == "snopt") {
 #if BUILD_WITH_SNOPT == 1
     auto solver = std::make_shared<ifopt::SnoptSolver>();
+    clock.start();
     solver->Solve(nlp);
+    time_solving = clock.stop();
 #else
     std::cout << "Snopt is not found" << std::endl;
     assert(false);
@@ -80,6 +86,7 @@ int main() {
   sol.from_one_hot_vector(vars);
   // sol.print_solution();
   sol.to_yaml();
+  printf("Takes %f miliseconds\n", time_solving);
 
   return 0;
 }
