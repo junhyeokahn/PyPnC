@@ -103,7 +103,7 @@ void Parameters::initialize() {
   // costs_.push_back({FinalEEMotionAngPosCost, w_FinalEEMotionAngPosCost})
   costs_.push_back({IntermediateBaseLinVelCost, w_IntermediateBaseLinVelCost});
   // costs_.push_back({IntermediateBaseAngVelCost,
-  // w_IntermediateBaseLinVelCost});
+  // w_IntermediateBaseAngVelCost});
   // costs_.push_back({BaseLinVelDiffCost, w_BaseLinVelDiffCost});
   // costs_.push_back({BaseAngVelDiffCost, w_BaseAngVelDiffCost});
   // costs_.push_back({WrenchLinPosCost, w_WrenchLinPosCost});

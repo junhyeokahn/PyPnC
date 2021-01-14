@@ -16,8 +16,10 @@ int main() {
   YAML::Node cfg =
       YAML::LoadFile(THIS_COM "config/towr_plus/atlas_one_step.yaml");
   std::string solver_type;
+  double max_cpu_time;
   try {
     readParameter(cfg, "solver", solver_type);
+    readParameter(cfg, "max_cpu_time", max_cpu_time);
   } catch (std::runtime_error &e) {
     std::cout << "Error reading parameter [" << e.what() << "] at file: ["
               << __FILE__ << "]" << std::endl
@@ -61,8 +63,12 @@ int main() {
 
   if (solver_type == "ipopt") {
     auto solver = std::make_shared<ifopt::IpoptSolver>();
+    nlp.PrintCurrent();
+    exit(0);
+    // solver->SetOption("derivative_test", "first-order");
+    // solver->SetOption("derivative_test_tol", 1e-3);
     solver->SetOption("jacobian_approximation", "exact");
-    solver->SetOption("max_cpu_time", 500.0);
+    solver->SetOption("max_cpu_time", max_cpu_time);
     clock.start();
     solver->Solve(nlp);
     time_solving = clock.stop();
@@ -86,7 +92,7 @@ int main() {
   sol.from_one_hot_vector(vars);
   // sol.print_solution();
   sol.to_yaml();
-  printf("Takes %f miliseconds\n", time_solving);
+  printf("Takes %f seconds\n", 1e-3 * time_solving);
 
   return 0;
 }

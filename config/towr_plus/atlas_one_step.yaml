@@ -1,4 +1,5 @@
 solver: "ipopt"
+max_cpu_time: 2000.
 
 locomotion_task:
 
@@ -56,7 +57,7 @@ locomotion_param:
         w_FinalBaseAngVelCost: [1., 1., 1.]
         w_FinalEEMotionLinPosCost: [2., 2., 2.]
         w_FinalEEMotionAngPosCost: [2., 2., 2.]
-        w_IntermediateBaseLinVelCost: [0.001, 0.001, 1.0]
+        w_IntermediateBaseLinVelCost: [0.001, 0.001, 2.0]
         w_IntermediateBaseAngVelCost: [0.01, 0.01, 0.01]
         w_BaseLinVelDiffCost: [0.1, 0.1, 1.0]
         w_BaseAngVelDiffCost: [0.1, 0.1, 0.1]
