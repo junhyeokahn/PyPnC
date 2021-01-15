@@ -1,12 +1,13 @@
 #include <cmath>
 #include <iostream>
 
+#include <configuration.h>
+
 #include <ifopt/ipopt_solver.h>
 #if BUILD_WITH_SNOPT == 1
 #include <ifopt/snopt_solver.h>
 #endif
 
-#include <configuration.h>
 #include <towr_plus/locomotion_solution.h>
 #include <towr_plus/locomotion_task.h>
 #include <towr_plus/models/robot_model.h>
@@ -63,10 +64,10 @@ int main() {
 
   if (solver_type == "ipopt") {
     auto solver = std::make_shared<ifopt::IpoptSolver>();
-    nlp.PrintCurrent();
-    exit(0);
-    solver->SetOption("derivative_test", "first-order");
-    solver->SetOption("derivative_test_tol", 1e-3);
+    // nlp.PrintCurrent();
+    // exit(0);
+    // solver->SetOption("derivative_test", "first-order");
+    // solver->SetOption("derivative_test_tol", 1e-3);
     solver->SetOption("jacobian_approximation", "exact");
     solver->SetOption("max_cpu_time", max_cpu_time);
     clock.start();

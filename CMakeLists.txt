@@ -7,7 +7,7 @@ find_package(Eigen)
 include_directories(${EIGEN_INCLUDE_DIRS})
 find_package(ifopt 2.0.1 REQUIRED)
 
-if(ifopt::ifopt_snopt)
+if(TARGET ifopt::ifopt_snopt)
     set(SNOPT_FOUND TRUE)
 else()
     set(SNOPT_FOUND FALSE)
@@ -37,7 +37,6 @@ add_subdirectory(pnc/planner/dubins)
 add_executable(dubins_test test/dubins.cc)
 target_link_libraries(dubins_test PRIVATE dubins)
 
-
 add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
 target_link_libraries(atlas_two_step_yaml_test
     PRIVATE
@@ -46,7 +45,7 @@ target_link_libraries(atlas_two_step_yaml_test
     my_yaml
 )
 if(SNOPT_FOUND)
-    target_link_libraries(atlas_two_step_yaml_test ifopt::ifopt_snopt)
+    target_link_libraries(atlas_two_step_yaml_test PRIVATE ifopt::ifopt_snopt)
 endif()
 
 add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
@@ -57,7 +56,7 @@ target_link_libraries(atlas_no_step_yaml_test
     my_yaml
 )
 if(SNOPT_FOUND)
-    target_link_libraries(atlas_no_step_yaml_test ifopt::ifopt_snopt)
+    target_link_libraries(atlas_no_step_yaml_test PRIVATE ifopt::ifopt_snopt)
 endif()
 
 add_executable(atlas_one_step_yaml_test test/atlas_one_step_yaml_test.cc)
@@ -68,7 +67,7 @@ target_link_libraries(atlas_one_step_yaml_test
     my_yaml
 )
 if(SNOPT_FOUND)
-    target_link_libraries(atlas_one_step_yaml_test ifopt::ifopt_snopt)
+    target_link_libraries(atlas_one_step_yaml_test PRIVATE ifopt::ifopt_snopt)
 endif()
 
 SET (THIS_COM "${PROJECT_SOURCE_DIR}/" )

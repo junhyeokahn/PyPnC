@@ -1,12 +1,13 @@
 #include <cmath>
 #include <iostream>
 
+#include <configuration.h>
+
 #include <ifopt/ipopt_solver.h>
 #if BUILD_WITH_SNOPT == 1
 #include <ifopt/snopt_solver.h>
 #endif
 
-#include <configuration.h>
 #include <towr_plus/locomotion_solution.h>
 #include <towr_plus/locomotion_task.h>
 #include <towr_plus/models/robot_model.h>
