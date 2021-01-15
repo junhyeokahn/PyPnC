@@ -65,8 +65,8 @@ int main() {
     auto solver = std::make_shared<ifopt::IpoptSolver>();
     nlp.PrintCurrent();
     exit(0);
-    // solver->SetOption("derivative_test", "first-order");
-    // solver->SetOption("derivative_test_tol", 1e-3);
+    solver->SetOption("derivative_test", "first-order");
+    solver->SetOption("derivative_test_tol", 1e-3);
     solver->SetOption("jacobian_approximation", "exact");
     solver->SetOption("max_cpu_time", max_cpu_time);
     clock.start();

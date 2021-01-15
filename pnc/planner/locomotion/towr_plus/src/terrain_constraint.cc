@@ -165,9 +165,9 @@ void TerrainConstraint::FillJacobianBlock(std::string var_set,
   }
 
   if (var_set == ee_motion_ang_->GetName()) {
+    int row = n_lin_;
     for (int id : contact_nodes_ids_) {
       auto ang_nodes = ee_motion_ang_->GetNodes();
-      int row = n_lin_;
       int idx_x = ee_motion_ang_->GetOptIndex(
           NodesVariables::NodeValueInfo(id, kPos, X));
       int idx_y = ee_motion_ang_->GetOptIndex(
