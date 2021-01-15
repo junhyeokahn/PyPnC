@@ -1,5 +1,4 @@
-#solver: "ipopt"
-solver: "snopt"
+solver: "ipopt" #"snopt"
 max_cpu_time: 2000.
 
 locomotion_task:
@@ -32,9 +31,7 @@ locomotion_param:
     b_optimize_timings: false
     bound_phase_duration: [0.07, 0.07]
 
-    ## =========================================================================
-    ## Consistency with DCM Planner
-    ## =========================================================================
+    ########### Consistency with DCM Planner
     # The foot lifting first : 1.5*ds
     # The foot lifting later : 2.5*ds + ss
     # The foot landing first : 2*ds + ss + b

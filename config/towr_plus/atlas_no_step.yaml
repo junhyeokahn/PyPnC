@@ -1,4 +1,4 @@
-solver: "ipopt"
+solver: "snopt"
 max_cpu_time: 2000.
 
 locomotion_task:
@@ -14,7 +14,7 @@ locomotion_task:
         0: [0., 0., 0.]
         1: [0., 0., 0.]
 
-    final_base_lin: [0., 0.0, 0.85, 0., 0., 0.]
+    final_base_lin: [0., 0.0, 0.7, 0., 0., 0.]
     final_base_ang: [0., 0., 0., 0., 0., 0.]
 
     terrain_type: "flat_ground"
@@ -32,8 +32,8 @@ locomotion_param:
     bound_phase_duration: [0.45, 1.65]
 
     ee_phase_durations:
-        0: [1.0]
-        1: [1.0]
+        0: [0.5]
+        1: [0.5]
     ee_in_contact_at_start:
         0: True
         1: True
