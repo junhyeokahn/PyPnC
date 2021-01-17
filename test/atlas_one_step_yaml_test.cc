@@ -42,7 +42,7 @@ int main() {
   formulation.model_ = RobotModel(RobotModel::Atlas);
   formulation.params_.from_yaml(cfg["locomotion_param"]);
   formulation.from_locomotion_task(task);
-  formulation.initialize_from_dcm_planner("dubins");
+  // formulation.initialize_from_dcm_planner("dubins");
 
   // Solve
   ifopt::Problem nlp;

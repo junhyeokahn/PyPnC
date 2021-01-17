@@ -1,5 +1,5 @@
 solver: "ipopt" #"snopt"
-max_cpu_time: 2000.
+max_cpu_time: 1000.
 
 locomotion_task:
 

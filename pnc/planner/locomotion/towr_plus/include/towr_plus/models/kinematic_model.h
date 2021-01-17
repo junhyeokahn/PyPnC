@@ -61,6 +61,7 @@ public:
   KinematicModel(int n_ee) {
     nominal_stance_.resize(n_ee);
     max_dev_from_nominal_.setZero();
+    min_dev_from_nominal_.setZero();
     foot_half_length_ = 0.15;
     foot_half_width_ = 0.07;
   }
@@ -81,6 +82,10 @@ public:
     return max_dev_from_nominal_;
   }
 
+  virtual Vector3d GetMinimumDeviationFromNominal() const {
+    return min_dev_from_nominal_;
+  }
+
   /**
    * @returns returns the number of endeffectors of this robot.
    */
@@ -92,6 +97,7 @@ public:
 protected:
   EEPos nominal_stance_;
   Vector3d max_dev_from_nominal_;
+  Vector3d min_dev_from_nominal_;
   double foot_half_length_;
   double foot_half_width_;
 };

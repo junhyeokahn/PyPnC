@@ -19,7 +19,8 @@ public:
     nominal_stance_.at(L) << x_nominal_b, y_nominal_b, z_nominal_b;
     nominal_stance_.at(R) << x_nominal_b, -y_nominal_b, z_nominal_b;
 
-    max_dev_from_nominal_ << 0.4, 0.2, 0.2;
+    max_dev_from_nominal_ << 0.18, 0.1, 0.05;
+    min_dev_from_nominal_ << -0.18, -0.1, -0.05;
   }
 };
 
@@ -34,7 +35,10 @@ public:
      0.386339  0.0325983   0.830916
   */
   AtlasDynamicModel()
-      : SingleRigidBodyDynamics(100, 4.49, 4.62, 0.83, -0.03, 0.39, 0.03, 2) {}
+      //: SingleRigidBodyDynamics(100, 4.49, 4.62, 0.83, -0.03, 0.39, 0.03, 2)
+      //{}
+      : SingleRigidBodyDynamics(93.34, 18.58, 15.41, 4.08, -0.01, -0.03, 0.06,
+                                2) {} // TODO: Talose
 };
 
 } /* namespace towr_plus */

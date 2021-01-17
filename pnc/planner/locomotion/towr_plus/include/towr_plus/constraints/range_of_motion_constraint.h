@@ -80,6 +80,7 @@ private:
   EulerConverter ee_motion_angular_;
 
   Eigen::Vector3d max_deviation_from_nominal_;
+  Eigen::Vector3d min_deviation_from_nominal_;
   Eigen::Vector3d nominal_ee_pos_B_;
   EE ee_;
 

@@ -49,6 +49,7 @@ RangeOfMotionConstraint::RangeOfMotionConstraint(
   ee_motion_angular_ = EulerConverter(spline_holder.ee_motion_angular_.at(ee));
 
   max_deviation_from_nominal_ = model->GetMaximumDeviationFromNominal();
+  min_deviation_from_nominal_ = model->GetMinimumDeviationFromNominal();
   max_cos_ = cos(0.);
   min_cos_ = cos(M_PI / 4.);
   nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
@@ -116,7 +117,8 @@ void RangeOfMotionConstraint::UpdateBoundsAtInstance(double t, int k,
     ifopt::Bounds b;
     b += nominal_ee_pos_B_(dim);
     b.upper_ += max_deviation_from_nominal_(dim);
-    b.lower_ -= max_deviation_from_nominal_(dim);
+    // b.lower_ -= max_deviation_from_nominal_(dim);
+    b.lower_ += min_deviation_from_nominal_(dim);
     bounds.at(GetRow(k, dim)) = b;
   }
   // Rot

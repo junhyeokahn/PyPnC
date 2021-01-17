@@ -90,6 +90,7 @@ struct RobotModel {
 const static std::map<RobotModel::Robot, std::string> robot_names = {
     {RobotModel::Monoped, "Monoped"},
     {RobotModel::Biped, "Biped"},
+    {RobotModel::Atlas, "Atlas"},
     {RobotModel::Hyq, "Hyq"},
     {RobotModel::Anymal, "Anymal"}};
 
