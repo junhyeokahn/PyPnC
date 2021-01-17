@@ -134,10 +134,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
   }
   spline_lin->AddStartBound(kPos, {X, Y, Z}, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, {X, Y, Z}, initial_base_.lin.v());
-  // TEST for snopt
-  // spline_lin->AddFinalBound(kPos, {X, Y, Z}, final_base_.lin.p());
-  // spline_lin->AddFinalBound(kVel, {X, Y, Z}, final_base_.lin.v());
-  // TEST END
   vars.push_back(spline_lin);
 
   auto spline_ang =
@@ -150,10 +146,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
   }
   spline_ang->AddStartBound(kPos, {X, Y, Z}, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, {X, Y, Z}, initial_base_.ang.v());
-  // TEST for snopt
-  // spline_ang->AddFinalBound(kPos, {X, Y, Z}, final_base_.ang.p());
-  // spline_ang->AddFinalBound(kVel, {X, Y, Z}, final_base_.ang.v());
-  // TEST END
   vars.push_back(spline_ang);
 
   return vars;
