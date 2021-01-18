@@ -19,7 +19,8 @@ add_library(towr_plus SHARED
   src/force_constraint.cc
   src/total_duration_constraint.cc
   src/dynamic_constraint.cc
-  src/range_of_motion_constraint.cc
+  src/range_of_motion_circle_constraint.cc
+  src/range_of_motion_box_constraint.cc
   src/spline_acc_constraint.cc
   src/linear_constraint.cc
   # costs

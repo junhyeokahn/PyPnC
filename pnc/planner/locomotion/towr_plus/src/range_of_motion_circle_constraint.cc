@@ -33,16 +33,15 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 #include <iostream>
 
-#include <towr_plus/constraints/range_of_motion_constraint.h>
+#include <towr_plus/constraints/range_of_motion_circle_constraint.h>
 #include <towr_plus/variables/variable_names.h>
 
 namespace towr_plus {
 
-RangeOfMotionConstraint::RangeOfMotionConstraint(
+RangeOfMotionCircleConstraint::RangeOfMotionCircleConstraint(
     const KinematicModel::Ptr &model, double T, double dt, const EE &ee,
     const SplineHolder &spline_holder)
-    : TimeDiscretizationConstraint(T, dt,
-                                   "rangeofmotion-" + std::to_string(ee)) {
+    : TimeDiscretizationConstraint(T, dt, "circle_rom-" + std::to_string(ee)) {
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = EulerConverter(spline_holder.base_angular_);
   ee_motion_linear_ = spline_holder.ee_motion_linear_.at(ee);
@@ -50,9 +49,15 @@ RangeOfMotionConstraint::RangeOfMotionConstraint(
 
   max_deviation_from_nominal_ = model->GetMaximumDeviationFromNominal();
   min_deviation_from_nominal_ = model->GetMinimumDeviationFromNominal();
+  nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
+  nominal_base_to_ee_len_ = nominal_ee_pos_B_.norm();
+
+  max_len_ = 0.25;
+  min_len_ = -0.25;
+
   max_cos_ = cos(0.);
   min_cos_ = cos(M_PI / 4.);
-  nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
+
   ee_ = ee;
 
   S1_ = Eigen::MatrixXd::Zero(2, 3);
@@ -66,20 +71,15 @@ RangeOfMotionConstraint::RangeOfMotionConstraint(
   local_x_(0) = 1.0;
   local_x__ = local_x_.sparseView();
 
-  SetRows(GetNumberOfNodes() * 4); // X, Y, Z, Rot
+  SetRows(GetNumberOfNodes() * 2); // EE Length, Feet Heading
 }
 
-int RangeOfMotionConstraint::GetRow(int node, int dim) const {
-  // dim should be in [0, 1, 2, 3]
-  if (3 < dim || dim < 0) {
-    std::cout << "Range of Motion : Asking Wrong Dim" << std::endl;
-    exit(0);
-  }
-  return node * 4 + dim;
+int RangeOfMotionCircleConstraint::GetRow(int node, int dim) const {
+  return node * 2 + dim;
 }
 
-void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
-                                                         VectorXd &g) const {
+void RangeOfMotionCircleConstraint::UpdateConstraintAtInstance(
+    double t, int k, VectorXd &g) const {
 
   Vector3d base_W = base_linear_->GetPoint(t).p();
   Vector3d pos_ee_W = ee_motion_linear_->GetPoint(t).p();
@@ -94,9 +94,10 @@ void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
       ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
   Vector3d vector_base_to_ee_W = pos_ee_W - base_W;
-  Vector3d vector_base_to_ee_B = b_R_w * (vector_base_to_ee_W);
 
-  g.middleRows(GetRow(k, X), k3D) = vector_base_to_ee_B; // X, Y, Z
+  Eigen::VectorXd val_len(1);
+  val_len << vector_base_to_ee_W.squaredNorm();
+  g.middleRows(GetRow(k, 0), 1) = val_len;
 
   Eigen::MatrixXd frnt_mtx =
       (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
@@ -107,30 +108,27 @@ void RangeOfMotionConstraint::UpdateConstraintAtInstance(double t, int k,
 
   Eigen::VectorXd val_rot(1);
   val_rot << frnt * std::pow(bck, -0.5);
-  g.middleRows(GetRow(k, k3D), 1) = val_rot; // cos(yaw)
+  g.middleRows(GetRow(k, 1), 1) = val_rot; // cos(yaw)
 }
 
-void RangeOfMotionConstraint::UpdateBoundsAtInstance(double t, int k,
-                                                     VecBound &bounds) const {
-  // X, Y, Z
-  for (int dim = 0; dim < k3D; ++dim) {
-    ifopt::Bounds b;
-    b += nominal_ee_pos_B_(dim);
-    b.upper_ += max_deviation_from_nominal_(dim);
-    // b.lower_ -= max_deviation_from_nominal_(dim);
-    b.lower_ += min_deviation_from_nominal_(dim);
-    bounds.at(GetRow(k, dim)) = b;
-  }
-  // Rot
-  ifopt::Bounds b;
-  b.upper_ = max_cos_;
-  b.lower_ = min_cos_;
-  bounds.at(GetRow(k, k3D)) = b;
+void RangeOfMotionCircleConstraint::UpdateBoundsAtInstance(
+    double t, int k, VecBound &bounds) const {
+
+  // EE Length
+  ifopt::Bounds b1;
+  b1.upper_ = std::pow(nominal_base_to_ee_len_ + max_len_, 2);
+  b1.lower_ = std::pow(nominal_base_to_ee_len_ + min_len_, 2);
+  bounds.at(GetRow(k, 0)) = b1;
+
+  // Feet Heading
+  ifopt::Bounds b2;
+  b2.upper_ = max_cos_;
+  b2.lower_ = min_cos_;
+  bounds.at(GetRow(k, 1)) = b2;
 }
 
-void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
-                                                       std::string var_set,
-                                                       Jacobian &jac) const {
+void RangeOfMotionCircleConstraint::UpdateJacobianAtInstance(
+    double t, int k, std::string var_set, Jacobian &jac) const {
 
   EulerConverter::MatrixSXd w_R_b =
       base_angular_.GetRotationMatrixBaseToWorld(t);
@@ -141,22 +139,21 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
   EulerConverter::MatrixSXd ee_R_w =
       ee_motion_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
-  int row_start = GetRow(k, X);
+  int row_start = GetRow(k, 0);
 
   if (var_set == id::base_lin_nodes) {
-    jac.middleRows(row_start, k3D) =
-        -1 * b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
+    // EE Length
+    Eigen::MatrixXd r_minus_p = Eigen::MatrixXd::Zero(1, 3);
+    Vector3d base_W = base_linear_->GetPoint(t).p();
+    Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
+    for (int i = 0; i < 3; ++i) {
+      r_minus_p(0, i) = base_W(i) - ee_pos_W(i);
+    }
+    jac.middleRows(row_start, 1) = 2. * r_minus_p.sparseView() *
+                                   base_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::base_ang_nodes) {
-    // X, Y, Z
-    Vector3d base_W = base_linear_->GetPoint(t).p();
-    Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
-    Vector3d r_W = ee_pos_W - base_W;
-
-    jac.middleRows(row_start, k3D) =
-        base_angular_.DerivOfRotVecMult(t, r_W, true);
-
     // Rot
     Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);
@@ -178,12 +175,19 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
            base_angular_.DerivOfRotVecMult(t, v3, true);
     jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
 
-    jac.middleRows(row_start + k3D, 1) = jac_rot;
+    jac.middleRows(row_start + 1, 1) = jac_rot;
   }
 
   if (var_set == id::EEMotionLinNodes(ee_)) {
-    jac.middleRows(row_start, k3D) =
-        b_R_w * ee_motion_linear_->GetJacobianWrtNodes(t, kPos);
+    Eigen::MatrixXd r_minus_p = Eigen::MatrixXd::Zero(1, 3);
+    Vector3d base_W = base_linear_->GetPoint(t).p();
+    Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
+    for (int i = 0; i < 3; ++i) {
+      r_minus_p(0, i) = base_W(i) - ee_pos_W(i);
+    }
+    jac.middleRows(row_start, 1) =
+        -2. * r_minus_p.sparseView() *
+        ee_motion_linear_->GetJacobianWrtNodes(t, kPos);
   }
 
   if (var_set == id::EEMotionAngNodes(ee_)) {
@@ -208,13 +212,19 @@ void RangeOfMotionConstraint::UpdateJacobianAtInstance(double t, int k,
            ee_motion_angular_.DerivOfRotVecMult(t, v3, false);
     jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
 
-    jac.middleRows(row_start + k3D, 1) = jac_rot;
+    jac.middleRows(row_start + 1, 1) = jac_rot;
   }
 
   if (var_set == id::EESchedule(ee_)) {
-
+    Eigen::MatrixXd r_minus_p = Eigen::MatrixXd::Zero(1, 3);
+    Vector3d base_W = base_linear_->GetPoint(t).p();
+    Vector3d ee_pos_W = ee_motion_linear_->GetPoint(t).p();
+    for (int i = 0; i < 3; ++i) {
+      r_minus_p(0, i) = base_W(i) - ee_pos_W(i);
+    }
     jac.middleRows(row_start, k3D) =
-        b_R_w * ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
+        -2. * r_minus_p.sparseView() *
+        ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
 
     Eigen::MatrixXd frnt_mtx =
         (S2__.transpose() * ee_R_w * w_R_b * S1__.transpose() * local_x__);

@@ -31,8 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
-#ifndef TOWR_CONSTRAINTS_RANGE_OF_MOTION_CONSTRAINT_H_
-#define TOWR_CONSTRAINTS_RANGE_OF_MOTION_CONSTRAINT_H_
+#pragma once
 
 #include <towr_plus/models/kinematic_model.h>
 #include <towr_plus/variables/euler_converter.h>
@@ -55,7 +54,7 @@ namespace towr_plus {
  *
  * @ingroup Constraints
  */
-class RangeOfMotionConstraint : public TimeDiscretizationConstraint {
+class RangeOfMotionBoxConstraint : public TimeDiscretizationConstraint {
 public:
   using EE = uint;
   using Vector3d = Eigen::Vector3d;
@@ -68,10 +67,10 @@ public:
    * @param ee            The endeffector for which to constrain the range.
    * @param spline_holder Pointer to the current variables.
    */
-  RangeOfMotionConstraint(const KinematicModel::Ptr &robot_model, double T,
-                          double dt, const EE &ee,
-                          const SplineHolder &spline_holder);
-  virtual ~RangeOfMotionConstraint() = default;
+  RangeOfMotionBoxConstraint(const KinematicModel::Ptr &robot_model, double T,
+                             double dt, const EE &ee,
+                             const SplineHolder &spline_holder);
+  virtual ~RangeOfMotionBoxConstraint() = default;
 
 private:
   NodeSpline::Ptr base_linear_;
@@ -105,5 +104,3 @@ private:
 };
 
 } /* namespace towr_plus */
-
-#endif /* TOWR_CONSTRAINTS_RANGE_OF_MOTION_CONSTRAINT_H_ */

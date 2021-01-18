@@ -40,7 +40,8 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <towr_plus/constraints/base_motion_constraint.h>
 #include <towr_plus/constraints/dynamic_constraint.h>
 #include <towr_plus/constraints/force_constraint.h>
-#include <towr_plus/constraints/range_of_motion_constraint.h>
+#include <towr_plus/constraints/range_of_motion_box_constraint.h>
+#include <towr_plus/constraints/range_of_motion_circle_constraint.h>
 #include <towr_plus/constraints/spline_acc_constraint.h>
 #include <towr_plus/constraints/swing_constraint.h>
 #include <towr_plus/constraints/terrain_constraint.h>
@@ -357,7 +358,7 @@ NlpFormulation::MakeRangeOfMotionBoxConstraint(const SplineHolder &s) const {
   ContraintPtrVec c;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto rom = std::make_shared<RangeOfMotionConstraint>(
+    auto rom = std::make_shared<RangeOfMotionBoxConstraint>(
         model_.kinematic_model_, params_.GetTotalTime(),
         params_.dt_constraint_range_of_motion_, ee, s);
     c.push_back(rom);
