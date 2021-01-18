@@ -256,10 +256,10 @@ if __name__ == "__main__":
             pass
         elif is_key_triggered(keys, '0'):
             if b_auto_progress:
-                print("Pressed 0: Trun off auto-progression")
+                print("Pressed 0: Trun Off Auto-Progression")
                 b_auto_progress = False
             else:
-                print("Pressed 0: Turn on auto-progression")
+                print("Pressed 0: Turn on Auto-Progression")
                 b_auto_progress = True
         elif is_key_triggered(keys, '2') or b_auto_progress:
             if not b_auto_progress:
@@ -311,6 +311,7 @@ if __name__ == "__main__":
                     print(q_guess)
                     print("q_sol")
                     print(q_sol)
+                    __import__('ipdb').set_trace()
                     print("====================================")
 
             # Handle timings

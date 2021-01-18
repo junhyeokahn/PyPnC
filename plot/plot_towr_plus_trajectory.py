@@ -114,8 +114,13 @@ def plot_foot(ax, pos, ori, color, text):
     rmat = euler_to_rot(ori)
     normal = np.array([rmat[0, 2], rmat[1, 2], rmat[2, 2]])
     d = -pos.dot(normal)
-    xx, yy = np.meshgrid(np.linspace(pos[0] - 0.11, pos[0] + 0.11, 2),
-                         np.linspace(pos[1] - 0.065, pos[1] + 0.065, 2))
+    # xx, yy = np.meshgrid(np.linspace(pos[0] - 0.11, pos[0] + 0.11, 2),
+    # np.linspace(pos[1] - 0.065, pos[1] + 0.065, 2))
+    xx, yy = np.meshgrid(np.linspace(-0.11, 0.11, 2),
+                         np.linspace(-0.065, 0.065, 2))
+    xx, yy = np.einsum('ji, mni->jmn', rmat[0:2, 0:2], np.dstack([xx, yy]))
+    xx += pos[0]
+    yy += pos[1]
     z = (-normal[0] * xx - normal[1] * yy - d) * 1. / normal[2]
     ax.plot_wireframe(xx, yy, z, color=color, linewidth=1.5)
     ax.plot_surface(xx, yy, z, edgecolors=color, color=color, alpha=0.5)
