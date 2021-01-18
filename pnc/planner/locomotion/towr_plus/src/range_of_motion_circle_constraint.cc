@@ -52,8 +52,8 @@ RangeOfMotionCircleConstraint::RangeOfMotionCircleConstraint(
   nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
   nominal_base_to_ee_len_ = nominal_ee_pos_B_.norm();
 
-  max_len_ = 0.25;
-  min_len_ = -0.25;
+  max_len_ = 0.05;
+  min_len_ = -0.05;
 
   max_cos_ = cos(0.);
   min_cos_ = cos(M_PI / 4.);
@@ -222,7 +222,7 @@ void RangeOfMotionCircleConstraint::UpdateJacobianAtInstance(
     for (int i = 0; i < 3; ++i) {
       r_minus_p(0, i) = base_W(i) - ee_pos_W(i);
     }
-    jac.middleRows(row_start, k3D) =
+    jac.middleRows(row_start, 1) =
         -2. * r_minus_p.sparseView() *
         ee_motion_linear_->GetJacobianOfPosWrtDurations(t);
 
@@ -250,7 +250,7 @@ void RangeOfMotionCircleConstraint::UpdateJacobianAtInstance(
         ee_motion_angular_.DerivOfRotVecMultWrtScheduleVariables(t, v3, false);
     jac_rot = jac1 - 0.5 * frnt * std::pow(bck, -1.5) * (jac2 + jac3);
 
-    jac.middleRows(row_start + k3D, 1) = jac_rot;
+    jac.middleRows(row_start + 1, 1) = jac_rot;
   }
 }
 

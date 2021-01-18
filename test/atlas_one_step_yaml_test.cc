@@ -42,7 +42,7 @@ int main() {
   formulation.model_ = RobotModel(RobotModel::Atlas);
   formulation.params_.from_yaml(cfg["locomotion_param"]);
   formulation.from_locomotion_task(task);
-  // formulation.initialize_from_dcm_planner("dubins");
+  formulation.initialize_from_dcm_planner("dubins");
 
   // Solve
   ifopt::Problem nlp;
@@ -56,6 +56,7 @@ int main() {
   for (auto c : formulation.GetCosts()) {
     nlp.AddCostSet(c);
   }
+
   // Eigen::VectorXd initial_vars = nlp.GetVariableValues();
   // sol.from_one_hot_vector(initial_vars);
   // sol.to_yaml();
