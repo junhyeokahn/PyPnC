@@ -49,6 +49,7 @@ BaseMotionConstraint::BaseMotionConstraint(double T, double dt,
   node_bounds_.at(AX) = Bounds(-dev_rad, dev_rad);
   node_bounds_.at(AY) = Bounds(-dev_rad, dev_rad);
   node_bounds_.at(AZ) = ifopt::NoBound; // Bounds(-dev_rad, dev_rad);
+  // node_bounds_.at(AZ) = Bounds(-dev_rad, dev_rad);
 
   double z_init = base_linear_->GetPoint(0.0).p().z();
   node_bounds_.at(LX) = ifopt::NoBound;
