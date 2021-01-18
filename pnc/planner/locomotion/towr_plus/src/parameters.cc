@@ -84,6 +84,7 @@ void Parameters::initialize() {
   constraints_.push_back(Terrain);
   constraints_.push_back(Dynamic);
   constraints_.push_back(BaseAcc);
+  // constraints_.push_back(BaseRom);
   constraints_.push_back(EndeffectorRom);
   constraints_.push_back(Force);
   constraints_.push_back(Swing);

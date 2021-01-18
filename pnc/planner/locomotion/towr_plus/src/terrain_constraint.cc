@@ -148,9 +148,9 @@ void TerrainConstraint::FillJacobianBlock(std::string var_set,
           HeightMap::Normal, X_, lin_p.x(), lin_p.y());
       Vector3d round_n_round_y = terrain_->GetDerivativeOfNormalizedBasisWrt(
           HeightMap::Normal, Y_, lin_p.x(), lin_p.y());
-      int idx_x = ee_motion_ang_->GetOptIndex(
+      int idx_x = ee_motion_lin_->GetOptIndex(
           NodesVariables::NodeValueInfo(id, kPos, X));
-      int idx_y = ee_motion_ang_->GetOptIndex(
+      int idx_y = ee_motion_lin_->GetOptIndex(
           NodesVariables::NodeValueInfo(id, kPos, Y));
 
       jac.coeffRef(row, idx_x) = -round_n_round_x(0);

@@ -12,6 +12,8 @@
 int main() {
   YAML::Node cfg =
       YAML::LoadFile(THIS_COM "config/towr_plus/atlas_two_step.yaml");
+  Clock clock = Clock();
+  double time_solving(0.);
 
   // Locomotion Task
   LocomotionTask task = LocomotionTask("atlas_two_step_yaml_test");
@@ -40,16 +42,23 @@ int main() {
   for (auto c : formulation.GetCosts()) {
     nlp.AddCostSet(c);
   }
-  Eigen::VectorXd initial_vars = nlp.GetVariableValues();
-  sol.from_one_hot_vector(initial_vars);
-  sol.to_yaml();
-  nlp.PrintCurrent();
-  exit(0);
+
+  // Eigen::VectorXd initial_vars = nlp.GetVariableValues();
+  // sol.from_one_hot_vector(initial_vars);
+  // sol.to_yaml();
+  // nlp.PrintCurrent();
+  // exit(0);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
+  // solver->SetOption("derivative_test", "first-order");
+  // solver->SetOption("derivative_test_tol", 1e-3);
+  // nlp.PrintCurrent();
+  // exit(0);
   solver->SetOption("jacobian_approximation", "exact");
-  solver->SetOption("max_cpu_time", 500.0);
+  solver->SetOption("max_cpu_time", 1000.0);
+  clock.start();
   solver->Solve(nlp);
+  time_solving = clock.stop();
 
   nlp.PrintCurrent();
 
@@ -57,6 +66,7 @@ int main() {
   sol.from_one_hot_vector(vars);
   // sol.print_solution();
   sol.to_yaml();
+  printf("Takes %f seconds\n", 1e-3 * time_solving);
 
   return 0;
 }

@@ -71,8 +71,7 @@ RangeOfMotionBoxConstraint::RangeOfMotionBoxConstraint(
 int RangeOfMotionBoxConstraint::GetRow(int node, int dim) const {
   // dim should be in [0, 1, 2, 3]
   if (3 < dim || dim < 0) {
-    std::cout << "Range of Motion : Asking Wrong Dim" << std::endl;
-    exit(0);
+    assert(false);
   }
   return node * 4 + dim;
 }
