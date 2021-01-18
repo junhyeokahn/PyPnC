@@ -95,11 +95,11 @@ void Parameters::initialize() {
   // ===========================================================================
 
   costs_.clear();
-  costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
-  costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
-  costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
-  costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
-  costs_.push_back({FinalEEMotionLinPosCost, w_FinalEEMotionLinPosCost});
+  // costs_.push_back({FinalBaseLinPosCost, w_FinalBaseLinPosCost});
+  // costs_.push_back({FinalBaseLinVelCost, w_FinalBaseLinVelCost});
+  // costs_.push_back({FinalBaseAngPosCost, w_FinalBaseAngPosCost});
+  // costs_.push_back({FinalBaseAngVelCost, w_FinalBaseAngVelCost});
+  // costs_.push_back({FinalEEMotionLinPosCost, w_FinalEEMotionLinPosCost});
   // costs_.push_back({FinalEEMotionAngPosCost, w_FinalEEMotionAngPosCost})
   // costs_.push_back({IntermediateBaseLinVelCost,
   // w_IntermediateBaseLinVelCost});

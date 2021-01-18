@@ -135,6 +135,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
   }
   spline_lin->AddStartBound(kPos, {X, Y, Z}, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, {X, Y, Z}, initial_base_.lin.v());
+  spline_lin->AddFinalBound(kPos, {X, Y, Z}, final_pos);
+  spline_lin->AddFinalBound(kVel, {X, Y, Z}, final_base_.lin.v());
   vars.push_back(spline_lin);
 
   auto spline_ang =
@@ -147,6 +149,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const {
   }
   spline_ang->AddStartBound(kPos, {X, Y, Z}, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, {X, Y, Z}, initial_base_.ang.v());
+  spline_ang->AddFinalBound(kPos, {X, Y, Z}, final_base_.ang.p());
+  spline_ang->AddFinalBound(kVel, {X, Y, Z}, final_base_.ang.v());
   vars.push_back(spline_ang);
 
   return vars;
@@ -188,7 +192,11 @@ NlpFormulation::MakeEEMotionLinVariables() const {
                                           Vector3d(x, y, z), T);
     }
 
+    Eigen::VectorXd zero3 = Eigen::VectorXd::Zero(3);
     lin_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_lin_.at(ee));
+    lin_nodes->AddStartBound(kVel, {X, Y, Z}, zero3);
+    lin_nodes->AddFinalBound(kPos, {X, Y, Z}, Vector3d(x, y, z));
+    lin_nodes->AddFinalBound(kVel, {X, Y, Z}, zero3);
     vars.push_back(lin_nodes);
   }
 
@@ -241,7 +249,11 @@ NlpFormulation::MakeEEMotionAngVariables() const {
                                           final_foot_euler_angles,
                                           params_.GetTotalTime());
     }
+    Eigen::VectorXd zero3 = Eigen::VectorXd::Zero(3);
     ang_nodes->AddStartBound(kPos, {X, Y, Z}, initial_ee_motion_ang_.at(ee));
+    ang_nodes->AddStartBound(kVel, {X, Y, Z}, zero3);
+    ang_nodes->AddFinalBound(kPos, {X, Y, Z}, final_foot_euler_angles);
+    ang_nodes->AddFinalBound(kVel, {X, Y, Z}, zero3);
     vars.push_back(ang_nodes);
   }
   return vars;
