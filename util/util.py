@@ -8,20 +8,23 @@ def pretty_print(ob):
     print(json.dumps(ob, indent=4))
 
 
-def euler_to_rot(seq, euler_angle, degrees=False):
-    """
-    Parameters
-    ----------
-    seq (str): Euler seq
-    euler_angle (list or np.array): angles
-    degrees (bool): If it is degrees or radians
-
-    Returns
-    -------
-    ret (np.array): SO3
-
-    """
-    return (R.from_euler(seq, euler_angle, degrees=degrees)).as_matrix()
+def euler_to_rot(angles):
+    # Euler ZYX to Rot
+    # Note that towr has (x, y, z) order
+    x = angles[0]
+    y = angles[1]
+    z = angles[2]
+    ret = np.array([
+        np.cos(y) * np.cos(z),
+        np.cos(z) * np.sin(x) * np.sin(y) - np.cos(x) * np.sin(z),
+        np.sin(x) * np.sin(z) + np.cos(x) * np.cos(z) * np.sin(y),
+        np.cos(y) * np.sin(z),
+        np.cos(x) * np.cos(z) + np.sin(x) * np.sin(y) * np.sin(z),
+        np.cos(x) * np.sin(y) * np.sin(z) - np.cos(z) * np.sin(x), -np.sin(y),
+        np.cos(y) * np.sin(x),
+        np.cos(x) * np.cos(y)
+    ]).reshape(3, 3)
+    return ret
 
 
 def quat_to_rot(quat):
