@@ -3,7 +3,6 @@ import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
-import pprint
 from collections import OrderedDict
 
 from scipy.linalg import block_diag
@@ -17,6 +16,10 @@ from util import util as util
 
 
 class DartRobotSystem(RobotSystem):
+    """
+    Dart considers floating base with 6 positions and 6 velocities with the
+    order of rotx, roty, rotz, x, y, z. Therefore, n_q = n_v
+    """
     def __init__(self, filepath, floating_joint_list, b_print_info=False):
         super(DartRobotSystem, self).__init__(filepath, floating_joint_list,
                                               b_print_info)
@@ -171,7 +174,7 @@ class DartRobotSystem(RobotSystem):
             T_lc = np.eye(4)
             T_lc[0:3, 0:3] = R_gl.transpose()
             T_lc[0:3, 3] = np.dot(R_gl.transpose(), (pCoM_g - p_gl))
-            AdT_lc = adjoint(T_lc)
+            AdT_lc = util.adjoint(T_lc)
             self._I_cent += np.dot(np.dot(AdT_lc.transpose(), I), AdT_lc)
             self._A_cent += np.dot(np.dot(AdT_lc.transpose(), I), jac)
 
@@ -274,18 +277,3 @@ class DartRobotSystem(RobotSystem):
         return self._skel.getJacobianClassicDeriv(
             self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
             dart.dynamics.Frame.World())
-
-    def debug_print_link_info(self):
-        print("-" * 80)
-        print("Controller")
-        print("-" * 80)
-        for (k, v) in self._link_id.items():
-            jac = self.get_link_jacobian(k)
-            qdot = self.get_q_dot()
-            jac_times_qdot = np.dot(jac, qdot)
-            print(k,
-                  self.get_link_iso(k)[0:3, 3],
-                  R.from_matrix(self.get_link_iso(k)[0:3, 0:3]).as_quat(),
-                  self.get_link_vel(k)[3:6],
-                  self.get_link_vel(k)[0:3], jac_times_qdot[3:6],
-                  jac_times_qdot[0:3])

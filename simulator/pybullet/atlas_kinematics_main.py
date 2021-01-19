@@ -61,6 +61,7 @@ def get_robot_config(robot):
             joint_id[info[1].decode("utf-8")] = info[0]
         link_id[info[12].decode("utf-8")] = info[0]
         nq = max(nq, info[3])
+        print(info[0], " : ", info[1] ," : " , info[3])
         nv = max(nv, info[4])
     nq += 1
     nv += 1

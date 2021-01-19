@@ -25,7 +25,7 @@ class BasicTask(Task):
     def update_cmd(self):
 
         if self._task_type is "JOINT":
-            pos = self._robot.get_q()[-self._dim:]
+            pos = self._robot.get_q()[self._robot.n_virtual:self._robot.n_a]
             pos_err = self._pos_des - pos
             vel_act = self._robot.get_q_dot()[-self._dim:]
             if self._b_data_save:
