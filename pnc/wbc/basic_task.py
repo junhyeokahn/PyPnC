@@ -27,7 +27,8 @@ class BasicTask(Task):
         if self._task_type is "JOINT":
             pos = self._robot.get_q()[self._robot.n_virtual:self._robot.n_a]
             pos_err = self._pos_des - pos
-            vel_act = self._robot.get_q_dot()[-self._dim:]
+            vel_act = self._robot.get_q_dot()[self._robot.n_virtual:self.
+                                              _robot.n_a]
             if self._b_data_save:
                 self._data_saver.add('joint_pos_des', self._pos_des.copy())
                 self._data_saver.add('joint_vel_des', self._vel_des.copy())

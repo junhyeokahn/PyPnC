@@ -59,7 +59,7 @@ class ValkyrieController(object):
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,
-            self._robot.get_q_dot()[self._robot.n_virtual:],
+            self._robot.get_q_dot()[self._robot.n_virtual:self._robot.n_a],
             self._robot.get_q()[self._robot.n_virtual:self._robot.n_a])
 
         command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
