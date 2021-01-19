@@ -222,13 +222,21 @@ if __name__ == "__main__":
             ee] = get_kinematics_config(robot, joint_id, link_id,
                                         open_chain_joints[ee], base_link[ee],
                                         ee_link[ee])
-    ## TEST
 
     # Initial Config
     set_initial_config(robot, joint_id)
 
     # Joint Friction
     set_joint_friction(robot, joint_id, 2)
+
+    # RobotSystem
+    if KinSimConfig.DYN_LIB == "dart":
+        from pnc.robot_system.dart_robot_system import DartRobotSystem
+        robot_system = DartRobotSystem(
+            cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+            ['rootJoint'], PnCConfig.PRINT_ROBOT_INFO)
+    else:
+        raise ValueError
 
     # Run Sim
     t = 0
@@ -243,6 +251,14 @@ if __name__ == "__main__":
 
         # Get SensorData
         sensor_data = get_sensor_data(robot, joint_id, link_id)
+        # Update RobotSystem
+        robot_system.update_system(sensor_data["base_pos"],
+                                   sensor_data["base_quat"],
+                                   sensor_data["base_lin_vel"],
+                                   sensor_data["base_ang_vel"],
+                                   sensor_data["joint_pos"],
+                                   sensor_data["joint_vel"],
+                                   b_cent=True)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()

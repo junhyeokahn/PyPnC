@@ -21,7 +21,7 @@ class DartRobotSystem(RobotSystem):
         super(DartRobotSystem, self).__init__(filepath, floating_joint_list,
                                               b_print_info)
 
-    def config_robot(self, filepath, floating_joint_list):
+    def _config_robot(self, filepath, floating_joint_list):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
 
         for i in range(self._skel.getNumJoints()):
@@ -99,8 +99,14 @@ class DartRobotSystem(RobotSystem):
             command["joint_trq"][k] = joint_trq_cmd[joint_idx]
         return command
 
-    def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
-                      joint_pos, joint_vel):
+    def update_system(self,
+                      base_pos,
+                      base_quat,
+                      base_lin_vel,
+                      base_ang_vel,
+                      joint_pos,
+                      joint_vel,
+                      b_cent=False):
 
         assert len(joint_pos.keys()) == self._n_a
 
@@ -146,11 +152,30 @@ class DartRobotSystem(RobotSystem):
             self._joint_id[v_k].setVelocity(0, v_v)
         self._skel.computeForwardKinematics()
 
-    def debug_update_system(self, q, qdot):
-        assert q.shape[0] == self._n_q_dot
-        self._skel.setPositions(q)
-        self._skel.setVelocities(qdot)
-        self._skel.computeForwardKinematics()
+        if b_cent:
+            self._update_centroidal_quantities()
+
+    def _update_centroidal_quantities(self):
+        self._I_cent = np.zeros((6, 6))
+        self._J_cent = np.zeros((6, self._n_q_dot))
+        self._A_cent = np.zeros((6, self._n_q_dot))
+        pCoM_g = self.get_com_pos()
+
+        for name, bn in self._link_id.items():
+            __import__('ipdb').set_trace()
+            jac = self.get_link_jacobian(name)  # TODO(JH): Compare these two
+            jac = self._skel.getJacobian(bn)
+            p_gl = bn.getWorldTransform().translation()
+            R_gl = bn.getWorldTransform().linear()
+            I = bn.getSpatialInertia()
+            T_lc = np.eye(4)
+            T_lc[0:3, 0:3] = R_gl.transpose()
+            T_lc[0:3, 3] = np.dot(R_gl.transpose(), (pCoM_g - p_gl))
+            AdT_lc = adjoint(T_lc)
+            self._I_cent += np.dot(np.dot(AdT_lc.transpose(), I), AdT_lc)
+            self._A_cent += np.dot(np.dot(AdT_lc.transpose(), I), jac)
+
+        self._Jcent = np.dot(np.linalg.inv(self._I_cent), self._A_cent)
 
     def get_q(self):
         return self._skel.getPositions()
@@ -221,12 +246,15 @@ class DartRobotSystem(RobotSystem):
 
     def get_link_jacobian(self, link_id):
         """
+        Link CoM Jacobian described in World Frame
+
         Parameters
         ----------
         link_id (str):
             Link ID
         Returns
         -------
+        Jacobian (np.ndarray):
             Link CoM Jacobian described in World Frame
         """
         return self._skel.getJacobian(self._link_id[link_id],

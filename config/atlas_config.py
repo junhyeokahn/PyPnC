@@ -6,6 +6,7 @@ class KinSimConfig(object):
 
     PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
+    DYN_LIB = "dart"
 
 
 class DynSimConfig(object):

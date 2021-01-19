@@ -32,7 +32,12 @@ class RobotSystem(abc.ABC):
         self._floating_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        self.config_robot(filepath, floating_joint_list)
+        # Centroidal Quantities
+        self._I_cent = np.zeros((6, 6))
+        self._J_cent = np.zeros((6, self._n_q_dot))
+        self._A_cent = np.zeros((6, self._n_q_dot))
+
+        self._config_robot(filepath, floating_joint_list)
 
     @property
     def n_virtual(self):
@@ -74,8 +79,31 @@ class RobotSystem(abc.ABC):
     def link_id(self):
         return self._link_id
 
+    @property
+    def I_cent(self):
+        return self._I_cent
+
+    @property
+    def J_cent(self):
+        return self._J_cent
+
+    @property
+    def A_cent(self):
+        return self._A_cent
+
     @abc.abstractmethod
-    def config_robot(self, filepath):
+    def _update_centroidal_quantities(self):
+        """
+        Update I_cent, A_cent, J_cent
+        , where
+        centroid_momentum = I_cent * centroid_velocity = A_cent * qdot
+                  J_cent = inv(I_cent) * A_cent
+        centroid_velocity = J_cent * qdot
+        """
+        pass
+
+    @abc.abstractmethod
+    def _config_robot(self, filepath):
         """
         Set properties.
 
@@ -122,8 +150,14 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def update_system(self, base_pos, base_quat, base_lin_vel, base_ang_vel,
-                      joint_pos, joint_vel):
+    def update_system(self,
+                      base_pos,
+                      base_quat,
+                      base_lin_vel,
+                      base_ang_vel,
+                      joint_pos,
+                      joint_vel,
+                      b_cent=False):
         """
         Update generalized coordinate
 
@@ -135,6 +169,7 @@ class RobotSystem(abc.ABC):
         base_ang_vel (np.array): Root angular velocity
         joint_pos (OrderedDict): Actuator pos
         joint_vel (OrderedDict): Actuator vel
+        b_cent (Bool): Whether updating centroidal frame or not
         """
         pass
 
