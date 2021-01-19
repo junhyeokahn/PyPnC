@@ -61,7 +61,6 @@ def get_robot_config(robot):
             joint_id[info[1].decode("utf-8")] = info[0]
         link_id[info[12].decode("utf-8")] = info[0]
         nq = max(nq, info[3])
-        print(info[0], " : ", info[1] ," : " , info[3])
         nv = max(nv, info[4])
     nq += 1
     nv += 1
@@ -231,13 +230,13 @@ if __name__ == "__main__":
     set_joint_friction(robot, joint_id, 2)
 
     # RobotSystem
-    if KinSimConfig.DYN_LIB == "dart":
-        from pnc.robot_system.dart_robot_system import DartRobotSystem
-        robot_system = DartRobotSystem(
-            cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-            ['rootJoint'], PnCConfig.PRINT_ROBOT_INFO)
-    else:
-        raise ValueError
+    # if KinSimConfig.DYN_LIB == "dart":
+    # from pnc.robot_system.dart_robot_system import DartRobotSystem
+    # robot_system = DartRobotSystem(
+    # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+    # ['rootJoint'], PnCConfig.PRINT_ROBOT_INFO)
+    # else:
+    # raise ValueError
 
     # Run Sim
     t = 0
@@ -253,13 +252,13 @@ if __name__ == "__main__":
         # Get SensorData
         sensor_data = get_sensor_data(robot, joint_id, link_id)
         # Update RobotSystem
-        robot_system.update_system(sensor_data["base_pos"],
-                                   sensor_data["base_quat"],
-                                   sensor_data["base_lin_vel"],
-                                   sensor_data["base_ang_vel"],
-                                   sensor_data["joint_pos"],
-                                   sensor_data["joint_vel"],
-                                   b_cent=True)
+        # robot_system.update_system(sensor_data["base_pos"],
+        # sensor_data["base_quat"],
+        # sensor_data["base_lin_vel"],
+        # sensor_data["base_ang_vel"],
+        # sensor_data["joint_pos"],
+        # sensor_data["joint_vel"],
+        # b_cent=True)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()

@@ -452,7 +452,7 @@ if __name__ == "__main__":
             joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
 
         # Visualize config
-        set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos)
+        # set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos)
 
         # Forward Kinematics Sanity Check : To check this, comoment out set_config and comment in stepSimulation to make robot fall down
         # _fk_sanity_check(robot, joint_id, link_id, open_chain_joints,
@@ -463,7 +463,7 @@ if __name__ == "__main__":
         # sensor_data, nominal_sensor_data)
 
         # Disable forward step
-        # p.stepSimulation()
+        p.stepSimulation()
 
         time.sleep(dt)
         t += dt
