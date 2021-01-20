@@ -1,6 +1,8 @@
 import abc
 from collections import OrderedDict
 
+import numpy as np
+
 
 class RobotSystem(abc.ABC):
     def __init__(self,
