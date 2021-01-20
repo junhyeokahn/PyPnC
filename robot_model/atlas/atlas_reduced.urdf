@@ -12,7 +12,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="multisense_sl_description/meshes/head.obj" />
+        <mesh filename="package://multisense_sl_description/meshes/head.obj" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -31,7 +31,6 @@
     </geometry>
   </collision>
   </link>
-
   <link name="ltorso">
     <inertial>
       <mass value="2.270"/>
@@ -40,16 +39,12 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes_unplugged/ltorso.obj" scale="1 1 1"/>
+        <mesh filename="package://meshes_unplugged/ltorso.obj" scale="1 1 1"/>
       </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
     </visual>
-    <!-- this produces unwanted self-collision -->
-    <!--collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <sphere radius="0.11"/>
-      </geometry>
-    </collision-->
   </link>
   <link name="mtorso">
     <inertial>
@@ -59,8 +54,11 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes_unplugged/mtorso.obj" scale="1 1 1"/>
+        <mesh filename="package://meshes_unplugged/mtorso.obj" scale="1 1 1"/>
       </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0.0 0 0.02"/>
@@ -77,8 +75,11 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes_unplugged/pelvis.obj" scale="1 1 1"/>
+        <mesh filename="package://meshes_unplugged/pelvis.obj" scale="1 1 1"/>
       </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="1.5707963267949 0 0" xyz="0.046 0.0 0.01"/>
@@ -111,7 +112,6 @@
       </geometry>
     </collision>
   </link>
-  <!-- with backpack -->
   <link name="utorso">
     <inertial>
       <mass value="84.409"/>
@@ -120,8 +120,11 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes_unplugged/utorso.obj" scale="1 1 1"/>
+        <mesh filename="package://meshes_unplugged/utorso.obj" scale="1 1 1"/>
       </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.102 0 0.25"/>
