@@ -17,7 +17,7 @@ class DynSimConfig(object):
     KD = 0.
 
     PRINT_TIME = False
-    PRINT_ROBOT_INFO = False
+    PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
 
 

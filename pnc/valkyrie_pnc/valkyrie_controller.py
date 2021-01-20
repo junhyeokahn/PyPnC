@@ -12,7 +12,7 @@ class ValkyrieController(object):
         self._robot = robot
 
         # Initialize WBC
-        act_list = [False] * robot.n_virtual + [True] * robot.n_a
+        act_list = [False] * robot.n_floating + [True] * robot.n_a
         self._wbc = WBC(act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
@@ -59,8 +59,10 @@ class ValkyrieController(object):
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd,
-            self._robot.get_q_dot()[self._robot.n_virtual:self._robot.n_a],
-            self._robot.get_q()[self._robot.n_virtual:self._robot.n_a])
+            self._robot.get_q_dot()
+            [self._robot.n_floating:self._robot.n_floating + self._robot.n_a],
+            self._robot.get_q()[self._robot.n_floating:self._robot.n_floating +
+                                self._robot.n_a])
 
         command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
                                                       joint_vel_cmd,
@@ -68,8 +70,8 @@ class ValkyrieController(object):
         return command
 
     def first_visit(self):
-        joint_pos_ini = self._robot.get_q()[self._robot.n_virtual:self._robot.
-                                            n_a]
+        joint_pos_ini = self._robot.get_q(
+        )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
         self._joint_integrator.initialize_states(np.zeros(self._robot.n_a),
                                                  joint_pos_ini)
 

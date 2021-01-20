@@ -23,14 +23,14 @@ class ValkyrieWorldNode(dart.gui.osg.RealTimeWorldNode):
             "basePosX", "basePosY", "basePosZ", "baseRotZ", "baseRotY",
             "pelvis"
         ]
-        self._n_virtual = 0
+        self._n_floating = 0
         self._floating_id = OrderedDict()
         self._joint_id = OrderedDict()
         self._link_id = OrderedDict()
         for i in range(self.robot.getNumJoints()):
             j = self.robot.getJoint(i)
             if j.getName() in floating_joint_list:
-                self._n_virtual += j.getNumDofs()
+                self._n_floating += j.getNumDofs()
                 self._floating_id[j.getName()] = j
             elif j.getType() != "WeldJoint":
                 self._joint_id[j.getName()] = j
@@ -42,7 +42,7 @@ class ValkyrieWorldNode(dart.gui.osg.RealTimeWorldNode):
             self._link_id[bn.getName()] = bn
 
         self._n_q = self._n_q_dot = self.robot.getNumDofs()
-        self._n_a = self._n_q_dot - self._n_virtual
+        self._n_a = self._n_q_dot - self._n_floating
         self._count = 0
 
     def customPreStep(self):

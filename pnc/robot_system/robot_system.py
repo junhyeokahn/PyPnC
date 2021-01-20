@@ -3,6 +3,8 @@ from collections import OrderedDict
 
 import numpy as np
 
+from util import util as util
+
 
 class RobotSystem(abc.ABC):
     def __init__(self,
@@ -20,30 +22,46 @@ class RobotSystem(abc.ABC):
             list of floating joint name
         """
 
-        self._b_print_robot_info = b_print_robot_info
-
-        self._n_virtual = 0
+        self._n_floating = 0
         self._n_q = 0
         self._n_q_dot = 0
         self._n_a = 0
+
         self._total_mass = 0.
-        self._joint_pos_limit = []
-        self._joint_vel_limit = []
-        self._joint_trq_limit = []
+
+        self._joint_pos_limit = None
+        self._joint_vel_limit = None
+        self._joint_trq_limit = None
+
         self._joint_id = OrderedDict()
         self._floating_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        # Centroidal Quantities
+        self._config_robot(filepath, floating_joint_list)
+
+        if b_print_robot_info:
+            print("=" * 80)
+            print("PyBulletRobotSystem")
+            print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ",
+                  self._n_a, ", nvirtual: ", self._n_floating)
+            print("+" * 80)
+            print("Joint Infos")
+            util.pretty_print([*self._joint_id.keys()])
+            print("+" * 80)
+            print("Floating Joint Infos")
+            util.pretty_print([*self._floating_id.keys()])
+            print("+" * 80)
+            print("Link Infos")
+            util.pretty_print([*self._link_id.keys()])
+            print("=" * 80)
+
         self._I_cent = np.zeros((6, 6))
         self._J_cent = np.zeros((6, self._n_q_dot))
         self._A_cent = np.zeros((6, self._n_q_dot))
 
-        self._config_robot(filepath, floating_joint_list)
-
     @property
-    def n_virtual(self):
-        return self._n_virtual
+    def n_floating(self):
+        return self._n_floating
 
     @property
     def n_q(self):
@@ -96,18 +114,41 @@ class RobotSystem(abc.ABC):
     @abc.abstractmethod
     def _update_centroidal_quantities(self):
         """
-        Update I_cent, A_cent, J_cent
-        , where
-        centroid_momentum = I_cent * centroid_velocity = A_cent * qdot
-                  J_cent = inv(I_cent) * A_cent
-        centroid_velocity = J_cent * qdot
+        Update I_cent, A_cent, J_cent:
+            centroid_momentum = I_cent * centroid_velocity = A_cent * qdot
+                      J_cent = inv(I_cent) * A_cent
+            centroid_velocity = J_cent * qdot
         """
         pass
 
     @abc.abstractmethod
     def _config_robot(self, filepath):
         """
-        Set properties.
+        Configure following properties:
+            robot_id (int):
+                Robot index
+            n_floating (int):
+                Number of floating joints
+            n_q (int):
+                Size of joint positions in generalized coordinate
+            n_q_dot (int):
+                Size of joint velocities in generalized coordinate
+            n_a (int):
+                Size of actuation in generalized coordinate
+            total_mass (double):
+                Total mass of the robot
+            joint_pos_limit (np.ndarray):
+                Joint position limits. Size of (n_a, 2)
+            joint_vel_limit (np.ndarray):
+                Joint velocity limits. Size of (n_a, 2)
+            joint_trq_limit (np.ndarray):
+                Joint torque limits. Size of (n_a, 2)
+            joint_id (OrderedDict):
+                Key: joint name, Value: joint indicator
+            floating_id (OrderedDict):
+                Key: floating joint name, Value: joint indicator
+            link_id (OrderedDict):
+                Key: link name, Value: link indicator
 
         Parameters
         ----------

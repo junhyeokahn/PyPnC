@@ -7,7 +7,7 @@ import time, math
 import pybullet as p
 
 from pnc.interface import Interface
-from config.atlas_config import SimConfig, PnCConfig
+from config.atlas_config import PnCConfig
 from pnc.atlas_pnc.atlas_interrupt_logic import AtlasInterruptLogic
 from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
 from pnc.atlas_pnc.atlas_state_estimator import AtlasStateEstimator

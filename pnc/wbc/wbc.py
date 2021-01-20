@@ -6,6 +6,7 @@ from qpsolvers import solve_qp
 
 from pnc.data_saver import DataSaver
 
+
 class WBC(object):
     """
     Whole Body Control
@@ -42,7 +43,6 @@ class WBC(object):
         self._b_data_save = data_save
         if self._b_data_save:
             self._data_saver = DataSaver()
-
 
     @property
     def trq_limit(self):

@@ -25,10 +25,11 @@ class BasicTask(Task):
     def update_cmd(self):
 
         if self._task_type is "JOINT":
-            pos = self._robot.get_q()[self._robot.n_virtual:self._robot.n_a]
+            pos = self._robot.get_q(
+            )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
             pos_err = self._pos_des - pos
-            vel_act = self._robot.get_q_dot()[self._robot.n_virtual:self.
-                                              _robot.n_a]
+            vel_act = self._robot.get_q_dot(
+            )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
             if self._b_data_save:
                 self._data_saver.add('joint_pos_des', self._pos_des.copy())
                 self._data_saver.add('joint_vel_des', self._vel_des.copy())
@@ -99,7 +100,8 @@ class BasicTask(Task):
 
     def update_jacobian(self):
         if self._task_type is "JOINT":
-            self._jacobian[:, self._robot.n_virtual:] = np.eye(self._dim)
+            self._jacobian[:, self._robot.n_floating:self._robot.n_floating +
+                           self._robot.n_a] = np.eye(self._dim)
             self._jacobian_dot_q_dot = np.zeros(self._dim)
         elif self._task_type is "SELECTED_JOINT":
             for i, jid in enumerate(self._robot.get_q_idx(self._target_id)):

@@ -213,7 +213,7 @@ if __name__ == "__main__":
     # [0, 0, 1.5 - 0.761], [0., 0., 0., 1.])
     robot = p.loadURDF(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        [0, 0, 1.5 - 0.761], [0.707, 0., 0., 0.707])
+        [0, 0, 1.5 - 0.761], [0., 0., 0., 1.])
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -230,7 +230,13 @@ if __name__ == "__main__":
     # Robot Model
 
     from pnc.robot_system.dart_robot_system import DartRobotSystem
-    robot_system = DartRobotSystem(
+    dart_robot_system = DartRobotSystem(
+        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        ['rootJoint'], True)
+
+    __import__('ipdb').set_trace()
+    from pnc.robot_system.pybullet_robot_system import PyBulletRobotSystem
+    pybullet_robot_system = PyBulletRobotSystem(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
         ['rootJoint'], True)
 
@@ -247,13 +253,20 @@ if __name__ == "__main__":
 
         # Get SensorData
         sensor_data = get_sensor_data(robot, joint_id, link_id)
-        robot_system.update_system(sensor_data["base_pos"],
-                                   sensor_data["base_quat"],
-                                   sensor_data["base_lin_vel"],
-                                   sensor_data["base_ang_vel"],
-                                   sensor_data["joint_pos"],
-                                   sensor_data["joint_vel"],
-                                   b_cent=False)
+        dart_robot_system.update_system(sensor_data["base_pos"],
+                                        sensor_data["base_quat"],
+                                        sensor_data["base_lin_vel"],
+                                        sensor_data["base_ang_vel"],
+                                        sensor_data["joint_pos"],
+                                        sensor_data["joint_vel"],
+                                        b_cent=False)
+        pybullet_robot_system.update_system(sensor_data["base_pos"],
+                                            sensor_data["base_quat"],
+                                            sensor_data["base_lin_vel"],
+                                            sensor_data["base_ang_vel"],
+                                            sensor_data["joint_pos"],
+                                            sensor_data["joint_vel"],
+                                            b_cent=False)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
