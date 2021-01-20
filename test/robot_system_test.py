@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
-# np.set_printoptions(precision=3)
+np.set_printoptions(precision=3)
 
 from config.atlas_config import KinSimConfig
 from util.util import *
@@ -134,20 +134,34 @@ def get_sensor_data(robot, joint_id, link_id):
 
 def get_qdot(robot, sensor_data):
     ## Angular first, Linear Later
+    rot_w_base = quat_to_rot(sensor_data['base_quat'])
+    aug_rot = np.zeros((6, 6))
+    aug_rot[0:3, 0:3] = rot_w_base.transpose()
+    aug_rot[3:6, 3:6] = rot_w_base.transpose()
     jvel = list(sensor_data['joint_vel'].values())
     ret = np.zeros(6 + len(jvel))
     ret[3:6] = np.copy(sensor_data['base_lin_vel'])
     ret[0:3] = np.copy(sensor_data['base_ang_vel'])
+    ret[0:6] = np.dot(aug_rot, ret[0:6])
     ret[6:] = np.array(jvel)
 
     return ret
 
 
 def get_jacobian(robot, link_idx, sensor_data):
+    link_state = p.getLinkState(robot,
+                                link_idx,
+                                computeLinkVelocity=1,
+                                computeForwardKinematics=1)
+    link_rot = quat_to_rot(sensor_data['base_quat'])
+    aug_link_rot = np.zeros((6, 6))
+    aug_link_rot[0:3, 0:3] = link_rot
+    aug_link_rot[3:6, 3:6] = link_rot
+
     jpos = list(sensor_data['joint_pos'].values())
     jvel = list(sensor_data['joint_vel'].values())
     zeros = [0.] * len(jvel)
-    jac = p.calculateJacobian(robot, link_idx, [0., 0., 0.], jpos, zeros,
+    jac = p.calculateJacobian(robot, link_idx, link_state[2], jpos, zeros,
                               zeros)
     nv = len(jac[0][0])
     ret = np.zeros((6, nv))
@@ -156,11 +170,16 @@ def get_jacobian(robot, link_idx, sensor_data):
             ret[row, col] = jac[1][row][col]  # angular
             ret[row + 3, col] = jac[0][row][col]  # linear
 
+    ret = np.dot(aug_link_rot, ret)
+
     return ret
 
 
 def get_spatial_velocities(robot, link_idx):
-    link_state = p.getLinkState(robot, link_idx, 1, 1)
+    link_state = p.getLinkState(robot,
+                                link_idx,
+                                computeLinkVelocity=1,
+                                computeForwardKinematics=1)
     ret = np.zeros(6)
     for i in range(3):
         ret[i] = link_state[7][i]  # ang vel
@@ -189,9 +208,12 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+    # robot = p.loadURDF(
+    # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+    # [0, 0, 1.5 - 0.761], [0., 0., 0., 1.])
     robot = p.loadURDF(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        [0, 0, 1.5 - 0.761])
+        [0, 0, 1.5 - 0.761], [0.707, 0., 0., 0.707])
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -204,6 +226,13 @@ if __name__ == "__main__":
 
     # Joint Friction
     set_joint_friction(robot, joint_id, 2)
+
+    # Robot Model
+
+    from pnc.robot_system.dart_robot_system import DartRobotSystem
+    robot_system = DartRobotSystem(
+        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        ['rootJoint'], True)
 
     # Run Sim
     t = 0
@@ -218,6 +247,13 @@ if __name__ == "__main__":
 
         # Get SensorData
         sensor_data = get_sensor_data(robot, joint_id, link_id)
+        robot_system.update_system(sensor_data["base_pos"],
+                                   sensor_data["base_quat"],
+                                   sensor_data["base_lin_vel"],
+                                   sensor_data["base_ang_vel"],
+                                   sensor_data["joint_pos"],
+                                   sensor_data["joint_vel"],
+                                   b_cent=False)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
@@ -240,16 +276,28 @@ if __name__ == "__main__":
         elif is_key_triggered(keys, '1'):
 
             ## TEST
-            r_sole_jac = get_jacobian(robot, link_id['r_sole'], sensor_data)
-            r_sole_vel = get_spatial_velocities(robot, link_id['r_sole'])
+            link = "ltorso"
+            r_sole_jac = get_jacobian(robot, link_id[link], sensor_data)
+            r_sole_vel = get_spatial_velocities(robot, link_id[link])
             qdot = get_qdot(robot, sensor_data)
-            # qdot = np.zeros(36)
-            # qdot[3] = 1.
+            qdot_from_dart = robot_system.get_q_dot()
+            r_sole_vel_from_dart = robot_system.get_link_vel(link)
+            r_sole_jac_from_dart = robot_system.get_link_jacobian(link)
             print("-" * 80)
-            print("r_sole_vel")
+            print("++++++++++ pybullet ++++++++++")
+            print("vel")
             print(r_sole_vel)
             print("jac times qdot")
             print(np.dot(r_sole_jac, qdot))
+            # print("jac")
+            # print(r_sole_jac)
+            print("++++++++++ pydart ++++++++++")
+            print("vel")
+            print(r_sole_vel_from_dart)
+            print("jac times qdot")
+            print(np.dot(r_sole_jac_from_dart, qdot_from_dart))
+            # print("jac")
+            # print(r_sole_jac_from_dart)
             ## TEST
             # torso_jac = get_jacobian(robot, -1, sensor_data)
             # print(torso_jac)
