@@ -7,10 +7,7 @@ from util import util as util
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self,
-                 filepath,
-                 floating_joint_list,
-                 b_print_robot_info=False):
+    def __init__(self, filepath, b_fixed_base, b_print_robot_info=False):
         """
         Base RobotSystem Class
 
@@ -18,9 +15,8 @@ class RobotSystem(abc.ABC):
         ----------
         filepath (str):
             urdf path
-        floating_joint_list (list of str):
-            list of floating joint name
         """
+        self._b_fixed_base = b_fixed_base
 
         self._n_floating = 0
         self._n_q = 0
@@ -34,10 +30,9 @@ class RobotSystem(abc.ABC):
         self._joint_trq_limit = None
 
         self._joint_id = OrderedDict()
-        self._floating_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        self._config_robot(filepath, floating_joint_list)
+        self._config_robot(filepath)
 
         if b_print_robot_info:
             print("=" * 80)
@@ -47,9 +42,6 @@ class RobotSystem(abc.ABC):
             print("+" * 80)
             print("Joint Infos")
             util.pretty_print([*self._joint_id.keys()])
-            print("+" * 80)
-            print("Floating Joint Infos")
-            util.pretty_print([*self._floating_id.keys()])
             print("+" * 80)
             print("Link Infos")
             util.pretty_print([*self._link_id.keys()])

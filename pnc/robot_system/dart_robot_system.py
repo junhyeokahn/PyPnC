@@ -20,18 +20,18 @@ class DartRobotSystem(RobotSystem):
     Dart considers floating base with 6 positions and 6 velocities with the
     order of rotx, roty, rotz, x, y, z. Therefore, n_q = n_v
     """
-    def __init__(self, filepath, floating_joint_list, b_print_info=False):
-        super(DartRobotSystem, self).__init__(filepath, floating_joint_list,
+    def __init__(self, filepath, b_print_info=False):
+        super(DartRobotSystem, self).__init__(filepath, b_fixed_base,
                                               b_print_info)
 
-    def _config_robot(self, filepath, floating_joint_list):
+    def _config_robot(self, filepath):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
 
         for i in range(self._skel.getNumJoints()):
             j = self._skel.getJoint(i)
-            if j.getName() in floating_joint_list:
+            if j.getName() is 'rootJoint':
+                assert (not self._b_fixed_base)
                 self._n_floating += j.getNumDofs()
-                self._floating_id[j.getName()] = j
             elif j.getType() != "WeldJoint":
                 self._joint_id[j.getName()] = j
             else:
@@ -101,11 +101,8 @@ class DartRobotSystem(RobotSystem):
 
         assert len(joint_pos.keys()) == self._n_a
 
-        if len(self._floating_id) > 1:
-            # Assume (x,y,z,rz,ry,rx)
-            #TODO
-            pass
-        elif len(self._floating_id) == 1:
+        if self._b_fixed_base:
+            # Floating Base Robot
             # Assume base_iso is representing root com frame
             p_joint_com_in_joint = self._skel.getRootBodyNode().getLocalCOM()
             T_joint_com = np.eye(4)
@@ -134,6 +131,7 @@ class DartRobotSystem(RobotSystem):
                 np.zeros((6, 1)), dart.dynamics.Frame.World(),
                 dart.dynamics.Frame.World())
         else:
+            # Fixed Base Robot
             pass
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),

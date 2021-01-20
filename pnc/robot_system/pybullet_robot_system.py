@@ -18,17 +18,11 @@ class PyBulletRobotsystem(RobotSystem):
     This is how PyBullet represents the floating base.
     You could double-check it by observing a jacobian matrix from PyBullet
     """
-    def __init__(self,
-                 filepath,
-                 floating_joint_list,
-                 b_use_fixed_base,
-                 b_print_info=False):
-        super(PyBulletRobotsystem,
-              self).__init__(filepath, floating_joint_list, b_print_info)
+    def __init__(self, filepath, b_fixed_base, b_print_info=False):
+        super(PyBulletRobotsystem, self).__init__(filepath, b_fixed_base,
+                                                  b_print_info)
 
-        self._b_use_fixed_base = b_use_fixed_base
-
-    def _config_robot(self, filepath, floating_joint_list):
+    def _config_robot(self, filepath):
 
         if self._b_use_fixed_base:
             self._robot_id = p.loadURDF(filepath, useFixedBase=True)
