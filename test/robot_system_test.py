@@ -148,6 +148,33 @@ def get_qdot(robot, sensor_data):
     return ret
 
 
+def get_jacobian2(robot, link_idx, sensor_data):
+    link_state = p.getLinkState(robot,
+                                link_idx,
+                                computeLinkVelocity=1,
+                                computeForwardKinematics=1)
+
+    base_pos = np.copy(sensor_data['base_pos'])
+    base_quat = np.copy(sensor_data['base_quat'])
+    base_lin_vel = np.copy(sensor_data['base_lin_vel'])
+    base_ang_vel = np.copy(sensor_data['base_ang_vel'])
+
+    jpos = list(base_pos) + list(base_quat) + list(
+        sensor_data['joint_pos'].values())
+    zeros = [0.] * len(jpos)
+
+    __import__('ipdb').set_trace()
+    jac = p.calculateJacobian(robot,
+                              link_idx,
+                              link_state[2],
+                              jpos,
+                              zeros,
+                              zeros,
+                              flags=1)
+
+    return jac
+
+
 def get_jacobian(robot, link_idx, sensor_data):
     link_state = p.getLinkState(robot,
                                 link_idx,
@@ -231,14 +258,12 @@ if __name__ == "__main__":
 
     from pnc.robot_system.dart_robot_system import DartRobotSystem
     dart_robot_system = DartRobotSystem(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        ['rootJoint'], True)
+        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf", False, True)
 
-    __import__('ipdb').set_trace()
-    from pnc.robot_system.pybullet_robot_system import PyBulletRobotSystem
-    pybullet_robot_system = PyBulletRobotSystem(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        ['rootJoint'], True)
+    # from pnc.robot_system.pybullet_robot_system import PyBulletRobotSystem
+    # pybullet_robot_system = PyBulletRobotSystem(
+    # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+    # ['rootJoint'], True)
 
     # Run Sim
     t = 0
@@ -260,13 +285,14 @@ if __name__ == "__main__":
                                         sensor_data["joint_pos"],
                                         sensor_data["joint_vel"],
                                         b_cent=False)
-        pybullet_robot_system.update_system(sensor_data["base_pos"],
-                                            sensor_data["base_quat"],
-                                            sensor_data["base_lin_vel"],
-                                            sensor_data["base_ang_vel"],
-                                            sensor_data["joint_pos"],
-                                            sensor_data["joint_vel"],
-                                            b_cent=False)
+
+        # pybullet_robot_system.update_system(sensor_data["base_pos"],
+        # sensor_data["base_quat"],
+        # sensor_data["base_lin_vel"],
+        # sensor_data["base_ang_vel"],
+        # sensor_data["joint_pos"],
+        # sensor_data["joint_vel"],
+        # b_cent=False)
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
@@ -290,7 +316,10 @@ if __name__ == "__main__":
 
             ## TEST
             link = "ltorso"
+            # M = get_mass_matrix(robot, sensor_data)
             r_sole_jac = get_jacobian(robot, link_id[link], sensor_data)
+            r_sol_jac2 = get_jacobian2(robot, link_id[link], sensor_data)
+            __import__('ipdb').set_trace()
             r_sole_vel = get_spatial_velocities(robot, link_id[link])
             qdot = get_qdot(robot, sensor_data)
             qdot_from_dart = robot_system.get_q_dot()

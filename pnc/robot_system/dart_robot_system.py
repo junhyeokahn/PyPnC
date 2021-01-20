@@ -6,7 +6,6 @@ import time, math
 from collections import OrderedDict
 
 from scipy.linalg import block_diag
-import pybullet as p
 import dartpy as dart
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -19,19 +18,22 @@ class DartRobotSystem(RobotSystem):
     """
     Dart considers floating base with 6 positions and 6 velocities with the
     order of rotx, roty, rotz, x, y, z. Therefore, n_q = n_v
+    Note that the joint named with 'rootJoint' has 6 dof to represent the
+    floating base.
     """
-    def __init__(self, filepath, b_print_info=False):
-        super(DartRobotSystem, self).__init__(filepath, b_fixed_base,
+    def __init__(self, filepath, b_fixed_base, b_print_info=False):
+        super(DartRobotSystem, self).__init__(filepath, None, b_fixed_base,
                                               b_print_info)
 
-    def _config_robot(self, filepath):
+    def _config_robot(self, filepath, package_dir):
         self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
 
         for i in range(self._skel.getNumJoints()):
             j = self._skel.getJoint(i)
-            if j.getName() is 'rootJoint':
+            if j.getName() == 'rootJoint':
+                self._n_floating = j.getNumDofs()
                 assert (not self._b_fixed_base)
-                self._n_floating += j.getNumDofs()
+                assert self._n_floating == 6
             elif j.getType() != "WeldJoint":
                 self._joint_id[j.getName()] = j
             else:
@@ -101,7 +103,7 @@ class DartRobotSystem(RobotSystem):
 
         assert len(joint_pos.keys()) == self._n_a
 
-        if self._b_fixed_base:
+        if not self._b_fixed_base:
             # Floating Base Robot
             # Assume base_iso is representing root com frame
             p_joint_com_in_joint = self._skel.getRootBodyNode().getLocalCOM()
@@ -110,8 +112,7 @@ class DartRobotSystem(RobotSystem):
             adjoint_joint_com_in_joint = util.adjoint(T_joint_com)
             joint_iso = dart.math.Isometry3()
             joint_iso.set_rotation(
-                np.reshape(np.asarray(p.getMatrixFromQuaternion(base_quat)),
-                           (3, 3)))
+                np.reshape(np.asarray(util.quat_to_rot(base_quat)), (3, 3)))
             joint_iso.set_translation(
                 base_pos - np.dot(joint_iso.rotation(), p_joint_com_in_joint))
             base_vel_in_world = np.concatenate([base_ang_vel, base_lin_vel])
@@ -132,7 +133,7 @@ class DartRobotSystem(RobotSystem):
                 dart.dynamics.Frame.World())
         else:
             # Fixed Base Robot
-            pass
+            raise NotImplementedError
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):

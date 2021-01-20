@@ -7,7 +7,11 @@ from util import util as util
 
 
 class RobotSystem(abc.ABC):
-    def __init__(self, filepath, b_fixed_base, b_print_robot_info=False):
+    def __init__(self,
+                 filepath,
+                 package_name,
+                 b_fixed_base,
+                 b_print_robot_info=False):
         """
         Base RobotSystem Class
 
@@ -32,11 +36,11 @@ class RobotSystem(abc.ABC):
         self._joint_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        self._config_robot(filepath)
+        self._config_robot(filepath, package_name)
 
         if b_print_robot_info:
             print("=" * 80)
-            print("PyBulletRobotSystem")
+            print("PnCRobot")
             print("nq: ", self._n_q, ", nv: ", self._n_q_dot, ", na: ",
                   self._n_a, ", nvirtual: ", self._n_floating)
             print("+" * 80)
