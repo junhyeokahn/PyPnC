@@ -63,6 +63,14 @@ class AtlasInterface(Interface):
         self._sp.prev_state = self._control_architecture.prev_state
         self._sp.state = self._control_architecture.state
 
+        ## TEST
+        dart_iso = self._robot.get_link_iso("r_sole")
+        print("Link Pos from Dart")
+        print(dart_iso[0:3, 3])
+        print("Link Rot from Dart")
+        print(dart_iso[0:3, 0:3])
+        ## TEST
+
         return command
 
     @property

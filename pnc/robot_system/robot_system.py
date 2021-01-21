@@ -8,7 +8,7 @@ from util import util as util
 
 class RobotSystem(abc.ABC):
     def __init__(self,
-                 filepath,
+                 urdf_file,
                  package_name,
                  b_fixed_base,
                  b_print_robot_info=False):
@@ -17,8 +17,10 @@ class RobotSystem(abc.ABC):
 
         Parameters
         ----------
-        filepath (str):
-            urdf path
+        urdf_file (str):
+            urdf file
+        package_name (str):
+            mesh directory
         """
         self._b_fixed_base = b_fixed_base
 
@@ -36,7 +38,7 @@ class RobotSystem(abc.ABC):
         self._joint_id = OrderedDict()
         self._link_id = OrderedDict()
 
-        self._config_robot(filepath, package_name)
+        self._config_robot(urdf_file, package_name)
 
         if b_print_robot_info:
             print("=" * 80)
@@ -118,7 +120,7 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _config_robot(self, filepath):
+    def _config_robot(self, urdf_file):
         """
         Configure following properties:
             robot_id (int):
@@ -148,7 +150,7 @@ class RobotSystem(abc.ABC):
 
         Parameters
         ----------
-        filepath (str): urdf path
+        urdf_file (str): urdf path
         """
         pass
 
@@ -190,10 +192,14 @@ class RobotSystem(abc.ABC):
 
     @abc.abstractmethod
     def update_system(self,
-                      base_pos,
-                      base_quat,
-                      base_lin_vel,
-                      base_ang_vel,
+                      base_com_pos,
+                      base_com_quat,
+                      base_com_lin_vel,
+                      base_com_ang_vel,
+                      base_joint_pos,
+                      base_joint_quat,
+                      base_joint_lin_vel,
+                      base_joint_ang_vel,
                       joint_pos,
                       joint_vel,
                       b_cent=False):

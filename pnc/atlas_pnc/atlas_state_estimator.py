@@ -17,12 +17,13 @@ class AtlasStateEstimator(object):
     def update(self, sensor_data):
 
         # Update Encoders
-        self._robot.update_system(sensor_data["base_pos"],
-                                  sensor_data["base_quat"],
-                                  sensor_data["base_lin_vel"],
-                                  sensor_data["base_ang_vel"],
-                                  sensor_data["joint_pos"],
-                                  sensor_data["joint_vel"])
+        self._robot.update_system(
+            sensor_data["base_com_pos"], sensor_data["base_com_quat"],
+            sensor_data["base_com_lin_vel"], sensor_data["base_com_ang_vel"],
+            sensor_data["base_joint_pos"], sensor_data["base_joint_quat"],
+            sensor_data["base_joint_lin_vel"],
+            sensor_data["base_joint_ang_vel"], sensor_data["joint_pos"],
+            sensor_data["joint_vel"])
 
         # Update Contact Info
         self._sp.b_rf_contact = sensor_data["b_rf_contact"]

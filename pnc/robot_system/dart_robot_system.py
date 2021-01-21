@@ -8,7 +8,6 @@ from collections import OrderedDict
 from scipy.linalg import block_diag
 import dartpy as dart
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 
 from pnc.robot_system.robot_system import RobotSystem
 from util import util as util
@@ -21,12 +20,12 @@ class DartRobotSystem(RobotSystem):
     Note that the joint named with 'rootJoint' has 6 dof to represent the
     floating base.
     """
-    def __init__(self, filepath, b_fixed_base, b_print_info=False):
-        super(DartRobotSystem, self).__init__(filepath, None, b_fixed_base,
+    def __init__(self, urdf_file, b_fixed_base, b_print_info=False):
+        super(DartRobotSystem, self).__init__(urdf_file, None, b_fixed_base,
                                               b_print_info)
 
-    def _config_robot(self, filepath, package_dir):
-        self._skel = dart.utils.DartLoader().parseSkeleton(filepath)
+    def _config_robot(self, urdf_file, package_dir):
+        self._skel = dart.utils.DartLoader().parseSkeleton(urdf_file)
 
         for i in range(self._skel.getNumJoints()):
             j = self._skel.getJoint(i)
@@ -93,10 +92,14 @@ class DartRobotSystem(RobotSystem):
         return command
 
     def update_system(self,
-                      base_pos,
-                      base_quat,
-                      base_lin_vel,
-                      base_ang_vel,
+                      base_com_pos,
+                      base_com_quat,
+                      base_com_lin_vel,
+                      base_com_ang_vel,
+                      base_joint_pos,
+                      base_joint_quat,
+                      base_joint_lin_vel,
+                      base_joint_ang_vel,
                       joint_pos,
                       joint_vel,
                       b_cent=False):
@@ -105,26 +108,18 @@ class DartRobotSystem(RobotSystem):
 
         if not self._b_fixed_base:
             # Floating Base Robot
-            # Assume base_iso is representing root com frame
             p_joint_com_in_joint = self._skel.getRootBodyNode().getLocalCOM()
-            T_joint_com = np.eye(4)
-            T_joint_com[0:3, 3] = p_joint_com_in_joint
-            adjoint_joint_com_in_joint = util.adjoint(T_joint_com)
             joint_iso = dart.math.Isometry3()
             joint_iso.set_rotation(
-                np.reshape(np.asarray(util.quat_to_rot(base_quat)), (3, 3)))
+                np.reshape(np.asarray(util.quat_to_rot(base_com_quat)),
+                           (3, 3)))
             joint_iso.set_translation(
-                base_pos - np.dot(joint_iso.rotation(), p_joint_com_in_joint))
-            base_vel_in_world = np.concatenate([base_ang_vel, base_lin_vel])
-            base_vel_in_com = np.dot(
-                block_diag(joint_iso.rotation().transpose(),
-                           joint_iso.rotation().transpose()),
-                base_vel_in_world)
-            joint_vel_in_joint = np.dot(adjoint_joint_com_in_joint,
-                                        base_vel_in_com)
-            joint_vel_in_world = np.dot(
-                block_diag(joint_iso.rotation(), joint_iso.rotation()),
-                joint_vel_in_joint)
+                base_com_pos -
+                np.dot(joint_iso.rotation(), p_joint_com_in_joint))
+
+            joint_vel_in_world = np.zeros(6)
+            joint_vel_in_world[0:3] = base_joint_ang_vel
+            joint_vel_in_world[3:6] = base_joint_lin_vel
             self._skel.getRootJoint().setSpatialMotion(
                 joint_iso, dart.dynamics.Frame.World(),
                 np.reshape(joint_vel_in_world, (6, 1)),
