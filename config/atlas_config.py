@@ -8,6 +8,9 @@ class KinSimConfig(object):
     VIDEO_RECORD = False
     DYN_LIB = "dart"
 
+    INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
+    INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
+
 
 class DynSimConfig(object):
     CONTROLLER_DT = 0.01
@@ -25,7 +28,7 @@ class DynSimConfig(object):
 
 
 class PnCConfig(object):
-    DYN_LIB = "pinocchio"  #"dart"
+    DYN_LIB = "dart"  # "pinocchio"
     CONTROLLER_DT = DynSimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1

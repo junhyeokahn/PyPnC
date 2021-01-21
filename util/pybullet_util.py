@@ -60,10 +60,11 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
     else:
         base_link_state = p.getLinkState(robot, link_id[base_link])
         base_pos, base_quat = base_link_state[0], base_link_state[1]
-    T_w_b = RpToTrans(quat_to_rot(np.array(base_quat)), np.array(base_pos))
-    T_w_ee = RpToTrans(quat_to_rot(np.array(ee_link_state[1])),
-                       np.array(ee_link_state[0]))
-    T_b_ee = np.dot(TransInv(T_w_b), T_w_ee)
+    T_w_b = liegroup.RpToTrans(util.quat_to_rot(np.array(base_quat)),
+                               np.array(base_pos))
+    T_w_ee = liegroup.RpToTrans(util.quat_to_rot(np.array(ee_link_state[1])),
+                                np.array(ee_link_state[0]))
+    T_b_ee = np.dot(liegroup.TransInv(T_w_b), T_w_ee)
     for i, joint_name in enumerate(open_chain_joints):
         joint_info = p.getJointInfo(robot, joint_id[joint_name])
         link_name = joint_info[12].decode("utf-8")
@@ -71,10 +72,10 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
         joint_axis = joint_info[13]
         screw_at_joint = np.zeros(6)
         link_state = p.getLinkState(robot, link_id[link_name])
-        T_w_j = RpToTrans(quat_to_rot(np.array(link_state[5])),
-                          np.array(link_state[4]))
-        T_ee_j = np.dot(TransInv(T_w_ee), T_w_j)
-        Adj_ee_j = Adjoint(T_ee_j)
+        T_w_j = liegroup.RpToTrans(util.quat_to_rot(np.array(link_state[5])),
+                                   np.array(link_state[4]))
+        T_ee_j = np.dot(liegroup.TransInv(T_w_ee), T_w_j)
+        Adj_ee_j = liegroup.Adjoint(T_ee_j)
         if joint_type == p.JOINT_REVOLUTE:
             screw_at_joint[0:3] = np.array(joint_axis)
         elif joint_type == p.JOINT_PRISMATIC:
@@ -84,6 +85,14 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
         joint_screws_in_ee[:, i] = np.dot(Adj_ee_j, screw_at_joint)
 
     return joint_screws_in_ee, T_b_ee
+
+
+def get_link_iso(robot, link_idx):
+    info = p.getLinkState(robot, link_idx)
+    pos = np.array(info[0])
+    rot = util.quat_to_rot(np.array(info[1]))
+
+    return liegroup.RpToTrans(rot, pos)
 
 
 def set_joint_friction(robot, joint_id, max_force=0):
@@ -227,3 +236,9 @@ def is_key_triggered(keys, key):
     if o in keys:
         return keys[ord(key)] & p.KEY_WAS_TRIGGERED
     return False
+
+
+def set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos):
+    p.resetBasePositionAndOrientation(robot, base_pos, base_quat)
+    for k, v in joint_pos.items():
+        p.resetJointState(robot, joint_id[k], v, 0.)
