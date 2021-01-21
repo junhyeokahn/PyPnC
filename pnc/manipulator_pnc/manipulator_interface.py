@@ -71,18 +71,4 @@ class ManipulatorInterface(Interface):
 
         jtrq = np.dot(mass_matrix, qddot_des) + c + g
 
-        print("-" * 80)
-        print("pos")
-        print(pos)
-        print("err")
-        print(err)
-        print("xddot_des")
-        print(xddot_des)
-        print("qddot_des")
-        print(qddot_des)
-        print("jtrq")
-        print(jtrq)
-        # __import__('ipdb').set_trace()
-        1 + 1
-
         return jtrq

@@ -70,6 +70,6 @@ if __name__ == "__main__":
 
         p.stepSimulation()
 
-        # time.sleep(dt)
+        time.sleep(dt)
         t += dt
         count += 1

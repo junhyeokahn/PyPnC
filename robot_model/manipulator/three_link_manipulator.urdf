@@ -7,7 +7,7 @@
         <color rgba="1 1 1 0.7"/>
     </material>
 
-    <link name="l0">
+    <link name="world">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <mass value="1." />
@@ -32,7 +32,7 @@
 
     <joint name="j0" type="revolute">
         <axis rpy="0 0 0" xyz="0 0 1"/>
-        <parent link="l0"/>
+        <parent link="world"/>
         <child link="l1"/>
         <limit effort="150.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.15"/>
     </joint>

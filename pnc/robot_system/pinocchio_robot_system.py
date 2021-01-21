@@ -155,7 +155,7 @@ class PinocchioRobotSystem(RobotSystem):
         else:
             # Fixed Based Robot
             self._q = np.copy(list(joint_pos.values()))
-            self._q_dot = np.copy(list(joint_pos.values()))
+            self._q_dot = np.copy(list(joint_vel.values()))
 
         self._joint_positions = np.array(list(joint_pos.values()))
         self._joint_velocities = np.array(list(joint_vel.values()))

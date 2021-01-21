@@ -140,7 +140,7 @@ class DartRobotSystem(RobotSystem):
                 dart.dynamics.Frame.World())
         else:
             # Fixed Base Robot
-            raise NotImplementedError
+            pass
 
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):
