@@ -15,7 +15,10 @@ from util import util as util
 class PinocchioRobotSystem(RobotSystem):
     """
     Pinnochio considers floating base with 7 positions and 6 velocities with the
-    order of [x, y, z, quat_x, quat_y, quat_z, quat_w, joints] and [].
+    order of [x, y, z, quat_x, quat_y, quat_z, quat_w, joints] and
+    [xdot, ydot, zdot, ang_x, ang_y, ang_z, joints].
+    Note that first six element of generalized velocities are represented in the
+    base joint frame acting on the base joint frame.
     """
     def __init__(self,
                  urdf_file,
@@ -82,9 +85,24 @@ class PinocchioRobotSystem(RobotSystem):
 
     def get_q_idx(self, joint_id):
         if type(joint_id) is list:
-            return [7 + self._joint_id[id] for id in joint_id]
+            return [self.get_q_idx(j_id) for j_id in joint_id]
         else:
-            return 7 + self._joint_id[joint_id]
+            return self._model.joints[self._model.getJointId(joint_id)].idx_q
+
+    def get_q_dot_idx(self, joint_id):
+        if type(joint_id) is list:
+            return [self.get_q_dot_idx(j_id) for j_id in joint_id]
+        else:
+            return self._model.joints[self._model.getJointId(joint_id)].idx_v
+
+    def get_joint_idx(self, joint_id):
+        if type(joint_id) is list:
+            return [self.get_joint_idx(j_id) for j_id in joint_id]
+        else:
+            for i, (k, v) in enumerate(self._joint_id.items()):
+                if k == joint_id:
+                    return i
+            raise ValueError("Worng joint_id")
 
     def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
                                 joint_trq_cmd):
@@ -117,16 +135,107 @@ class PinocchioRobotSystem(RobotSystem):
 
         if not self._b_fixed_base:
             # Floating Based Robot
-            q = np.zeros(self._n_q)
-            q[0:3] = np.copy(base_pos)
-            q[3:7] = np.copy(base_quat)
-            q[7:7 + self._n_a] = np.copy(list(joint_pos.values()))
+            self._q = np.zeros(self._n_q)
+            self._q[0:3] = np.copy(base_joint_pos)
+            self._q[3:7] = np.copy(base_joint_quat)
+            self._q[7:7 + self._n_a] = np.copy(list(joint_pos.values()))
 
-            rot_w_base = util.quat_to_rot(base_quat)
-            qdot = np.zeros(self._n_q_dot)
-            qdot[0:3] = np.dot(rot_w_base.transpose(), np.copy(base_lin_vel))
-            qdot[3:6] = np.dot(rot_w_base.transpose(), np.copy(base_ang_vel))
-            qdot[6:6 + self._n_a] = np.copy(list(joint_vel.values()))
+            rot_w_basejoint = util.quat_to_rot(base_joint_quat)
+            twist_basejoint_in_world = np.zeros(6)
+            twist_basejoint_in_world[0:3] = base_joint_ang_vel
+            twist_basejoint_in_world[3:6] = base_joint_lin_vel
+            augrot_joint_world = np.zeros((6, 6))
+            augrot_joint_world[0:3, 0:3] = rot_w_basejoint.transpose()
+            augrot_joint_world[3:6, 3:6] = rot_w_basejoint.transpose()
+            twist_basejoint_in_joint = np.dot(augrot_joint_world,
+                                              twist_basejoint_in_world)
+            self._q_dot = np.zeros(self._n_q_dot)
+            self._q_dot[0:3] = twist_basejoint_in_joint[3:6]
+            self._q_dot[3:6] = twist_basejoint_in_joint[0:3]
+            self._q_dot[6:6 + self._n_a] = np.copy(list(joint_vel.values()))
         else:
             # Fixed Based Robot
             raise NotImplementedError
+
+        self._joint_positions = np.array(list(joint_pos.values()))
+        self._joint_velocities = np.array(list(joint_vel.values()))
+
+        pin.forwardKinematics(self._model, self._data, self._q, self._q_dot)
+
+        if b_cent:
+            self._update_centroidal_quantities()
+
+    def _update_centroidal_quantities(self):
+        pin.ccrba(self._model, self._data, self._q, self._q_dot)
+        ## TODO (JH): Check this is Local Frame
+        self._hg = np.copy(self._data.hg)
+        self._Ag = np.copy(self._data.Ag)
+        self._Ig = np.copy(self._data.Ig)
+        self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
+
+    def get_q(self):
+        return self._q
+
+    def get_q_dot(self):
+        return self._q_dot
+
+    def get_mass_matrix(self):
+        return pin.crba(self._model, self._data, self._q)
+
+    def get_gravity(self):
+        return pin.computeGeneralizedGravity(self._model, self._data, self._q)
+
+    def get_coriolis(self):
+        return pin.nonLinearEffects(self._model, self._data, self._q,
+                                    self._v) - self.get_gravity()
+
+    def get_com_pos(self):
+        pin.centerOfMass(self._model, self._data, self._q, self._v)
+        return self._data.com[0]
+
+    def get_com_lin_vel(self):
+        pin.centerOfMass(self._model, self._data, self._q, self._v)
+        return self._data.vcom[0]
+
+    def get_com_lin_jacobian(self):
+        return pin.jacobianCenterOfMass(self._model, self._data, self._q)
+
+    def get_com_lin_jacobian_dot(self):
+        return (pin.computeCentroidalMapTimeVariation(
+            self._model, self._data, self._q,
+            self._v)[0:3, :]) / self._total_mass
+
+    def get_link_iso(self, link_id):
+        ret = np.eye(4)
+        frame_id = self._model.getFrameId(link_id)
+        trans = pin.updateFramePlacement(self._model, self._data, frame_id)
+        ret[0:3, 0:3] = trans.rotation
+        ret[0:3, 3] = trans.translation
+        return ret
+
+    def get_link_vel(self, link_id):
+        ret = np.zeros(6)
+        frame_id = self._model.getFrameId(link_id)
+        ## TODO (JH) : No option arguement
+        # spatial_vel = pin.getFrameVelocity(self._model, self._data, frame_id,
+        # pin.ReferenceFrame.LOCAL)
+
+        spatial_vel = pin.getFrameVelocity(self._model, self._data, frame_id)
+
+        ret[0:3] = spatial_vel.angular
+        ret[3:6] = spatial_vel.linear
+
+        return ret
+
+    def get_link_jacobian(self, link_id):
+        frame_id = self._model.getFrameId(link_id)
+
+        return pin.computeFrameJacobian(self._model, self._data, self._q,
+                                        pin.ReferenceFrame.LOCAL)
+
+    def get_link_jacobian_dot(self, link_id):
+        frame_id = self._model.getFrameId(link_id)
+
+        return pin.getFrameJacobianTimeVariation(self._model, self._data,
+                                                 frame_id,
+                                                 pin.ReferenceFrame.LOCAL)

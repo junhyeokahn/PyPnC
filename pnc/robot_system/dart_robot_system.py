@@ -74,6 +74,23 @@ class DartRobotSystem(RobotSystem):
         else:
             return self._joint_id[joint].getIndexInSkeleton(0)
 
+    def get_q_dot_idx(self, joint_id):
+        if type(joint_id) is list:
+            return [
+                self._joint_id[id].getIndexInSkeleton(0) for id in joint_id
+            ]
+        else:
+            return self._joint_id[joint].getIndexInSkeleton(0)
+
+    def get_joint_idx(self, joint_id):
+        if type(joint_id) is list:
+            return [self.get_joint_idx(j_id) for j_id in joint_id]
+        else:
+            for i, (k, v) in enumerate(self._joint_id.items()):
+                if k == joint_id:
+                    return i
+            raise ValueError("worng joint_id")
+
     def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
                                 joint_trq_cmd):
 
@@ -137,13 +154,16 @@ class DartRobotSystem(RobotSystem):
             self._joint_id[v_k].setVelocity(0, v_v)
         self._skel.computeForwardKinematics()
 
+        self._joint_positions = np.array(list(joint_pos.values()))
+        self._joint_velocities = np.array(list(joint_vel.values()))
+
         if b_cent:
             self._update_centroidal_quantities()
 
     def _update_centroidal_quantities(self):
-        self._I_cent = np.zeros((6, 6))
-        self._J_cent = np.zeros((6, self._n_q_dot))
-        self._A_cent = np.zeros((6, self._n_q_dot))
+        self._Ig = np.zeros((6, 6))
+        self._Jg = np.zeros((6, self._n_q_dot))
+        self._Ag = np.zeros((6, self._n_q_dot))
         pCoM_g = self.get_com_pos()
 
         for name, bn in self._link_id.items():
@@ -157,10 +177,11 @@ class DartRobotSystem(RobotSystem):
             T_lc[0:3, 0:3] = R_gl.transpose()
             T_lc[0:3, 3] = np.dot(R_gl.transpose(), (pCoM_g - p_gl))
             AdT_lc = util.adjoint(T_lc)
-            self._I_cent += np.dot(np.dot(AdT_lc.transpose(), I), AdT_lc)
-            self._A_cent += np.dot(np.dot(AdT_lc.transpose(), I), jac)
+            self._Ig += np.dot(np.dot(AdT_lc.transpose(), I), AdT_lc)
+            self._Ag += np.dot(np.dot(AdT_lc.transpose(), I), jac)
 
-        self._Jcent = np.dot(np.linalg.inv(self._I_cent), self._A_cent)
+        self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
+        self._hg = np.dot(self._Ig, self.get_q_dot())
 
     def get_q(self):
         return self._skel.getPositions()

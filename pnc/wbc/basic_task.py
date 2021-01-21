@@ -25,11 +25,9 @@ class BasicTask(Task):
     def update_cmd(self):
 
         if self._task_type is "JOINT":
-            pos = self._robot.get_q(
-            )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
+            pos = self._robot.joint_positions
             pos_err = self._pos_des - pos
-            vel_act = self._robot.get_q_dot(
-            )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
+            vel_act = self._robot.joint_velocities
             if self._b_data_save:
                 self._data_saver.add('joint_pos_des', self._pos_des.copy())
                 self._data_saver.add('joint_vel_des', self._vel_des.copy())
@@ -37,9 +35,10 @@ class BasicTask(Task):
                 self._data_saver.add('joint_vel', vel_act.copy())
                 self._data_saver.add('w_joint', self._w_hierarchy)
         elif self._task_type is "SELECTED_JOINT":
-            pos = self._robot.get_q()[self._robot.get_q_idx(self._target_id)]
+            pos = self._robot.joint_positions[self._robot.get_joint_idx(
+                self._target_id)]
             pos_err = self._pos_des - pos
-            vel_act = self._robot.get_q_dot()[self._robot.get_q_idx(
+            vel_act = self._robot.joint_velocities[self._robot.get_joint_idx(
                 self._target_id)]
             if self._b_data_save:
                 self._data_saver.add('joint_pos_des', self._pos_des.copy())
@@ -104,7 +103,8 @@ class BasicTask(Task):
                            self._robot.n_a] = np.eye(self._dim)
             self._jacobian_dot_q_dot = np.zeros(self._dim)
         elif self._task_type is "SELECTED_JOINT":
-            for i, jid in enumerate(self._robot.get_q_idx(self._target_id)):
+            for i, jid in enumerate(self._robot.get_q_dot_idx(
+                    self._target_id)):
                 self._jacobian[i, jid] = 1
             self._jacobian_dot_q_dot = np.zeros(self._dim)
         elif self._task_type is "LINK_XYZ":

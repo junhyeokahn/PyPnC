@@ -58,11 +58,8 @@ class AtlasController(object):
             False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
-            joint_acc_cmd,
-            self._robot.get_q_dot()
-            [self._robot.n_floating:self._robot.n_floating + self._robot.n_a],
-            self._robot.get_q()[self._robot.n_floating:self._robot.n_floating +
-                                self._robot.n_a])
+            joint_acc_cmd, self._robot.joint_velocities,
+            self._robot.joint_positions)
 
         command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
                                                       joint_vel_cmd,
@@ -70,8 +67,7 @@ class AtlasController(object):
         return command
 
     def first_visit(self):
-        joint_pos_ini = self._robot.get_q(
-        )[self._robot.n_floating:self._robot.n_floating + self._robot.n_a]
+        joint_pos_ini = self._robot.joint_positions
         self._joint_integrator.initialize_states(np.zeros(self._robot.n_a),
                                                  joint_pos_ini)
 

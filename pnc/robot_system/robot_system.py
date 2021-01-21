@@ -53,9 +53,13 @@ class RobotSystem(abc.ABC):
             util.pretty_print([*self._link_id.keys()])
             print("=" * 80)
 
-        self._I_cent = np.zeros((6, 6))
-        self._J_cent = np.zeros((6, self._n_q_dot))
-        self._A_cent = np.zeros((6, self._n_q_dot))
+        self._joint_positions = None
+        self._joint_velocities = None
+
+        self._Ig = np.zeros((6, 6))
+        self._Jg = np.zeros((6, self._n_q_dot))
+        self._Ag = np.zeros((6, self._n_q_dot))
+        self._hg = np.zeros(6)
 
     @property
     def n_floating(self):
@@ -98,24 +102,36 @@ class RobotSystem(abc.ABC):
         return self._link_id
 
     @property
-    def I_cent(self):
-        return self._I_cent
+    def Ig(self):
+        return self._Ig
 
     @property
-    def J_cent(self):
-        return self._J_cent
+    def Jg(self):
+        return self._Jg
 
     @property
-    def A_cent(self):
-        return self._A_cent
+    def Ag(self):
+        return self._Ag
+
+    @property
+    def hg(self):
+        return self._hg
+
+    @property
+    def joint_positions(self):
+        return self._joint_positions
+
+    @property
+    def joint_velocities(self):
+        return self._joint_velocities
 
     @abc.abstractmethod
     def _update_centroidal_quantities(self):
         """
-        Update I_cent, A_cent, J_cent:
-            centroid_momentum = I_cent * centroid_velocity = A_cent * qdot
-                      J_cent = inv(I_cent) * A_cent
-            centroid_velocity = J_cent * qdot
+        Update Ig, Ag, Jg:
+            centroid_momentum = Ig * centroid_velocity = Ag * qdot
+                      Jg = inv(Ig) * Ag
+            centroid_velocity = Jg * qdot
         """
         pass
 
@@ -156,6 +172,36 @@ class RobotSystem(abc.ABC):
 
     @abc.abstractmethod
     def get_q_idx(self, joint_id):
+        """
+        Get joint index in generalized coordinate
+
+        Parameters
+        ----------
+        joint_id (str or list of str)
+
+        Returns
+        -------
+        joint_idx (int or list of int)
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_q_dot_idx(self, joint_id):
+        """
+        Get joint index in generalized coordinate
+
+        Parameters
+        ----------
+        joint_id (str or list of str)
+
+        Returns
+        -------
+        joint_idx (int or list of int)
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_joint_idx(self, joint_id):
         """
         Get joint index in generalized coordinate
 
