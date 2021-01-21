@@ -25,7 +25,7 @@ class DynSimConfig(object):
 
 
 class PnCConfig(object):
-    DYN_LIB = "dart"
+    DYN_LIB = "pinocchio"  #"dart"
     CONTROLLER_DT = DynSimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1

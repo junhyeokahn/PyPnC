@@ -165,6 +165,7 @@ class DartRobotSystem(RobotSystem):
             jac = self._skel.getJacobian(bn)
             p_gl = bn.getWorldTransform().translation()
             R_gl = bn.getWorldTransform().rotation()
+            raise NotImplementedError
             I = bn.getSpatialInertia()
             T_lc = np.eye(4)
             T_lc[0:3, 0:3] = R_gl.transpose()

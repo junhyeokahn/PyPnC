@@ -303,7 +303,7 @@ if __name__ == "__main__":
                                 nominal_sensor_data["base_joint_lin_vel"],
                                 nominal_sensor_data["base_joint_ang_vel"],
                                 nominal_sensor_data["joint_pos"],
-                                nominal_sensor_data["joint_vel"], True)
+                                nominal_sensor_data["joint_vel"], False)
 
         ## TEST
         print("=" * 80)

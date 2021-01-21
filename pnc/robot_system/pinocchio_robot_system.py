@@ -52,7 +52,7 @@ class PinocchioRobotSystem(RobotSystem):
             if j_name == 'root_joint' or j_name == 'universe':
                 pass
             else:
-                self._joint_id[j_name] = j_id
+                self._joint_id[j_name] = j_id - 2
 
         for f_id, frame in enumerate(self._model.frames):
             if frame.name == 'root_joint' or frame.name == 'universe':
