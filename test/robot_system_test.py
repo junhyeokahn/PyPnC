@@ -2,19 +2,20 @@ import os
 import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
-import time
-import math
-import copy
+import time, math
 from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
-np.set_printoptions(precision=3)
 
-from config.atlas_config import KinSimConfig
-from util.util import *
-from util.liegroup import *
-from util.robot_kinematics import *
+from config.atlas_config import DynSimConfig
+from util import util
+from util import liegroup
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--dyn_lib", default=None, type=str)
+args = parser.parse_args()
 
 
 def get_robot_config(robot):
@@ -31,18 +32,31 @@ def get_robot_config(robot):
     nv += 1
     na = len(joint_id)
 
-    if KinSimConfig.PRINT_ROBOT_INFO:
+    base_pos, base_quat = p.getBasePositionAndOrientation(robot)
+    rot_world_com = util.quat_to_rot(base_quat)
+    rot_world_basejoint = util.quat_to_rot(
+        np.array(DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT))
+    pos_basejoint_to_basecom = base_pos - np.array(
+        DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT)
+    rot_basejoint_to_basecom = np.dot(rot_world_basejoint.transpose(),
+                                      rot_world_com)
+
+    if DynSimConfig.PRINT_ROBOT_INFO:
         print("=" * 80)
         print("SimulationRobot")
         print("nq: ", nq, ", nv: ", nv, ", na: ", na)
+        print("Vector from base joint frame to base com frame")
+        print(pos_basejoint_to_basecom)
+        print("Rotation from base joint frame to base com frame")
+        print(rot_basejoint_to_basecom)
         print("+" * 80)
         print("Joint Infos")
-        pretty_print(joint_id)
+        util.pretty_print(joint_id)
         print("+" * 80)
         print("Link Infos")
-        pretty_print(link_id)
+        util.pretty_print(link_id)
 
-    return nq, nv, na, joint_id, link_id
+    return nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom
 
 
 def set_initial_config(robot, joint_id):
@@ -66,31 +80,62 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
 
 
-def set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos):
-    p.resetBasePositionAndOrientation(robot, base_pos, base_quat)
-    for k, v in joint_pos.items():
-        p.resetJointState(robot, joint_id[k], v, 0.)
-
-
 def set_joint_friction(robot, joint_id, max_force=0):
     p.setJointMotorControlArray(robot, [*joint_id.values()],
                                 p.VELOCITY_CONTROL,
                                 forces=[max_force] * len(joint_id))
 
 
-def get_sensor_data(robot, joint_id, link_id):
+def set_motor_trq(robot, joint_id, command):
+    assert len(joint_id) == len(command['joint_trq'])
+    trq_applied = OrderedDict()
+    for (joint_name, pos_des), (_, vel_des), (_, trq_des) in zip(
+            command['joint_pos'].items(), command['joint_vel'].items(),
+            command['joint_trq'].items()):
+        joint_state = p.getJointState(robot, joint_id[joint_name])
+        joint_pos, joint_vel = joint_state[0], joint_state[1]
+        trq_applied[joint_id[joint_name]] = (trq_des + DynSimConfig.KP *
+                                             (pos_des - joint_pos) +
+                                             DynSimConfig.KD *
+                                             (vel_des - joint_vel))
+    p.setJointMotorControlArray(robot,
+                                trq_applied.keys(),
+                                controlMode=p.TORQUE_CONTROL,
+                                forces=trq_applied.values())
+
+
+def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
+                    rot_basejoint_to_basecom):
     """
     Parameters
     ----------
     joint_id (dict):
         Joint ID Dict
+    link_id (dict):
+        Link ID Dict
+    pos_basejoint_to_basecom (np.ndarray):
+        3d vector from base joint frame to base com frame
+    rot_basejoint_to_basecom (np.ndarray):
+        SO(3) from base joint frame to base com frame
     Returns
     -------
     sensor_data (dict):
-        base_pos (np.array):
-            Base CoM Pos
-        base_quat (np.array):
-            Base CoM Quat
+        base_com_pos (np.array):
+            base com pos in world
+        base_com_quat (np.array):
+            base com quat in world
+        base_com_lin_vel (np.array):
+            base com lin vel in world
+        base_com_ang_vel (np.array):
+            base com ang vel in world
+        base_joint_pos (np.array):
+            base pos in world
+        base_joint_quat (np.array):
+            base quat in world
+        base_joint_lin_vel (np.array):
+            base lin vel in world
+        base_joint_ang_vel (np.array):
+            base ang vel in world
         joint_pos (dict):
             Joint pos
         joint_vel (dict):
@@ -102,14 +147,42 @@ def get_sensor_data(robot, joint_id, link_id):
     """
     sensor_data = OrderedDict()
 
-    base_pos, base_quat = p.getBasePositionAndOrientation(robot)
-    sensor_data['base_pos'] = np.asarray(base_pos)
-    sensor_data['base_quat'] = np.asarray(base_quat)
+    # Handle Base Frame Quantities
+    base_com_pos, base_com_quat = p.getBasePositionAndOrientation(robot)
+    sensor_data['base_com_pos'] = np.asarray(base_com_pos)
+    sensor_data['base_com_quat'] = np.asarray(base_com_quat)
 
-    base_lin_vel, base_ang_vel = p.getBaseVelocity(robot)
-    sensor_data['base_lin_vel'] = np.asarray(base_lin_vel)
-    sensor_data['base_ang_vel'] = np.asarray(base_ang_vel)
+    base_com_lin_vel, base_com_ang_vel = p.getBaseVelocity(robot)
+    sensor_data['base_com_lin_vel'] = np.asarray(base_com_lin_vel)
+    sensor_data['base_com_ang_vel'] = np.asarray(base_com_ang_vel)
 
+    rot_world_com = util.quat_to_rot(np.copy(sensor_data['base_com_quat']))
+    rot_world_joint = np.dot(rot_world_com,
+                             rot_basejoint_to_basecom.transpose())
+    sensor_data['base_joint_pos'] = sensor_data['base_com_pos'] - np.dot(
+        rot_world_joint, pos_basejoint_to_basecom)
+    sensor_data['base_joint_quat'] = util.rot_to_quat(rot_world_joint)
+    trans_joint_com = liegroup.RpToTrans(rot_basejoint_to_basecom,
+                                         pos_basejoint_to_basecom)
+    adT_joint_com = liegroup.Adjoint(trans_joint_com)
+    twist_com_in_world = np.zeros(6)
+    twist_com_in_world[0:3] = np.copy(sensor_data['base_com_ang_vel'])
+    twist_com_in_world[3:6] = np.copy(sensor_data['base_com_lin_vel'])
+    augrot_com_world = np.zeros((6, 6))
+    augrot_com_world[0:3, 0:3] = rot_world_com.transpose()
+    augrot_com_world[3:6, 3:6] = rot_world_com.transpose()
+    twist_com_in_com = np.dot(augrot_com_world, twist_com_in_world)
+    twist_joint_in_joint = np.dot(adT_joint_com, twist_com_in_com)
+    rot_world_joint = np.dot(rot_world_com,
+                             rot_basejoint_to_basecom.transpose())
+    augrot_world_joint = np.zeros((6, 6))
+    augrot_world_joint[0:3, 0:3] = rot_world_joint
+    augrot_world_joint[3:6, 3:6] = rot_world_joint
+    twist_joint_in_world = np.dot(augrot_world_joint, twist_joint_in_joint)
+    sensor_data['base_joint_lin_vel'] = np.copy(twist_joint_in_world[3:6])
+    sensor_data['base_joint_ang_vel'] = np.copy(twist_joint_in_world[0:3])
+
+    # Joint Quantities
     sensor_data['joint_pos'] = OrderedDict()
     sensor_data['joint_vel'] = OrderedDict()
     for k, v in joint_id.items():
@@ -117,102 +190,22 @@ def get_sensor_data(robot, joint_id, link_id):
         sensor_data['joint_pos'][k] = js[0]
         sensor_data['joint_vel'][k] = js[1]
 
-    rf_info = p.getLinkState(robot, link_id["r_sole"], False, True)
+    # Contact Sensing
+    rf_info = p.getLinkState(robot, link_id["r_sole"])
     rf_pos = rf_info[0]
-    lf_info = p.getLinkState(robot, link_id["l_sole"], False, True)
-    lf_pos = lf_info[0]
+    if rf_pos[2] <= 0.01:
+        sensor_data["b_rf_contact"] = True
+    else:
+        sensor_data["b_rf_contact"] = False
 
-    # pretty_print(sensor_data['joint_pos'])
-    # print('base_pos: ', sensor_data['base_pos'])
-    # print('base_quat: ',sensor_data['base_quat'])
-    # print('rf_pos: ', rf_pos)
-    # print('lf_pos: ', lf_pos)
-    # exit()
+    lf_info = p.getLinkState(robot, link_id["l_sole"])
+    lf_pos = lf_info[0]
+    if lf_pos[2] <= 0.01:
+        sensor_data["b_lf_contact"] = True
+    else:
+        sensor_data["b_lf_contact"] = False
 
     return sensor_data
-
-
-def get_qdot(robot, sensor_data):
-    ## Angular first, Linear Later
-    rot_w_base = quat_to_rot(sensor_data['base_quat'])
-    aug_rot = np.zeros((6, 6))
-    aug_rot[0:3, 0:3] = rot_w_base.transpose()
-    aug_rot[3:6, 3:6] = rot_w_base.transpose()
-    jvel = list(sensor_data['joint_vel'].values())
-    ret = np.zeros(6 + len(jvel))
-    ret[3:6] = np.copy(sensor_data['base_lin_vel'])
-    ret[0:3] = np.copy(sensor_data['base_ang_vel'])
-    ret[0:6] = np.dot(aug_rot, ret[0:6])
-    ret[6:] = np.array(jvel)
-
-    return ret
-
-
-def get_jacobian2(robot, link_idx, sensor_data):
-    link_state = p.getLinkState(robot,
-                                link_idx,
-                                computeLinkVelocity=1,
-                                computeForwardKinematics=1)
-
-    base_pos = np.copy(sensor_data['base_pos'])
-    base_quat = np.copy(sensor_data['base_quat'])
-    base_lin_vel = np.copy(sensor_data['base_lin_vel'])
-    base_ang_vel = np.copy(sensor_data['base_ang_vel'])
-
-    jpos = list(base_pos) + list(base_quat) + list(
-        sensor_data['joint_pos'].values())
-    zeros = [0.] * len(jpos)
-
-    __import__('ipdb').set_trace()
-    jac = p.calculateJacobian(robot,
-                              link_idx,
-                              link_state[2],
-                              jpos,
-                              zeros,
-                              zeros,
-                              flags=1)
-
-    return jac
-
-
-def get_jacobian(robot, link_idx, sensor_data):
-    link_state = p.getLinkState(robot,
-                                link_idx,
-                                computeLinkVelocity=1,
-                                computeForwardKinematics=1)
-    link_rot = quat_to_rot(sensor_data['base_quat'])
-    aug_link_rot = np.zeros((6, 6))
-    aug_link_rot[0:3, 0:3] = link_rot
-    aug_link_rot[3:6, 3:6] = link_rot
-
-    jpos = list(sensor_data['joint_pos'].values())
-    jvel = list(sensor_data['joint_vel'].values())
-    zeros = [0.] * len(jvel)
-    jac = p.calculateJacobian(robot, link_idx, link_state[2], jpos, zeros,
-                              zeros)
-    nv = len(jac[0][0])
-    ret = np.zeros((6, nv))
-    for row in range(3):
-        for col in range(nv):
-            ret[row, col] = jac[1][row][col]  # angular
-            ret[row + 3, col] = jac[0][row][col]  # linear
-
-    ret = np.dot(aug_link_rot, ret)
-
-    return ret
-
-
-def get_spatial_velocities(robot, link_idx):
-    link_state = p.getLinkState(robot,
-                                link_idx,
-                                computeLinkVelocity=1,
-                                computeForwardKinematics=1)
-    ret = np.zeros(6)
-    for i in range(3):
-        ret[i] = link_state[7][i]  # ang vel
-        ret[i + 3] = link_state[6][i]  # lin vel
-
-    return ret
 
 
 def is_key_triggered(keys, key):
@@ -230,23 +223,27 @@ if __name__ == "__main__":
                                  cameraYaw=120,
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
-    p.setGravity(0, 0, -9.81)
-    p.setPhysicsEngineParameter(fixedTimeStep=KinSimConfig.DT, numSubSteps=1)
+    p.setGravity(0, 0, -9.8)
+    p.setPhysicsEngineParameter(fixedTimeStep=DynSimConfig.CONTROLLER_DT,
+                                numSubSteps=DynSimConfig.N_SUBSTEP)
+    if DynSimConfig.VIDEO_RECORD:
+        if not os.path.exists('video'):
+            os.makedirs('video')
+        for f in os.listdir('video'):
+            os.remove('video/' + f)
+        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas.mp4")
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    # robot = p.loadURDF(
-    # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-    # [0, 0, 1.5 - 0.761], [0., 0., 0., 1.])
     robot = p.loadURDF(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        [0, 0, 1.5 - 0.761], [0., 0., 0., 1.])
+        DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
-
-    # Robot Configuration
-    nq, nv, na, joint_id, link_id = get_robot_config(robot)
+    nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = get_robot_config(
+        robot)
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -254,103 +251,62 @@ if __name__ == "__main__":
     # Joint Friction
     set_joint_friction(robot, joint_id, 2)
 
-    # Robot Model
-
-    from pnc.robot_system.dart_robot_system import DartRobotSystem
-    dart_robot_system = DartRobotSystem(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf", False, True)
-
-    # from pnc.robot_system.pybullet_robot_system import PyBulletRobotSystem
-    # pybullet_robot_system = PyBulletRobotSystem(
-    # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-    # ['rootJoint'], True)
+    # RobotSystem
+    if args.dyn_lib == 'dart':
+        from pnc.robot_system.dart_robot_system import DartRobotSystem
+        robot_sys = DartRobotSystem(
+            cwd +
+            "/robot_model/atlas/atlas_v4_with_multisense_relative_path.urdf",
+            False, True)
+    elif args.dyn_lib == 'pinocchio':
+        from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
+        robot_sys = PinocchioRobotSystem(
+            cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+            cwd + "/robot_model/atlas", False, True)
+    else:
+        raise ValueError
 
     # Run Sim
     t = 0
-    dt = KinSimConfig.DT
+    dt = DynSimConfig.CONTROLLER_DT
     count = 0
-
-    nominal_sensor_data = get_sensor_data(robot, joint_id, link_id)
-    base_pos = np.copy(nominal_sensor_data['base_pos'])
-    base_quat = np.copy(nominal_sensor_data['base_quat'])
-    joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
     while (1):
 
         # Get SensorData
-        sensor_data = get_sensor_data(robot, joint_id, link_id)
-        dart_robot_system.update_system(sensor_data["base_pos"],
-                                        sensor_data["base_quat"],
-                                        sensor_data["base_lin_vel"],
-                                        sensor_data["base_ang_vel"],
-                                        sensor_data["joint_pos"],
-                                        sensor_data["joint_vel"],
-                                        b_cent=False)
+        sensor_data = get_sensor_data(robot, joint_id, link_id,
+                                      pos_basejoint_to_basecom,
+                                      rot_basejoint_to_basecom)
 
-        # pybullet_robot_system.update_system(sensor_data["base_pos"],
-        # sensor_data["base_quat"],
-        # sensor_data["base_lin_vel"],
-        # sensor_data["base_ang_vel"],
-        # sensor_data["joint_pos"],
-        # sensor_data["joint_vel"],
-        # b_cent=False)
+        # Update Robot
+        robot_sys.update_system(
+            sensor_data["base_com_pos"], sensor_data["base_com_quat"],
+            sensor_data["base_com_lin_vel"], sensor_data["base_com_ang_vel"],
+            sensor_data["base_joint_pos"], sensor_data["base_joint_quat"],
+            sensor_data["base_joint_lin_vel"],
+            sensor_data["base_joint_ang_vel"], sensor_data["joint_pos"],
+            sensor_data["joint_vel"])
 
-        # Get Keyboard Event
-        keys = p.getKeyboardEvents()
+        ## TEST
+        target_link = 'r_sole'
+        ls = p.getLinkState(robot, link_id[target_link], 1, 1)
+        print("Link Pos from PyBullet")
+        print(np.array(ls[0]))
+        print("Link Rot from PyBullet")
+        print(util.quat_to_rot(np.array(ls[1])))
 
-        # Reset base_pos, base_quat, joint_pos here for visualization
-        if is_key_triggered(keys, '8'):
-            pass
-        elif is_key_triggered(keys, '5'):
-            pass
-        elif is_key_triggered(keys, '4'):
-            pass
-        elif is_key_triggered(keys, '2'):
-            pass
-        elif is_key_triggered(keys, '6'):
-            pass
-        elif is_key_triggered(keys, '7'):
-            pass
-        elif is_key_triggered(keys, '9'):
-            pass
-        elif is_key_triggered(keys, '1'):
+        pnc_iso = robot_sys.get_link_iso(target_link)
+        print("Link Pos from PnC")
+        print(pnc_iso[0:3, 3])
+        print("Link Rot from PnC")
+        print(pnc_iso[0:3, 0:3])
 
-            ## TEST
-            link = "ltorso"
-            # M = get_mass_matrix(robot, sensor_data)
-            r_sole_jac = get_jacobian(robot, link_id[link], sensor_data)
-            r_sol_jac2 = get_jacobian2(robot, link_id[link], sensor_data)
-            __import__('ipdb').set_trace()
-            r_sole_vel = get_spatial_velocities(robot, link_id[link])
-            qdot = get_qdot(robot, sensor_data)
-            qdot_from_dart = robot_system.get_q_dot()
-            r_sole_vel_from_dart = robot_system.get_link_vel(link)
-            r_sole_jac_from_dart = robot_system.get_link_jacobian(link)
-            print("-" * 80)
-            print("++++++++++ pybullet ++++++++++")
-            print("vel")
-            print(r_sole_vel)
-            print("jac times qdot")
-            print(np.dot(r_sole_jac, qdot))
-            # print("jac")
-            # print(r_sole_jac)
-            print("++++++++++ pydart ++++++++++")
-            print("vel")
-            print(r_sole_vel_from_dart)
-            print("jac times qdot")
-            print(np.dot(r_sole_jac_from_dart, qdot_from_dart))
-            # print("jac")
-            # print(r_sole_jac_from_dart)
-            ## TEST
-            # torso_jac = get_jacobian(robot, -1, sensor_data)
-            # print(torso_jac)
-
-            p.stepSimulation()
-            pass
-
-        # Visualize config
-        # set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos)
+        print("=" * 80)
+        ## TEST
 
         # p.stepSimulation()
+        keys = p.getKeyboardEvents()
+        if is_key_triggered(keys, '1'):
+            p.stepSimulation()
 
         time.sleep(dt)
         t += dt

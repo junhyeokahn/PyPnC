@@ -25,27 +25,24 @@ class PinocchioRobotSystem(RobotSystem):
                  package_dir,
                  b_fixed_base,
                  b_print_info=False):
-        supare(PinocchioRobotSystem, self).__init__(urdf_file, package_dir,
-                                                    b_fixed_base, b_print_info)
+        super(PinocchioRobotSystem, self).__init__(urdf_file, package_dir,
+                                                   b_fixed_base, b_print_info)
 
     def _config_robot(self, urdf_file, package_dir):
         if self._b_fixed_base:
             # Fixed based robot
             self._model, self._collision_model, self._visual_model = pin.buildModelsFromUrdf(
-                urdf_filename, package_dir)
+                urdf_file, package_dir)
             self._n_floating = 0
         else:
             # Floating based robot
             self._model, self._collision_model, self._visual_model = pin.buildModelsFromUrdf(
-                urdf_filename, package_dir, pin.JointModelFreeFlyer())
+                urdf_file, package_dir, pin.JointModelFreeFlyer())
             self._n_floating = 6
 
         self._n_q = self._model.nq
         self._n_q_dot = self._model.nv
-        self._n_a = self._model.njoints
-
-        # model.names : joints
-        # model.frames : body, joint, body, joint, ...
+        self._n_a = self._n_q_dot - self._n_floating
 
         for j_id, j_name in enumerate(self._model.names):
             if j_name == 'root_joint' or j_name == 'universe':
@@ -63,18 +60,15 @@ class PinocchioRobotSystem(RobotSystem):
                     self._link_id[frame.name] = link_id
                 else:
                     # Joint
-                    joint_id = int((f_id - 1) / 2 - 1)
-                    self._joint_id[frame.name] = joint_id
+                    pass
 
-        assert len(self._joint_name == self._n_a)
+        assert len(self._joint_id) == self._n_a
 
-        self._total_mass = sum([inertia.mass for inertia in model.inertias])
+        self._total_mass = sum(
+            [inertia.mass for inertia in self._model.inertias])
 
         self._joint_pos_limit = np.stack(
-            [
-                self._model.lowerPositionLimit(),
-                self._model.upperPositionLimit()
-            ],
+            [self._model.lowerPositionLimit, self._model.upperPositionLimit],
             axis=1)[self._n_floating:self._n_floating + self._n_a, :]
         self._joint_vel_limit = np.stack(
             [-self._model.velocityLimit, self._model.velocityLimit],
@@ -137,6 +131,7 @@ class PinocchioRobotSystem(RobotSystem):
             # Floating Based Robot
             self._q = np.zeros(self._n_q)
             self._q[0:3] = np.copy(base_joint_pos)
+            __import__('ipdb').set_trace()
             self._q[3:7] = np.copy(base_joint_quat)
             self._q[7:7 + self._n_a] = np.copy(list(joint_pos.values()))
 

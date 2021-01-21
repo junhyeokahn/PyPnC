@@ -152,11 +152,12 @@ def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
     sensor_data['base_com_lin_vel'] = np.asarray(base_com_lin_vel)
     sensor_data['base_com_ang_vel'] = np.asarray(base_com_ang_vel)
 
-    sensor_data['base_joint_pos'] = sensor_data[
-        'base_com_pos'] - pos_basejoint_to_basecom
     rot_world_com = util.quat_to_rot(np.copy(sensor_data['base_com_quat']))
-    sensor_data['base_joint_quat'] = np.dot(
-        rot_world_com, rot_basejoint_to_basecom.transpose())
+    rot_world_joint = np.dot(rot_world_com,
+                             rot_basejoint_to_basecom.transpose())
+    sensor_data['base_joint_pos'] = sensor_data['base_com_pos'] - np.dot(
+        rot_world_joint, pos_basejoint_to_basecom)
+    sensor_data['base_joint_quat'] = util.rot_to_quat(rot_world_joint)
     trans_joint_com = liegroup.RpToTrans(rot_basejoint_to_basecom,
                                          pos_basejoint_to_basecom)
     adT_joint_com = liegroup.Adjoint(trans_joint_com)
@@ -311,15 +312,6 @@ if __name__ == "__main__":
         if DynSimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(sensor_data)
-
-        ## TEST
-        ls = p.getLinkState(robot, link_id["r_sole"], 1, 1)
-        print("Link Pos from PyBullet")
-        print(np.array(ls[0]))
-        print("Link Rot from PyBullet")
-        print(util.quat_to_rot(np.array(ls[1])))
-        print("=" * 80)
-        ## TEST
 
         if DynSimConfig.PRINT_TIME:
             end_time = time.time()

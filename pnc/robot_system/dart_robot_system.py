@@ -125,14 +125,9 @@ class DartRobotSystem(RobotSystem):
 
         if not self._b_fixed_base:
             # Floating Base Robot
-            p_joint_com_in_joint = self._skel.getRootBodyNode().getLocalCOM()
             joint_iso = dart.math.Isometry3()
-            joint_iso.set_rotation(
-                np.reshape(np.asarray(util.quat_to_rot(base_com_quat)),
-                           (3, 3)))
-            joint_iso.set_translation(
-                base_com_pos -
-                np.dot(joint_iso.rotation(), p_joint_com_in_joint))
+            joint_iso.set_rotation(util.quat_to_rot(base_joint_quat))
+            joint_iso.set_translation(base_joint_pos)
 
             joint_vel_in_world = np.zeros(6)
             joint_vel_in_world[0:3] = base_joint_ang_vel

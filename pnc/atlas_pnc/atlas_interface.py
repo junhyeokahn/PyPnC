@@ -25,8 +25,14 @@ class AtlasInterface(Interface):
                 cwd +
                 "/robot_model/atlas/atlas_v4_with_multisense_relative_path.urdf",
                 False, PnCConfig.PRINT_ROBOT_INFO)
+        elif PnCConfig.DYN_LIB == "pinocchio":
+            from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
+            self._robot = PinocchioRobotSystem(
+                cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+                cwd + "/robot_model/atlas", False, PnCConfig.PRINT_ROBOT_INFO)
         else:
-            raise ValueError
+            raise ValueError("wrong dynamics library")
+
         self._sp = AtlasStateProvider(self._robot)
         self._se = AtlasStateEstimator(self._robot)
         self._control_architecture = AtlasControlArchitecture(self._robot)
@@ -62,14 +68,6 @@ class AtlasInterface(Interface):
         self._sp.curr_time = self._running_time
         self._sp.prev_state = self._control_architecture.prev_state
         self._sp.state = self._control_architecture.state
-
-        ## TEST
-        dart_iso = self._robot.get_link_iso("r_sole")
-        print("Link Pos from Dart")
-        print(dart_iso[0:3, 3])
-        print("Link Rot from Dart")
-        print(dart_iso[0:3, 0:3])
-        ## TEST
 
         return command
 
