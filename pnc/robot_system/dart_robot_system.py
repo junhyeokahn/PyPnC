@@ -162,11 +162,9 @@ class DartRobotSystem(RobotSystem):
         pCoM_g = self.get_com_pos()
 
         for name, bn in self._link_id.items():
-            __import__('ipdb').set_trace()
-            jac = self.get_link_jacobian(name)  # TODO(JH): Compare these two
             jac = self._skel.getJacobian(bn)
             p_gl = bn.getWorldTransform().translation()
-            R_gl = bn.getWorldTransform().linear()
+            R_gl = bn.getWorldTransform().rotation()
             I = bn.getSpatialInertia()
             T_lc = np.eye(4)
             T_lc[0:3, 0:3] = R_gl.transpose()
@@ -272,6 +270,13 @@ class DartRobotSystem(RobotSystem):
         -------
             Link CoM Jacobian Dot
         """
-        return self._skel.getJacobianClassicDeriv(
+
+        ## TODO (I thought this should be the one I need to use but comparing
+        ## to the pinocchio, it seems to be wrong
+        # return self._skel.getJacobianClassicDeriv(
+        # self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
+        # dart.dynamics.Frame.World())
+
+        return self._skel.getJacobianSpatialDeriv(
             self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
             dart.dynamics.Frame.World())

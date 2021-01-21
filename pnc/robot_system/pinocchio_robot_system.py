@@ -9,7 +9,8 @@ import numpy as np
 import pinocchio as pin
 
 from pnc.robot_system.robot_system import RobotSystem
-from util import util as util
+from util import util
+from util import liegroup
 
 
 class PinocchioRobotSystem(RobotSystem):
@@ -39,6 +40,9 @@ class PinocchioRobotSystem(RobotSystem):
             self._model, self._collision_model, self._visual_model = pin.buildModelsFromUrdf(
                 urdf_file, package_dir, pin.JointModelFreeFlyer())
             self._n_floating = 6
+
+        self._data, self._collision_data, self._visual_data = pin.createDatas(
+            self._model, self._collision_model, self._visual_model)
 
         self._n_q = self._model.nq
         self._n_q_dot = self._model.nv
@@ -131,7 +135,6 @@ class PinocchioRobotSystem(RobotSystem):
             # Floating Based Robot
             self._q = np.zeros(self._n_q)
             self._q[0:3] = np.copy(base_joint_pos)
-            __import__('ipdb').set_trace()
             self._q[3:7] = np.copy(base_joint_quat)
             self._q[7:7 + self._n_a] = np.copy(list(joint_pos.values()))
 
@@ -182,14 +185,14 @@ class PinocchioRobotSystem(RobotSystem):
 
     def get_coriolis(self):
         return pin.nonLinearEffects(self._model, self._data, self._q,
-                                    self._v) - self.get_gravity()
+                                    self._q_dot) - self.get_gravity()
 
     def get_com_pos(self):
-        pin.centerOfMass(self._model, self._data, self._q, self._v)
+        pin.centerOfMass(self._model, self._data, self._q, self._q_dot)
         return self._data.com[0]
 
     def get_com_lin_vel(self):
-        pin.centerOfMass(self._model, self._data, self._q, self._v)
+        pin.centerOfMass(self._model, self._data, self._q, self._q_dot)
         return self._data.vcom[0]
 
     def get_com_lin_jacobian(self):
@@ -198,7 +201,7 @@ class PinocchioRobotSystem(RobotSystem):
     def get_com_lin_jacobian_dot(self):
         return (pin.computeCentroidalMapTimeVariation(
             self._model, self._data, self._q,
-            self._v)[0:3, :]) / self._total_mass
+            self._q_dot)[0:3, :]) / self._total_mass
 
     def get_link_iso(self, link_id):
         ret = np.eye(4)
@@ -211,26 +214,46 @@ class PinocchioRobotSystem(RobotSystem):
     def get_link_vel(self, link_id):
         ret = np.zeros(6)
         frame_id = self._model.getFrameId(link_id)
-        ## TODO (JH) : No option arguement
-        # spatial_vel = pin.getFrameVelocity(self._model, self._data, frame_id,
-        # pin.ReferenceFrame.LOCAL)
 
+        # This returns local frame twist
         spatial_vel = pin.getFrameVelocity(self._model, self._data, frame_id)
 
         ret[0:3] = spatial_vel.angular
         ret[3:6] = spatial_vel.linear
 
+        # In the world coordinate
+        rot_w_link = self.get_link_iso(link_id)[0:3, 0:3]
+        aug_rot_w_link = np.zeros((6, 6))
+        aug_rot_w_link[0:3, 0:3] = rot_w_link
+        aug_rot_w_link[3:6, 3:6] = rot_w_link
+        ret = np.dot(aug_rot_w_link, ret)
+
         return ret
 
     def get_link_jacobian(self, link_id):
         frame_id = self._model.getFrameId(link_id)
+        pin.computeJointJacobians(self._model, self._data, self._q)
+        jac = pin.getFrameJacobian(self._model, self._data, frame_id,
+                                   pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 
-        return pin.computeFrameJacobian(self._model, self._data, self._q,
-                                        pin.ReferenceFrame.LOCAL)
+        # Pinocchio has linear on top of angular
+        ret = np.zeros_like(jac)
+        ret[0:3] = jac[3:6]
+        ret[3:6] = jac[0:3]
+
+        return ret
 
     def get_link_jacobian_dot(self, link_id):
         frame_id = self._model.getFrameId(link_id)
+        pin.computeJointJacobiansTimeVariation(self._model, self._data,
+                                               self._q, self._q_dot)
+        jac_dot = pin.getFrameJacobianTimeVariation(
+            self._model, self._data, frame_id,
+            pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 
-        return pin.getFrameJacobianTimeVariation(self._model, self._data,
-                                                 frame_id,
-                                                 pin.ReferenceFrame.LOCAL)
+        # Pinocchio has linear on top of angular
+        ret = np.zeros_like(jac_dot)
+        ret[0:3] = jac_dot[3:6]
+        ret[3:6] = jac_dot[0:3]
+
+        return ret
