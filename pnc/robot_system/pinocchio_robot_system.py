@@ -48,11 +48,12 @@ class PinocchioRobotSystem(RobotSystem):
         self._n_q_dot = self._model.nv
         self._n_a = self._n_q_dot - self._n_floating
 
+        passing_idx = 0
         for j_id, j_name in enumerate(self._model.names):
             if j_name == 'root_joint' or j_name == 'universe':
-                pass
+                passing_idx += 1
             else:
-                self._joint_id[j_name] = j_id - 2
+                self._joint_id[j_name] = j_id - passing_idx
 
         for f_id, frame in enumerate(self._model.frames):
             if frame.name == 'root_joint' or frame.name == 'universe':
@@ -153,7 +154,8 @@ class PinocchioRobotSystem(RobotSystem):
             self._q_dot[6:6 + self._n_a] = np.copy(list(joint_vel.values()))
         else:
             # Fixed Based Robot
-            raise NotImplementedError
+            self._q = np.copy(list(joint_pos.values()))
+            self._q_dot = np.copy(list(joint_pos.values()))
 
         self._joint_positions = np.array(list(joint_pos.values()))
         self._joint_velocities = np.array(list(joint_vel.values()))
