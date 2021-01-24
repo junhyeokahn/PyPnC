@@ -348,6 +348,10 @@ class RobotSystem(abc.ABC):
     @abc.abstractmethod
     def get_link_iso(self, link_id):
         """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
         Returns
         -------
         link_iso (np.array): Link SE(3)
@@ -357,26 +361,41 @@ class RobotSystem(abc.ABC):
     @abc.abstractmethod
     def get_link_vel(self, link_id):
         """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
         Returns
         -------
-        link_vel (np.array): Link Screw
+            Link CoM Screw described in World Frame
         """
         pass
 
     @abc.abstractmethod
     def get_link_jacobian(self, link_id):
         """
+        Link CoM Jacobian described in World Frame
+
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
         Returns
         -------
-        link_jac (np.array): Link jacobian
+        Jacobian (np.ndarray):
+            Link CoM Jacobian described in World Frame
         """
         pass
 
     @abc.abstractmethod
     def get_link_jacobian_dot(self, link_id):
         """
+        Parameters
+        ----------
+        link_id (str):
+            Link ID
         Returns
         -------
-        link_jac_dot (np.array): Link jacobian dot
+            Link CoM Jacobian Dot
         """
         pass

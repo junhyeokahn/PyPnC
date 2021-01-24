@@ -6,12 +6,13 @@ sys.path.append(cwd)
 import pinocchio as pin
 import numpy as np
 
-urdf_file = cwd + "/three_link_manipulator.urdf"
+urdf_file = cwd + "/robot_model/manipulator/three_link_manipulator.urdf"
 model = pin.buildModelFromUrdf(urdf_file)
 data = model.createData()
 print(model)
 
-q = np.zeros(3)
+q = np.array([np.pi / 2., 0., 0.])
+# q = np.zeros(3)
 qdot = np.ones(3)
 
 pin.forwardKinematics(model, data, q, qdot)
@@ -20,7 +21,7 @@ pin.forwardKinematics(model, data, q, qdot)
 print([frame.name for frame in model.frames])
 
 ## Calculate j2 placement
-j2_frame = model.getFrameId('j2')
+j2_frame = model.getFrameId('j1')
 j2_translation = pin.updateFramePlacement(model, data, j2_frame)
 print("j2 translation")
 print(j2_translation)
@@ -50,6 +51,8 @@ print("j2 vel")
 print(j2_vel)
 
 ## Calculate l2 spatial velocity
-l2_vel = pin.getFrameVelocity(model, data, l2_frame)
+l2_vel = pin.getFrameVelocity(model, data, l2_frame,
+                              pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 print("l2 vel")
 print(l2_vel)
+print(np.dot(l2_jacobian, qdot))

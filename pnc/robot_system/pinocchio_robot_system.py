@@ -229,18 +229,12 @@ class PinocchioRobotSystem(RobotSystem):
         ret = np.zeros(6)
         frame_id = self._model.getFrameId(link_id)
 
-        # This returns local frame twist
-        spatial_vel = pin.getFrameVelocity(self._model, self._data, frame_id)
+        spatial_vel = pin.getFrameVelocity(
+            self._model, self._data, frame_id,
+            pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 
         ret[0:3] = spatial_vel.angular
         ret[3:6] = spatial_vel.linear
-
-        # In the world coordinate
-        rot_w_link = self.get_link_iso(link_id)[0:3, 0:3]
-        aug_rot_w_link = np.zeros((6, 6))
-        aug_rot_w_link[0:3, 0:3] = rot_w_link
-        aug_rot_w_link[3:6, 3:6] = rot_w_link
-        ret = np.dot(aug_rot_w_link, ret)
 
         return np.copy(ret)
 

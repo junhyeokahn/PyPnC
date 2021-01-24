@@ -130,7 +130,6 @@ if __name__ == "__main__":
                                 nominal_sensor_data["joint_pos"],
                                 nominal_sensor_data["joint_vel"], True)
 
-        ## TEST
         print("=" * 80)
         print("Step : ", step)
         print("-" * 80)
@@ -191,8 +190,6 @@ if __name__ == "__main__":
         print(robot_sys.Ig)
 
         print("-" * 80)
-
-        ## TEST
 
         p.stepSimulation()
 

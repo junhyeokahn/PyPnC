@@ -77,15 +77,6 @@ class DoubleSupportStand(StateMachine):
         for fm in self._force_managers.values():
             fm.update_ramp_to_max(self._sp.curr_time)
 
-        ## TEST
-        if self._sp.curr_time > 0.25:
-            exit()
-        print("pelvis iso in PnC")
-        print(self._robot.get_link_iso('pelvis'))
-        print("mtorso in PnC")
-        print(self._robot.get_link_iso('mtorso'))
-        ## TEST
-
     def last_visit(self):
         pass
 

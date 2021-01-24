@@ -67,13 +67,17 @@ if __name__ == "__main__":
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
         robot, DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
-        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
+        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT,
+        DynSimConfig.PRINT_ROBOT_INFO)
 
     # Initial Config
     set_initial_config(robot, joint_id)
 
+    # Link Damping
+    pybullet_util.set_link_damping(robot, link_id.values(), 0., 0.)
+
     # Joint Friction
-    pybullet_util.set_joint_friction(robot, joint_id, 2)
+    pybullet_util.set_joint_friction(robot, joint_id, 0)
 
     #camera intrinsic parameter
     fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10
@@ -101,23 +105,6 @@ if __name__ == "__main__":
         lf_height = pybullet_util.get_link_iso(robot, link_id['l_sole'])[2, 3]
         sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
         sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
-
-        ## TEST
-        print("--------------------------------")
-        print("base com iso from pybullet")
-        print(
-            liegroup.RpToTrans(util.quat_to_rot(sensor_data['base_com_quat']),
-                               sensor_data['base_com_pos']))
-
-        print("base joint iso from pybullet")
-        print(
-            liegroup.RpToTrans(
-                util.quat_to_rot(sensor_data['base_joint_quat']),
-                sensor_data['base_joint_pos']))
-
-        print("mtorso iso from pybullet")
-        print(pybullet_util.get_link_iso(robot, link_id['mtorso']))
-        ## TEST
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()

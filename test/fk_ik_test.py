@@ -329,8 +329,6 @@ if __name__ == "__main__":
             ee] = get_kinematics_config(robot, joint_id, link_id,
                                         open_chain_joints[ee], base_link[ee],
                                         ee_link[ee])
-    ## TEST
-
     # Initial Config
     set_initial_config(robot, joint_id)
 

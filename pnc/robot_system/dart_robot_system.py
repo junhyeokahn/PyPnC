@@ -186,13 +186,7 @@ class DartRobotSystem(RobotSystem):
         return np.copy(self._skel.getMassMatrix())
 
     def get_gravity(self):
-        """
-        Get gravity in generalized coordinate
-        Dart 6.9 has a bug on this API
-        """
-        # return self._skel.getGravityForces()
-        return np.copy(self._skel.getCoriolisAndGravityForces() -
-                       self._skel.getCoriolisForces())
+        return np.copy(self._skel.getGravityForces())
 
     def get_coriolis(self):
         return np.copy(self._skel.getCoriolisForces())
@@ -214,15 +208,6 @@ class DartRobotSystem(RobotSystem):
             self._skel.getCOMLinearJacobianDeriv(dart.dynamics.Frame.World()))
 
     def get_link_iso(self, link_id):
-        """
-        Parameters
-        ----------
-        link_id (str):
-            Link ID
-        Returns
-        -------
-            Link CoM SE(3)
-        """
         link_iso = self._link_id[link_id].getTransform(
             dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
         ret = np.eye(4)
@@ -232,48 +217,16 @@ class DartRobotSystem(RobotSystem):
         return np.copy(ret)
 
     def get_link_vel(self, link_id):
-        """
-        Parameters
-        ----------
-        link_id (str):
-            Link ID
-        Returns
-        -------
-            Link CoM Screw described in World Frame
-        """
-
         return np.copy(self._link_id[link_id].getCOMSpatialVelocity(
             dart.dynamics.Frame.World(), dart.dynamics.Frame.World()))
 
     def get_link_jacobian(self, link_id):
-        """
-        Link CoM Jacobian described in World Frame
-
-        Parameters
-        ----------
-        link_id (str):
-            Link ID
-        Returns
-        -------
-        Jacobian (np.ndarray):
-            Link CoM Jacobian described in World Frame
-        """
         return np.copy(
             self._skel.getJacobian(self._link_id[link_id],
                                    self._link_id[link_id].getLocalCOM(),
                                    dart.dynamics.Frame.World()))
 
     def get_link_jacobian_dot(self, link_id):
-        """
-        Parameters
-        ----------
-        link_id (str):
-            Link ID
-        Returns
-        -------
-            Link CoM Jacobian Dot
-        """
-
         ## TODO (I thought this should be the one I need to use but comparing
         ## to the pinocchio, it seems to be wrong
         # return self._skel.getJacobianClassicDeriv(

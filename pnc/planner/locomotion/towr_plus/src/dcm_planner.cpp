@@ -852,19 +852,6 @@ void DCMPlanner::get_ref_reaction_force(const double t,
       lf_wrench_out[i] = x[i];
       rf_wrench_out[i] = x[i + 6];
     }
-    // TEST: Constraint check
-    // pretty_print(lf_wrench_out, std::cout, "lf_wrench");
-    // pretty_print(rf_wrench_out, std::cout, "rf_wrench");
-    // Eigen::VectorXd sol(12);
-    // sol.head(6) = lf_wrench_out;
-    // sol.tail(6) = rf_wrench_out;
-    // Eigen::VectorXd ineq_violation = _CI * sol + _ci0;
-    // pretty_print(ineq_violation, std::cout,
-    //"ineq const value should be positive");
-    // Eigen::VectorXd eq_violation = _CE * sol + _ce0;
-    // pretty_print(eq_violation, std::cout, "eq const value should be zero");
-    // exit(0);
-    // TEST END
   } else {
     // =========================================================================
     // Single Support

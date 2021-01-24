@@ -54,11 +54,11 @@ def get_robot_config(robot,
 def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
                           base_link, ee_link):
     joint_screws_in_ee = np.zeros((6, len(open_chain_joints)))
-    ee_link_state = p.getLinkState(robot, link_id[ee_link])
+    ee_link_state = p.getLinkState(robot, link_id[ee_link], 1, 1)
     if link_id[base_link] == -1:
         base_pos, base_quat = p.getBasePositionAndOrientation(robot)
     else:
-        base_link_state = p.getLinkState(robot, link_id[base_link])
+        base_link_state = p.getLinkState(robot, link_id[base_link], 1, 1)
         base_pos, base_quat = base_link_state[0], base_link_state[1]
     T_w_b = liegroup.RpToTrans(util.quat_to_rot(np.array(base_quat)),
                                np.array(base_pos))
@@ -71,7 +71,7 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
         joint_type = joint_info[2]
         joint_axis = joint_info[13]
         screw_at_joint = np.zeros(6)
-        link_state = p.getLinkState(robot, link_id[link_name])
+        link_state = p.getLinkState(robot, link_id[link_name], 1, 1)
         T_w_j = liegroup.RpToTrans(util.quat_to_rot(np.array(link_state[5])),
                                    np.array(link_state[4]))
         T_ee_j = np.dot(liegroup.TransInv(T_w_ee), T_w_j)
@@ -88,11 +88,28 @@ def get_kinematics_config(robot, joint_id, link_id, open_chain_joints,
 
 
 def get_link_iso(robot, link_idx):
-    info = p.getLinkState(robot, link_idx)
+    info = p.getLinkState(robot, link_idx, 1, 1)
     pos = np.array(info[0])
     rot = util.quat_to_rot(np.array(info[1]))
 
     return liegroup.RpToTrans(rot, pos)
+
+
+def get_link_vel(robot, link_idx):
+    info = p.getLinkState(robot, link_idx, 1, 1)
+    ret = np.zeros(6)
+    ret[3:6] = np.array(info[6])
+    ret[0:3] = np.array(info[7])
+
+    return ret
+
+
+def set_link_damping(robot, link_id, lin_damping, ang_damping):
+    for i in link_id:
+        p.changeDynamics(robot,
+                         i,
+                         linearDamping=lin_damping,
+                         angularDamping=ang_damping)
 
 
 def set_joint_friction(robot, joint_id, max_force=0):
@@ -209,7 +226,8 @@ def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
 
 
 def get_camera_image(robot, link_id, projection_matrix):
-    link_info = p.getLinkState(robot, link_id['head'])  #Get head link info
+    link_info = p.getLinkState(robot, link_id['head'], 1,
+                               1)  #Get head link info
     link_pos = link_info[0]  #Get link com pos wrt world
     link_ori = link_info[1]  #Get link com ori wrt world
     rot = p.getMatrixFromQuaternion(link_ori)

@@ -19,7 +19,7 @@ class AtlasTaskForceContainer(TaskForceContainer):
         self._com_task.kd = WBCConfig.KD_COM
         self._com_task.w_hierarchy = WBCConfig.W_COM
         # Pelvis Task
-        self._pelvis_ori_task = BasicTask(robot, "LINK_ORI", 3, "pelvis",
+        self._pelvis_ori_task = BasicTask(robot, "LINK_ORI", 3, "pelvis_com",
                                           PnCConfig.SAVE_DATA)
         self._pelvis_ori_task.kp = WBCConfig.KP_PELVIS
         self._pelvis_ori_task.kd = WBCConfig.KD_PELVIS
