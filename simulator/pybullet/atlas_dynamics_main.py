@@ -91,6 +91,7 @@ if __name__ == "__main__":
     t = 0
     dt = DynSimConfig.CONTROLLER_DT
     count = 0
+
     while (1):
 
         # Get SensorData

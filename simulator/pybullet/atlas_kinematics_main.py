@@ -27,7 +27,7 @@ args = parser.parse_args()
 ## Parse file if exist
 file = args.file
 b_has_file = False
-b_auto_progress = False
+b_auto_progress = True
 vis_idx = 0
 if file is not None:
     with open(file, 'r') as stream:

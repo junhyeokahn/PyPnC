@@ -1,36 +1,49 @@
 # PyPnC
-Python Implementation of Planning and Control
+PyPnC is a python library designed for generating trajectories for a robot
+system and stabilizing the system over the trajectories.
 
-## Requirements
-- Install [dartpy](http://dartsim.github.io/install_dartpy_on_ubuntu.html)
-- Install [ifopt](https://github.com/ethz-adrl/ifopt)
-- Install the other dependencies
+## Installation
+- Install [Conda](https://docs.anaconda.com/anaconda/install/)
+- Clone the repository
 ```
-pip install -r requirements.txt.
+$ git clone https://github.com/junhyeokahn/PyPnC.git
+```
+- Create a virtual environment and install Dependancies
+```
+$ conda env create -f environment.yml
+```
+- Activate the environment
+```
+$ conda activate ASE389
 ```
 
-## Running Experiments
-### Whole Body Control Example
-- Running WBC example
+## Running Examples
+### Three Link Manipulator Control with Operational Space Control
+- Run
 ```
-python simulator/pybullet/atlas_main.py
+$ python simulator/pybullet/manipulator_main.py
 ```
-
-### Towr+ Example
-- Make directories for data saving
+### Atlas Walking Control with DCM planning and IHWBC
+- Run
 ```
-mkdir data & mkdir video
+$ python simulator/pybullet/atlas_dynamics_main.py
 ```
-- First compile Towr+ code
+- Send Walking Commands through Keystroke Interface. For example, hit 8 for forward walking, hit 5 for in-place walking, hit 4 for leftward walking, hit 6 for rightward walking, hit 2 for backward walking, hit 7 for ccw turning, and hit 9 for cw turning.
+- Plot the Results
 ```
-mkdir build && cd build && cmake ..
-make -j4
+$ python plot/atlas/plot_task.py --file=data/history.pkl
 ```
-- Then run an example
+### TOWR+
+- Compile and Run the Code
 ```
-./atlas_two_step_yaml_test
+$ mkdir build && cd build && cmake .. && make -j6
+$ ./atlas_two_step_yaml_test
 ```
-- You can plot the result
+- Plot the Optimized Trajectory
 ```
-python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step_yaml_test.yaml
+$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step_yaml_test.yaml
+```
+- Visualize the Optimized Trajectory with Atlas
+```
+$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_two_step_yaml_test.yaml
 ```

@@ -4,7 +4,7 @@ import numpy as np
 class KinSimConfig(object):
     DT = 0.01
 
-    PRINT_ROBOT_INFO = True
+    PRINT_ROBOT_INFO = False
     VIDEO_RECORD = False
     DYN_LIB = "dart"
 
@@ -23,7 +23,7 @@ class DynSimConfig(object):
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 
     PRINT_TIME = False
-    PRINT_ROBOT_INFO = True
+    PRINT_ROBOT_INFO = False
     VIDEO_RECORD = False
 
 
