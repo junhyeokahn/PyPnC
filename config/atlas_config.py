@@ -21,6 +21,7 @@ class DynSimConfig(object):
 
     INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
+    # INITIAL_QUAT_WORLD_TO_BASEJOINT = [0.707, 0., 0., 0.707]
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
@@ -28,7 +29,8 @@ class DynSimConfig(object):
 
 
 class PnCConfig(object):
-    DYN_LIB = "dart"  # "pinocchio"
+    DYN_LIB = "dart"
+    # DYN_LIB = "pinocchio"
     CONTROLLER_DT = DynSimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1
@@ -50,6 +52,8 @@ class WBCConfig(object):
     # Task Gains
     KP_COM = np.array([100., 100., 100])
     KD_COM = np.array([10., 10., 10.])
+    # KP_COM = np.array([500., 500., 500])
+    # KD_COM = np.array([50., 50., 50.])
 
     KP_PELVIS = np.array([100., 100., 100])
     KD_PELVIS = np.array([10., 10., 10.])

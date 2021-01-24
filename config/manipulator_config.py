@@ -10,6 +10,7 @@ class ManipulatorConfig(object):
     PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
     DYN_LIB = "pinocchio"  # "dart"
+    # DYN_LIB = "dart"
 
     DES_EE_POS = np.array([1., 2., 0.])
     KP = 4.0

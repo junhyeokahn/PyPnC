@@ -60,6 +60,12 @@ class ManipulatorInterface(Interface):
         pos = self._robot.get_link_iso('ee')[0:3, 3]
         vel = self._robot.get_link_vel('ee')[3:6]
 
+        ## TEST
+        print(self._robot.get_link_jacobian('l1'))
+        print(self._robot.get_link_iso('l1'))
+        exit()
+        ## TEST
+
         err = ManipulatorConfig.DES_EE_POS - pos
         err_d = -vel
         xddot_des = ManipulatorConfig.KP * err + ManipulatorConfig.KD * err_d

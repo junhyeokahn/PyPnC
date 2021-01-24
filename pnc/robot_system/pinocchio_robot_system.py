@@ -167,43 +167,55 @@ class PinocchioRobotSystem(RobotSystem):
 
     def _update_centroidal_quantities(self):
         pin.ccrba(self._model, self._data, self._q, self._q_dot)
-        ## TODO (JH): Check this is Local Frame
-        self._hg = np.copy(self._data.hg)
-        self._Ag = np.copy(self._data.Ag)
-        self._Ig = np.copy(self._data.Ig)
+
+        self._hg = np.zeros_like(self._data.hg)
+        self._hg[0:3] = np.copy(self._data.hg.angular)
+        self._hg[3:6] = np.copy(self._data.hg.linear)
+
+        self._Ag = np.zeros_like(self._data.Ag)
+        self._Ag[0:3] = np.copy(self._data.Ag[3:6, :])
+        self._Ag[3:6] = np.copy(self._data.Ag[0:3, :])
+
+        self._Ig = np.zeros_like(self._data.Ig)
+        self._Ig[0:3, 0:3] = np.copy(self._data.Ig)[3:6, 3:6]
+        self._Ig[3:6, 3:6] = np.copy(self._data.Ig)[0:3, 0:3]
+
         self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
 
     def get_q(self):
-        return self._q
+        return np.copy(self._q)
 
     def get_q_dot(self):
-        return self._q_dot
+        return np.copy(self._q_dot)
 
     def get_mass_matrix(self):
-        return pin.crba(self._model, self._data, self._q)
+        return np.copy(pin.crba(self._model, self._data, self._q))
 
     def get_gravity(self):
-        return pin.computeGeneralizedGravity(self._model, self._data, self._q)
+        return np.copy(
+            pin.computeGeneralizedGravity(self._model, self._data, self._q))
 
     def get_coriolis(self):
-        return pin.nonLinearEffects(self._model, self._data, self._q,
-                                    self._q_dot) - self.get_gravity()
+        return np.copy(
+            pin.nonLinearEffects(self._model, self._data, self._q, self._q_dot)
+            - self.get_gravity())
 
     def get_com_pos(self):
         pin.centerOfMass(self._model, self._data, self._q, self._q_dot)
-        return self._data.com[0]
+        return np.copy(self._data.com[0])
 
     def get_com_lin_vel(self):
         pin.centerOfMass(self._model, self._data, self._q, self._q_dot)
-        return self._data.vcom[0]
+        return np.copy(self._data.vcom[0])
 
     def get_com_lin_jacobian(self):
-        return pin.jacobianCenterOfMass(self._model, self._data, self._q)
+        return np.copy(
+            pin.jacobianCenterOfMass(self._model, self._data, self._q))
 
     def get_com_lin_jacobian_dot(self):
-        return (pin.computeCentroidalMapTimeVariation(
-            self._model, self._data, self._q,
-            self._q_dot)[0:3, :]) / self._total_mass
+        return np.copy((pin.computeCentroidalMapTimeVariation(
+            self._model, self._data, self._q, self._q_dot)[0:3, :]) /
+                       self._total_mass)
 
     def get_link_iso(self, link_id):
         ret = np.eye(4)
@@ -211,7 +223,7 @@ class PinocchioRobotSystem(RobotSystem):
         trans = pin.updateFramePlacement(self._model, self._data, frame_id)
         ret[0:3, 0:3] = trans.rotation
         ret[0:3, 3] = trans.translation
-        return ret
+        return np.copy(ret)
 
     def get_link_vel(self, link_id):
         ret = np.zeros(6)
@@ -230,7 +242,7 @@ class PinocchioRobotSystem(RobotSystem):
         aug_rot_w_link[3:6, 3:6] = rot_w_link
         ret = np.dot(aug_rot_w_link, ret)
 
-        return ret
+        return np.copy(ret)
 
     def get_link_jacobian(self, link_id):
         frame_id = self._model.getFrameId(link_id)
@@ -243,7 +255,7 @@ class PinocchioRobotSystem(RobotSystem):
         ret[0:3] = jac[3:6]
         ret[3:6] = jac[0:3]
 
-        return ret
+        return np.copy(ret)
 
     def get_link_jacobian_dot(self, link_id):
         frame_id = self._model.getFrameId(link_id)
@@ -258,4 +270,4 @@ class PinocchioRobotSystem(RobotSystem):
         ret[0:3] = jac_dot[3:6]
         ret[3:6] = jac_dot[0:3]
 
-        return ret
+        return np.copy(ret)

@@ -114,10 +114,18 @@ class WBC(object):
         for i, task in enumerate(task_list):
             j = task.jacobian
             j_dot_q_dot = task.jacobian_dot_q_dot
+            ## TEST
+            j_dot_q_dot = np.zeros_like(j_dot_q_dot)
+            ## TEST
             x_ddot = task.op_cmd
             if verbose:
                 print(i, " th task")
                 task.debug()
+            ## TEST
+            # if i <= 2:
+            # print(i, " th task")
+            # task.debug()
+            ## TEST
 
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(

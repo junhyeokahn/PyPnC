@@ -114,7 +114,7 @@ def set_motor_trq(robot, joint_id, command):
     p.setJointMotorControlArray(robot,
                                 trq_applied.keys(),
                                 controlMode=p.TORQUE_CONTROL,
-                                forces=trq_applied.values())
+                                forces=list(trq_applied.values()))
 
 
 def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,

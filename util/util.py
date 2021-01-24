@@ -24,7 +24,7 @@ def euler_to_rot(angles):
         np.cos(y) * np.sin(x),
         np.cos(x) * np.cos(y)
     ]).reshape(3, 3)
-    return ret
+    return np.copy(ret)
 
 
 def quat_to_rot(quat):
@@ -38,7 +38,7 @@ def quat_to_rot(quat):
     ret (np.array): SO3
 
     """
-    return (R.from_quat(quat)).as_matrix()
+    return np.copy((R.from_quat(quat)).as_matrix())
 
 
 def rot_to_quat(rot):
@@ -52,7 +52,7 @@ def rot_to_quat(rot):
     quat (np.array): scalar last quaternion
 
     """
-    return R.from_matrix(rot).as_quat()
+    return np.copy(R.from_matrix(rot).as_quat())
 
 
 def smooth_changing(ini, end, dur, curr_time):
@@ -91,7 +91,7 @@ def quat_to_exp(quat):
         return np.zeros(3)
     ret = img_vec / np.sin(theta / 2.0)
 
-    return ret * theta
+    return np.copy(ret * theta)
 
 
 def exp_to_quat(exp):
@@ -107,7 +107,7 @@ def exp_to_quat(exp):
         ret[1] = 0.5 * exp[1]
         ret[2] = 0.5 * exp[2]
         ret[3] = 1.0
-    return ret
+    return np.copy(ret)
 
 
 def get_alpha_from_frequency(hz, dt):

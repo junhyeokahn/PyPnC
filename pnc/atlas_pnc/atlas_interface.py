@@ -3,6 +3,7 @@ import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
+import copy
 
 import pybullet as p
 
@@ -69,7 +70,7 @@ class AtlasInterface(Interface):
         self._sp.prev_state = self._control_architecture.prev_state
         self._sp.state = self._control_architecture.state
 
-        return command
+        return copy.deepcopy(command)
 
     @property
     def interrupt_logic(self):

@@ -165,8 +165,7 @@ class DartRobotSystem(RobotSystem):
             jac = self._skel.getJacobian(bn)
             p_gl = bn.getWorldTransform().translation()
             R_gl = bn.getWorldTransform().rotation()
-            raise NotImplementedError
-            I = bn.getSpatialInertia()
+            I = bn.getInertia().getSpatialTensor()
             T_lc = np.eye(4)
             T_lc[0:3, 0:3] = R_gl.transpose()
             T_lc[0:3, 3] = np.dot(R_gl.transpose(), (pCoM_g - p_gl))
@@ -175,16 +174,16 @@ class DartRobotSystem(RobotSystem):
             self._Ag += np.dot(np.dot(AdT_lc.transpose(), I), jac)
 
         self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
-        self._hg = np.dot(self._Ig, self.get_q_dot())
+        self._hg = np.dot(self._Ag, self.get_q_dot())
 
     def get_q(self):
-        return self._skel.getPositions()
+        return np.copy(self._skel.getPositions())
 
     def get_q_dot(self):
-        return self._skel.getVelocities()
+        return np.copy(self._skel.getVelocities())
 
     def get_mass_matrix(self):
-        return self._skel.getMassMatrix()
+        return np.copy(self._skel.getMassMatrix())
 
     def get_gravity(self):
         """
@@ -192,25 +191,27 @@ class DartRobotSystem(RobotSystem):
         Dart 6.9 has a bug on this API
         """
         # return self._skel.getGravityForces()
-        return self._skel.getCoriolisAndGravityForces(
-        ) - self._skel.getCoriolisForces()
+        return np.copy(self._skel.getCoriolisAndGravityForces() -
+                       self._skel.getCoriolisForces())
 
     def get_coriolis(self):
-        return self._skel.getCoriolisForces()
+        return np.copy(self._skel.getCoriolisForces())
 
     def get_com_pos(self):
-        return self._skel.getCOM(dart.dynamics.Frame.World())
+        return np.copy(self._skel.getCOM(dart.dynamics.Frame.World()))
 
     def get_com_lin_vel(self):
-        return self._skel.getCOMLinearVelocity(dart.dynamics.Frame.World(),
-                                               dart.dynamics.Frame.World())
+        return np.copy(
+            self._skel.getCOMLinearVelocity(dart.dynamics.Frame.World(),
+                                            dart.dynamics.Frame.World()))
 
     def get_com_lin_jacobian(self):
-        return self._skel.getCOMLinearJacobian(dart.dynamics.Frame.World())
+        return np.copy(
+            self._skel.getCOMLinearJacobian(dart.dynamics.Frame.World()))
 
     def get_com_lin_jacobian_dot(self):
-        return self._skel.getCOMLinearJacobianDeriv(
-            dart.dynamics.Frame.World())
+        return np.copy(
+            self._skel.getCOMLinearJacobianDeriv(dart.dynamics.Frame.World()))
 
     def get_link_iso(self, link_id):
         """
@@ -228,7 +229,7 @@ class DartRobotSystem(RobotSystem):
         ret[0:3, 0:3] = link_iso.rotation()
         ret[0:3,
             3] = self._link_id[link_id].getCOM(dart.dynamics.Frame.World())
-        return ret
+        return np.copy(ret)
 
     def get_link_vel(self, link_id):
         """
@@ -241,8 +242,8 @@ class DartRobotSystem(RobotSystem):
             Link CoM Screw described in World Frame
         """
 
-        return self._link_id[link_id].getCOMSpatialVelocity(
-            dart.dynamics.Frame.World(), dart.dynamics.Frame.World())
+        return np.copy(self._link_id[link_id].getCOMSpatialVelocity(
+            dart.dynamics.Frame.World(), dart.dynamics.Frame.World()))
 
     def get_link_jacobian(self, link_id):
         """
@@ -257,9 +258,10 @@ class DartRobotSystem(RobotSystem):
         Jacobian (np.ndarray):
             Link CoM Jacobian described in World Frame
         """
-        return self._skel.getJacobian(self._link_id[link_id],
-                                      self._link_id[link_id].getLocalCOM(),
-                                      dart.dynamics.Frame.World())
+        return np.copy(
+            self._skel.getJacobian(self._link_id[link_id],
+                                   self._link_id[link_id].getLocalCOM(),
+                                   dart.dynamics.Frame.World()))
 
     def get_link_jacobian_dot(self, link_id):
         """
@@ -278,6 +280,7 @@ class DartRobotSystem(RobotSystem):
         # self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
         # dart.dynamics.Frame.World())
 
-        return self._skel.getJacobianSpatialDeriv(
-            self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
-            dart.dynamics.Frame.World())
+        return np.copy(
+            self._skel.getJacobianSpatialDeriv(
+                self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
+                dart.dynamics.Frame.World()))

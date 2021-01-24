@@ -105,7 +105,7 @@ class Task(abc.ABC):
         pass
 
     def debug(self):
-        # print("pos des: ", self._pos_des)
-        # print("vel des: ", self._vel_des)
-        # print("acc des: ", self._acc_des)
+        print("pos des: ", self._pos_des)
+        print("vel des: ", self._vel_des)
+        print("acc des: ", self._acc_des)
         print("xddot: ", self._op_cmd)

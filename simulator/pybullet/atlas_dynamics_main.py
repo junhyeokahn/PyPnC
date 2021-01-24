@@ -4,9 +4,11 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
 from collections import OrderedDict
+import copy
 
 import pybullet as p
 import numpy as np
+np.set_printoptions(precision=2)
 
 from config.atlas_config import DynSimConfig
 from pnc.atlas_pnc.atlas_interface import AtlasInterface
@@ -100,6 +102,23 @@ if __name__ == "__main__":
         sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
         sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
 
+        ## TEST
+        print("--------------------------------")
+        print("base com iso from pybullet")
+        print(
+            liegroup.RpToTrans(util.quat_to_rot(sensor_data['base_com_quat']),
+                               sensor_data['base_com_pos']))
+
+        print("base joint iso from pybullet")
+        print(
+            liegroup.RpToTrans(
+                util.quat_to_rot(sensor_data['base_joint_quat']),
+                sensor_data['base_joint_pos']))
+
+        print("mtorso iso from pybullet")
+        print(pybullet_util.get_link_iso(robot, link_id['mtorso']))
+        ## TEST
+
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
         if pybullet_util.is_key_triggered(keys, '8'):
@@ -120,7 +139,7 @@ if __name__ == "__main__":
         # Compute Command
         if DynSimConfig.PRINT_TIME:
             start_time = time.time()
-        command = interface.get_command(sensor_data)
+        command = interface.get_command(copy.deepcopy(sensor_data))
 
         if DynSimConfig.PRINT_TIME:
             end_time = time.time()

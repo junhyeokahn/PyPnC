@@ -102,8 +102,8 @@ plot_rf(time, rf_cmd, phase)
 ## =============================================================================
 ## Plot Weights and Max Reaction Force Z
 ## =============================================================================
-plot_weights(time, w, phase)
+# plot_weights(time, w, phase)
 
-plot_rf_z_max(time, rf_z_max, phase)
+# plot_rf_z_max(time, rf_z_max, phase)
 
 plt.show()
