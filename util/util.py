@@ -1,7 +1,10 @@
 from collections import OrderedDict
 from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
 import numpy as np
 import json
+
+from util import liegroup
 
 
 def pretty_print(ob):
@@ -55,31 +58,6 @@ def rot_to_quat(rot):
     return np.copy(R.from_matrix(rot).as_quat())
 
 
-def smooth_changing(ini, end, dur, curr_time):
-    ret = ini + (end - ini) * 0.5 * (1 - np.cos(curr_time / dur * np.pi))
-    if curr_time > dur:
-        ret = end
-
-    return ret
-
-
-def smooth_changing_vel(ini, end, dur, curr_time):
-    ret = (end - ini) * 0.5 * (np.pi / dur) * np.sin(curr_time / dur * np.pi)
-    if curr_time > dur:
-        ret = 0.
-
-    return ret
-
-
-def smooth_changing_acc(ini, end, dur, curr_time):
-    ret = (end - ini) * 0.5 * (np.pi / dur) * (np.pi / dur) * np.cos(
-        curr_time / dur * np.pi)
-    if curr_time > dur:
-        ret = 0.
-
-    return ret
-
-
 def quat_to_exp(quat):
     img_vec = np.array([quat[0], quat[1], quat[2]])
     w = quat[3]
@@ -110,23 +88,50 @@ def exp_to_quat(exp):
     return np.copy(ret)
 
 
+def iso_interpolate(T1, T2, alpha):
+    p1 = T1[0:3, 3]
+    R1 = T1[0:3, 0:3]
+    p2 = T2[0:3, 3]
+    R2 = T2[0:3, 0:3]
+
+    slerp = Slerp([0, 1], R.from_matrix([R1, R2]))
+
+    p_ret = alpha * (p1 + p2)
+    R_ret = slerp(alpha).as_matrix()
+
+    return liegroup.RpToTrans(R_ret, p_ret)
+
+
+def smooth_changing(ini, end, dur, curr_time):
+    ret = ini + (end - ini) * 0.5 * (1 - np.cos(curr_time / dur * np.pi))
+    if curr_time > dur:
+        ret = end
+
+    return ret
+
+
+def smooth_changing_vel(ini, end, dur, curr_time):
+    ret = (end - ini) * 0.5 * (np.pi / dur) * np.sin(curr_time / dur * np.pi)
+    if curr_time > dur:
+        ret = 0.
+
+    return ret
+
+
+def smooth_changing_acc(ini, end, dur, curr_time):
+    ret = (end - ini) * 0.5 * (np.pi / dur) * (np.pi / dur) * np.cos(
+        curr_time / dur * np.pi)
+    if curr_time > dur:
+        ret = 0.
+
+    return ret
+
+
 def get_alpha_from_frequency(hz, dt):
     omega = 2 * np.pi * hz
     alpha = (omega * dt) / (1. + (omega * dt))
 
     return np.clip(alpha, 0., 1.)
-
-
-def adjoint(T):
-    R, p = T[0:3, 0:3], T[0:3, 3]
-    so3 = [[0, -p[2], p[1]], [p[2], 0, -p[0]], [-p[1], p[0], 0]]
-    return np.r_[np.c_[R, np.zeros((3, 3))], np.c_[np.dot(so3, R), R]]
-
-
-def iso_inv(T):
-    R, p = T[0:3, 0:3], T[0:3, 3]
-    Rt = np.array(R).T
-    return np.r_[np.c_[Rt, -np.dot(Rt, p)], [[0, 0, 0, 1]]]
 
 
 def print_attrs(ob):

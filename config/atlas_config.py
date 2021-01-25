@@ -1,18 +1,7 @@
 import numpy as np
 
 
-class KinSimConfig(object):
-    DT = 0.01
-
-    PRINT_ROBOT_INFO = False
-    VIDEO_RECORD = False
-    DYN_LIB = "dart"
-
-    INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
-    INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
-
-
-class DynSimConfig(object):
+class SimConfig(object):
     CONTROLLER_DT = 0.01
     N_SUBSTEP = 10
     CAMERA_DT = 0.05
@@ -29,11 +18,11 @@ class DynSimConfig(object):
 
 class PnCConfig(object):
     DYN_LIB = "pinocchio"  # "dart"
-    CONTROLLER_DT = DynSimConfig.CONTROLLER_DT
+    CONTROLLER_DT = SimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1
 
-    PRINT_ROBOT_INFO = DynSimConfig.PRINT_ROBOT_INFO
+    PRINT_ROBOT_INFO = SimConfig.PRINT_ROBOT_INFO
 
 
 class WBCConfig(object):

@@ -10,7 +10,7 @@ import pybullet as p
 import numpy as np
 np.set_printoptions(precision=2)
 
-from config.atlas_config import DynSimConfig
+from config.atlas_config import SimConfig
 from pnc.atlas_pnc.atlas_interface import AtlasInterface
 from util import pybullet_util
 from util import util
@@ -47,9 +47,9 @@ if __name__ == "__main__":
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=DynSimConfig.CONTROLLER_DT,
-                                numSubSteps=DynSimConfig.N_SUBSTEP)
-    if DynSimConfig.VIDEO_RECORD:
+    p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
+                                numSubSteps=SimConfig.N_SUBSTEP)
+    if SimConfig.VIDEO_RECORD:
         if not os.path.exists('video'):
             os.makedirs('video')
         for f in os.listdir('video'):
@@ -60,15 +60,14 @@ if __name__ == "__main__":
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
         cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
-        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
+        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
-        robot, DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
-        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT,
-        DynSimConfig.PRINT_ROBOT_INFO)
+        robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -89,13 +88,13 @@ if __name__ == "__main__":
 
     # Run Sim
     t = 0
-    dt = DynSimConfig.CONTROLLER_DT
+    dt = SimConfig.CONTROLLER_DT
     count = 0
 
     while (1):
 
         # Get SensorData
-        if count % (DynSimConfig.CAMERA_DT / DynSimConfig.CONTROLLER_DT) == 0:
+        if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             camera_img = pybullet_util.get_camera_image(
                 robot, link_id, projection_matrix)
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
@@ -125,11 +124,11 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_nine = True
 
         # Compute Command
-        if DynSimConfig.PRINT_TIME:
+        if SimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(copy.deepcopy(sensor_data))
 
-        if DynSimConfig.PRINT_TIME:
+        if SimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
 
