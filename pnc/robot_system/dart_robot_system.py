@@ -157,7 +157,6 @@ class DartRobotSystem(RobotSystem):
 
     def _update_centroidal_quantities(self):
         self._Ig = np.zeros((6, 6))
-        self._Jg = np.zeros((6, self._n_q_dot))
         self._Ag = np.zeros((6, self._n_q_dot))
         pCoM_g = self.get_com_pos()
 
@@ -173,7 +172,6 @@ class DartRobotSystem(RobotSystem):
             self._Ig += np.dot(np.dot(AdT_lc.transpose(), I), AdT_lc)
             self._Ag += np.dot(np.dot(AdT_lc.transpose(), I), jac)
 
-        self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
         self._hg = np.dot(self._Ag, self.get_q_dot())
 
     def get_q(self):

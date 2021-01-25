@@ -180,8 +180,6 @@ class PinocchioRobotSystem(RobotSystem):
         self._Ig[0:3, 0:3] = np.copy(self._data.Ig)[3:6, 3:6]
         self._Ig[3:6, 3:6] = np.copy(self._data.Ig)[0:3, 0:3]
 
-        self._Jg = np.dot(np.linalg.inv(self._Ig), self._Ag)
-
     def get_q(self):
         return np.copy(self._q)
 

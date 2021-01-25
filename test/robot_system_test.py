@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
-np.set_printoptions(precision=2, threshold=sys.maxsize)
+# np.set_printoptions(precision=2, threshold=sys.maxsize)
 
 from config.atlas_config import DynSimConfig
 from util import pybullet_util
@@ -69,7 +69,9 @@ if __name__ == "__main__":
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
-        robot)
+        robot, DynSimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+        DynSimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT,
+        DynSimConfig.PRINT_ROBOT_INFO)
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -107,28 +109,17 @@ if __name__ == "__main__":
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
                                                     pos_basejoint_to_basecom,
                                                     rot_basejoint_to_basecom)
-
         # Update Robot
-        #         robot_sys.update_system(
-        # sensor_data["base_com_pos"], sensor_data["base_com_quat"],
-        # sensor_data["base_com_lin_vel"], sensor_data["base_com_ang_vel"],
-        # sensor_data["base_joint_pos"], sensor_data["base_joint_quat"],
-        # sensor_data["base_joint_lin_vel"],
-        # sensor_data["base_joint_ang_vel"], sensor_data["joint_pos"],
-        # sensor_data["joint_vel"])
-        for k, v in nominal_sensor_data['joint_pos'].items():
-            nominal_sensor_data['joint_pos'][k] = 0.2
-            nominal_sensor_data['joint_vel'][k] = -0.2
-        robot_sys.update_system(nominal_sensor_data["base_com_pos"],
-                                nominal_sensor_data["base_com_quat"],
-                                nominal_sensor_data["base_com_lin_vel"],
-                                nominal_sensor_data["base_com_ang_vel"],
-                                nominal_sensor_data["base_joint_pos"],
-                                nominal_sensor_data["base_joint_quat"],
-                                nominal_sensor_data["base_joint_lin_vel"],
-                                nominal_sensor_data["base_joint_ang_vel"],
-                                nominal_sensor_data["joint_pos"],
-                                nominal_sensor_data["joint_vel"], True)
+        # for k, v in sensor_data['joint_pos'].items():
+        # sensor_data['joint_pos'][k] = 0.2
+        # sensor_data['joint_vel'][k] = -0.2
+        robot_sys.update_system(
+            sensor_data["base_com_pos"], sensor_data["base_com_quat"],
+            sensor_data["base_com_lin_vel"], sensor_data["base_com_ang_vel"],
+            sensor_data["base_joint_pos"], sensor_data["base_joint_quat"],
+            sensor_data["base_joint_lin_vel"],
+            sensor_data["base_joint_ang_vel"], sensor_data["joint_pos"],
+            sensor_data["joint_vel"], True)
 
         print("=" * 80)
         print("Step : ", step)
@@ -193,13 +184,10 @@ if __name__ == "__main__":
 
         p.stepSimulation()
 
-        exit()
+        __import__('ipdb').set_trace()
 
         keys = p.getKeyboardEvents()
-        if is_key_triggered(keys, '1'):
-            p.stepSimulation()
-            step += 1
 
-        # time.sleep(dt)
+        time.sleep(dt)
         t += dt
         count += 1

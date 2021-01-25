@@ -57,7 +57,6 @@ class RobotSystem(abc.ABC):
         self._joint_velocities = None
 
         self._Ig = np.zeros((6, 6))
-        self._Jg = np.zeros((6, self._n_q_dot))
         self._Ag = np.zeros((6, self._n_q_dot))
         self._hg = np.zeros(6)
 
@@ -106,10 +105,6 @@ class RobotSystem(abc.ABC):
         return self._Ig
 
     @property
-    def Jg(self):
-        return self._Jg
-
-    @property
     def Ag(self):
         return self._Ag
 
@@ -128,10 +123,9 @@ class RobotSystem(abc.ABC):
     @abc.abstractmethod
     def _update_centroidal_quantities(self):
         """
-        Update Ig, Ag, Jg:
-            centroid_momentum = Ig * centroid_velocity = Ag * qdot
-                      Jg = inv(Ig) * Ag
-            centroid_velocity = Jg * qdot
+        Update Ig, Ag, hg:
+            hg = Ig * centroid_velocity = Ag * qdot
+        Note that all quantities are represented at the world frame
         """
         pass
 
