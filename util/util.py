@@ -3,6 +3,8 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 import numpy as np
 import json
+import multiprocessing as mp
+from tqdm import tqdm
 
 from util import liegroup
 
@@ -102,6 +104,39 @@ def iso_interpolate(T1, T2, alpha):
     return liegroup.RpToTrans(R_ret, p_ret)
 
 
+def normalize_data(data):
+    mean = np.mean(np.stack(data, axis=0), axis=0)
+    std = np.std(np.stack(data, axis=0), axis=0)
+
+    return mean, std, normalize(data, mean, std)
+
+
+def normalize(x, mean, std):
+    assert std.shape == mean.shape
+    if type(x) is list:
+        assert x[0].shape == mean.shape
+        ret = []
+        for val in x:
+            ret.append((val - mean) / std)
+        return ret
+    else:
+        assert x.shape == mean.shape
+        return (x - mean) / std
+
+
+def denormalize(x, mean, std):
+    assert std.shape == mean.shape
+    if type(x) is list:
+        assert x[0].shape == mean.shape
+        ret = []
+        for val in x:
+            ret.append(val * std + mean)
+        return ret
+    else:
+        assert x.shape == mean.shape
+        return x * std + mean
+
+
 def smooth_changing(ini, end, dur, curr_time):
     ret = ini + (end - ini) * 0.5 * (1 - np.cos(curr_time / dur * np.pi))
     if curr_time > dur:
@@ -137,6 +172,43 @@ def get_alpha_from_frequency(hz, dt):
 def print_attrs(ob):
     attr = vars(ob)
     print(", \n".join("%s: %s" % item for item in attr.items()))
+
+
+def try_multiprocess(args_list, num_cpu, f, max_timeouts=1):
+    """
+    Multiprocessing wrapper function.
+    """
+    if max_timeouts == 0:
+        return None
+
+    if num_cpu == 1:
+        return [f(args_list)]
+    else:
+        pool = mp.Pool(processes=num_cpu,
+                       maxtasksperchild=1,
+                       initargs=(mp.RLock(), ),
+                       initializer=tqdm.set_lock)
+        pruns = []
+        for i in range(num_cpu):
+            rseed = np.random.randint(1000000)
+            pruns.append(pool.apply_async(f, args=(args_list + [rseed, i], )))
+        try:
+            results = [p.get(timeout=36000) for p in pruns]
+        except Exception as e:
+            print(str(e))
+            print('WARNING: error raised in multiprocess, trying again')
+
+            pool.close()
+            pool.terminate()
+            pool.join()
+
+            return try_multiprocess(args_list, num_cpu, f, max_timeouts - 1)
+
+        pool.close()
+        pool.terminate()
+        pool.join()
+
+    return results
 
 
 class HermiteCurve(object):

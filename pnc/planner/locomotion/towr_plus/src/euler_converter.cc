@@ -291,9 +291,9 @@ EulerConverter::GetDerivativeOfRotationMatrixWrtNodes(double t) const {
   double y = ori.p()(Y);
   double z = ori.p()(Z);
 
-  JacobianRow jac_x = GetJac(t, kPos, X);
-  JacobianRow jac_y = GetJac(t, kPos, Y);
-  JacobianRow jac_z = GetJac(t, kPos, Z);
+  JacobianRow jac_x = GetJac(t, kPos, X); // round_x_round_nodes (1 x nodes)
+  JacobianRow jac_y = GetJac(t, kPos, Y); // round_y_round_nodes (1 x nodes)
+  JacobianRow jac_z = GetJac(t, kPos, Z); // round_z_round_nodes (1 x nodes)
 
   jac.at(X).at(X) = -cos(z) * sin(y) * jac_y - cos(y) * sin(z) * jac_z;
   jac.at(X).at(Y) = sin(x) * sin(z) * jac_x - cos(x) * cos(z) * jac_z -
