@@ -5,7 +5,6 @@ import copy
 
 from scipy.spatial.transform import Rotation as R
 import numpy as np
-import yaml
 
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.planner.locomotion.dcm_planner.footstep import interpolate
@@ -177,9 +176,6 @@ class DCMTrajectoryManager(object):
 
         if not os.path.exists('data'):
             os.makedirs('data')
-
-        # with open("data/{}_th_dcm_planning.yaml".format(file_name), 'w') as file:
-        # yaml.dump(data, file)
 
         file = open("data/{}_th_dcm_planning.pkl".format(file_name), 'ab')
         pickle.dump(data, file)

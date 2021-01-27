@@ -1,6 +1,6 @@
 import numpy as np
 
-from util import util
+from util import filters
 
 
 class JointIntegrator(object):
@@ -67,10 +67,10 @@ class JointIntegrator(object):
         self._vel = init_vel
 
     def integrate(self, acc, vel, pos):
-        alpha_vel = util.get_alpha_from_frequency(self._vel_cutoff_freq,
-                                                  self._dt)
-        alpha_pos = util.get_alpha_from_frequency(self._pos_cutoff_freq,
-                                                  self._dt)
+        alpha_vel = filters.get_alpha_from_frequency(self._vel_cutoff_freq,
+                                                     self._dt)
+        alpha_pos = filters.get_alpha_from_frequency(self._pos_cutoff_freq,
+                                                     self._dt)
 
         self._vel = np.clip(
             (1.0 - alpha_vel) * self._vel + alpha_vel * vel + acc * self._dt,

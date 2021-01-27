@@ -4,6 +4,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
 from util import util
+from util import interpolation
 
 
 class FloatingBaseTrajectoryManager(object):
@@ -39,23 +40,23 @@ class FloatingBaseTrajectoryManager(object):
         com_pos_des, com_vel_des, com_acc_des = np.zeros(3), np.zeros(
             3), np.zeros(3)
         for i in range(3):
-            com_pos_des[i] = util.smooth_changing(
+            com_pos_des[i] = interpolation.smooth_changing(
                 self._ini_com_pos[i], self._target_com_pos[i], self._duration,
                 current_time - self._start_time)
-            com_vel_des[i] = util.smooth_changing_vel(
+            com_vel_des[i] = interpolation.smooth_changing_vel(
                 self._ini_com_pos[i], self._target_com_pos[i], self._duration,
                 current_time - self._start_time)
-            com_acc_des[i] = util.smooth_changing_acc(
+            com_acc_des[i] = interpolation.smooth_changing_acc(
                 self._ini_com_pos[i], self._target_com_pos[i], self._duration,
                 current_time - self._start_time)
 
         self._com_task.update_desired(com_pos_des, com_vel_des, com_acc_des)
 
-        scaled_t = util.smooth_changing(0, 1, self._duration,
-                                        current_time - self._start_time)
-        scaled_tdot = util.smooth_changing_vel(0, 1, self._duration,
-                                               current_time - self._start_time)
-        scaled_tddot = util.smooth_changing_acc(
+        scaled_t = interpolation.smooth_changing(
+            0, 1, self._duration, current_time - self._start_time)
+        scaled_tdot = interpolation.smooth_changing_vel(
+            0, 1, self._duration, current_time - self._start_time)
+        scaled_tddot = interpolation.smooth_changing_acc(
             0, 1, self._duration, current_time - self._start_time)
 
         exp_inc = self._exp_error * scaled_t

@@ -45,7 +45,7 @@ rf_z_max = dict()
 for topic in rf_z:
     rf_z_max[topic] = []
 
-with open('data/history.pkl', 'rb') as file:
+with open('data/pnc.pkl', 'rb') as file:
     while True:
         try:
             d = pickle.load(file)

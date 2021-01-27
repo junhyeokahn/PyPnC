@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation as R
 
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep, interpolate
 from util import util
+from util import interpolation
 
 
 class FootTrajectoryManager(object):
@@ -71,13 +72,13 @@ class FootTrajectoryManager(object):
                          self._swing_init_foot.pos) / self._swing_duration
 
         # construct trajectories
-        self._pos_traj_init_to_mid = util.HermiteCurveVec(
+        self._pos_traj_init_to_mid = interpolation.HermiteCurveVec(
             self._swing_init_foot.pos, np.zeros(3), mid_swing_pos,
             mid_swing_vel)
-        self._pos_traj_mid_to_end = util.HermiteCurveVec(
+        self._pos_traj_mid_to_end = interpolation.HermiteCurveVec(
             mid_swing_pos, mid_swing_vel, self._swing_land_foot.pos,
             np.zeros(3))
-        self._quat_hermite_curve = util.HermiteCurveQuat(
+        self._quat_hermite_curve = interpolation.HermiteCurveQuat(
             self._swing_init_foot.quat, np.zeros(3),
             self._swing_land_foot.quat, np.zeros(3))
 

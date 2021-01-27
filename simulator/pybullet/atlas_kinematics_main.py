@@ -7,7 +7,7 @@ import math
 import copy
 from collections import OrderedDict
 
-import yaml
+from ruamel.yaml import YAML
 import pybullet as p
 import numpy as np
 np.set_printoptions(precision=3)
@@ -36,26 +36,23 @@ file = args.file
 vis_idx = 0
 if file is not None:
     with open(file, 'r') as stream:
-        try:
-            data = yaml.load(stream, Loader=yaml.FullLoader)
-            vis_time = data["trajectory"]["time"]
-            vis_base_lin = np.array(data["trajectory"]["base_lin"])
-            vis_base_ang = np.array(data["trajectory"]["base_ang"])
-            vis_ee_motion_lin = dict()
-            vis_ee_motion_ang = dict()
-            vis_ee_wrench_lin = dict()
-            vis_ee_wrench_ang = dict()
-            for ee in range(2):
-                vis_ee_motion_lin[ee] = np.array(
-                    data["trajectory"]["ee_motion_lin"][ee])
-                vis_ee_motion_ang[ee] = np.array(
-                    data["trajectory"]["ee_motion_ang"][ee])
-                vis_ee_wrench_lin[ee] = np.array(
-                    data["trajectory"]["ee_wrench_lin"][ee])
-                vis_ee_wrench_ang[ee] = np.array(
-                    data["trajectory"]["ee_wrench_ang"][ee])
-        except yaml.YAMLError as exc:
-            print(exc)
+        data = YAML().load(stream)
+        vis_time = data["trajectory"]["time"]
+        vis_base_lin = np.array(data["trajectory"]["base_lin"])
+        vis_base_ang = np.array(data["trajectory"]["base_ang"])
+        vis_ee_motion_lin = dict()
+        vis_ee_motion_ang = dict()
+        vis_ee_wrench_lin = dict()
+        vis_ee_wrench_ang = dict()
+        for ee in range(2):
+            vis_ee_motion_lin[ee] = np.array(
+                data["trajectory"]["ee_motion_lin"][ee])
+            vis_ee_motion_ang[ee] = np.array(
+                data["trajectory"]["ee_motion_ang"][ee])
+            vis_ee_wrench_lin[ee] = np.array(
+                data["trajectory"]["ee_wrench_lin"][ee])
+            vis_ee_wrench_ang[ee] = np.array(
+                data["trajectory"]["ee_wrench_ang"][ee])
 
 
 def set_initial_config(robot, joint_id):
@@ -93,7 +90,8 @@ if __name__ == "__main__":
         if not os.path.exists('video'):
             os.makedirs('video')
         for f in os.listdir('video'):
-            os.remove('video/' + f)
+            if f == 'atlas_kin.mp4':
+                os.remove('video/' + f)
         p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas_kin.mp4")
 
     # Create Robot, Ground

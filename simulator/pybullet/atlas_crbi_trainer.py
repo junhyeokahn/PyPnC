@@ -16,12 +16,16 @@ import tensorflow as tf
 from tqdm import tqdm
 from ruamel.yaml import YAML
 
+from pnc.data_saver import DataSaver
 from util import pybullet_util
 from util import util
+from util import interpolation
 from util import liegroup
 from util import robot_kinematics
 
 ## Configs
+VIDEO_RECORD = False
+PRINT_FREQ = 10
 DT = 0.01
 PRINT_ROBOT_INFO = False
 INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
@@ -44,16 +48,15 @@ SWING_TIME_LB, SWING_TIME_UB = 0.35, 0.75
 BASE_HEIGHT_LB, BASE_HEIGHT_UB = 0.7, 0.8
 
 ## Dataset Generation
-N_CPU_DATA_GEN = 6
-# N_MOTION_PER_LEG = 5e2
-N_MOTION_PER_LEG = 60
-N_DATA_PER_MOTION = 10
+N_CPU_DATA_GEN = 5
+N_MOTION_PER_LEG = 1e4
+N_DATA_PER_MOTION = 15
 
 N_LAYER_OUTPUT = [64, 64]
 ACTIVATION = [tf.keras.activations.tanh, tf.keras.activations.tanh]
 LR = 0.01
 MOMENTUM = 0.
-N_EPOCH = 5
+N_EPOCH = 20
 BATCH_SIZE = 32
 
 
@@ -65,12 +68,23 @@ def inertia_from_one_hot_vec(vec):
     ret[2, 2] = vec[2]
 
     ret[0, 1] = vec[3]
-    ret[1, 0] = -vec[3]
+    ret[1, 0] = vec[3]
     ret[0, 2] = vec[4]
-    ret[2, 0] = -vec[4]
+    ret[2, 0] = vec[4]
     ret[1, 2] = vec[5]
-    ret[2, 1] = -vec[5]
+    ret[2, 1] = vec[5]
 
+    return ret
+
+
+def inertia_to_one_hot_vec(inertia):
+    ret = np.zeros(6)
+    ret[0] = inertia[0, 0]
+    ret[1] = inertia[1, 1]
+    ret[2] = inertia[2, 2]
+    ret[3] = inertia[0, 1]
+    ret[4] = inertia[0, 2]
+    ret[5] = inertia[1, 2]
     return ret
 
 
@@ -189,31 +203,29 @@ def sample_swing_config(nominal_lf_iso, nominal_rf_iso, side):
 def create_curves(lfoot_ini_iso, lfoot_mid_iso, lfoot_fin_iso, lfoot_mid_vel,
                   rfoot_ini_iso, rfoot_mid_iso, rfoot_fin_iso, rfoot_mid_vel,
                   base_ini_iso, base_fin_iso):
-    lfoot_pos_curve_ini_to_mid = util.HermiteCurveVec(lfoot_ini_iso[0:3, 3],
-                                                      np.zeros(3),
-                                                      lfoot_mid_iso[0:3, 3],
-                                                      lfoot_mid_vel)
-    lfoot_pos_curve_mid_to_fin = util.HermiteCurveVec(lfoot_mid_iso[0:3, 3],
-                                                      lfoot_mid_vel,
-                                                      lfoot_fin_iso[0:3, 3],
-                                                      np.zeros(3))
-    lfoot_quat_curve = util.HermiteCurveQuat(
+    lfoot_pos_curve_ini_to_mid = interpolation.HermiteCurveVec(
+        lfoot_ini_iso[0:3, 3], np.zeros(3), lfoot_mid_iso[0:3, 3],
+        lfoot_mid_vel)
+    lfoot_pos_curve_mid_to_fin = interpolation.HermiteCurveVec(
+        lfoot_mid_iso[0:3, 3], lfoot_mid_vel, lfoot_fin_iso[0:3, 3],
+        np.zeros(3))
+    lfoot_quat_curve = interpolation.HermiteCurveQuat(
         util.rot_to_quat(lfoot_ini_iso[0:3, 0:3]), np.zeros(3),
         util.rot_to_quat(lfoot_fin_iso[0:3, 0:3]), np.zeros(3))
-    rfoot_pos_curve_ini_to_mid = util.HermiteCurveVec(rfoot_ini_iso[0:3, 3],
-                                                      np.zeros(3),
-                                                      rfoot_mid_iso[0:3, 3],
-                                                      rfoot_mid_vel)
-    rfoot_pos_curve_mid_to_fin = util.HermiteCurveVec(rfoot_mid_iso[0:3, 3],
-                                                      rfoot_mid_vel,
-                                                      rfoot_fin_iso[0:3, 3],
-                                                      np.zeros(3))
-    rfoot_quat_curve = util.HermiteCurveQuat(
+    rfoot_pos_curve_ini_to_mid = interpolation.HermiteCurveVec(
+        rfoot_ini_iso[0:3, 3], np.zeros(3), rfoot_mid_iso[0:3, 3],
+        rfoot_mid_vel)
+    rfoot_pos_curve_mid_to_fin = interpolation.HermiteCurveVec(
+        rfoot_mid_iso[0:3, 3], rfoot_mid_vel, rfoot_fin_iso[0:3, 3],
+        np.zeros(3))
+    rfoot_quat_curve = interpolation.HermiteCurveQuat(
         util.rot_to_quat(rfoot_ini_iso[0:3, 0:3]), np.zeros(3),
         util.rot_to_quat(rfoot_fin_iso[0:3, 0:3]), np.zeros(3))
-    base_pos_curve = util.HermiteCurveVec(base_ini_iso[0:3, 3], np.zeros(3),
-                                          base_fin_iso[0:3, 3], np.zeros(3))
-    base_quat_curve = util.HermiteCurveQuat(
+    base_pos_curve = interpolation.HermiteCurveVec(base_ini_iso[0:3, 3],
+                                                   np.zeros(3),
+                                                   base_fin_iso[0:3, 3],
+                                                   np.zeros(3))
+    base_quat_curve = interpolation.HermiteCurveQuat(
         util.rot_to_quat(base_ini_iso[0:3, 0:3]), np.zeros(3),
         util.rot_to_quat(base_fin_iso[0:3, 0:3]), np.zeros(3))
 
@@ -368,6 +380,13 @@ if __name__ == "__main__":
                                  cameraTargetPosition=[1, 0.5, 1.5])
     p.setGravity(0, 0, -9.81)
     p.setPhysicsEngineParameter(fixedTimeStep=DT, numSubSteps=1)
+    if VIDEO_RECORD:
+        if not os.path.exists('video'):
+            os.makedirs('video')
+        for f in os.listdir('video'):
+            if f == "atlas_crbi.mp4":
+                os.remove('video/' + f)
+        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas_crbi.mp4")
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -423,6 +442,9 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
+    # DataSaver
+    data_saver = DataSaver("atlas_crbi_validation.pkl")
+
     # Run Sim
     t = 0
     dt = DT
@@ -469,15 +491,11 @@ if __name__ == "__main__":
             output_mean, output_std, normalized_data_y = util.normalize_data(
                 data_y)
 
-            # crbi_dataset = tf.data.Dataset.from_tensor_slices(
-            # (np.array(normalized_data_x, dtype=np.float32),
-            # np.array(normalized_data_y, dtype=np.float32)))
-            # __import__('ipdb').set_trace()
-
-            log_dir = "data/tensorboard/atlas_crbi/" + datetime.now().strftime(
-                "%Y%m%d-%H%M%S")
+            log_dir = "data/tensorboard/atlas_crbi"
+            if os.path.exists(log_dir):
+                shutil.rmtree(log_dir)
             tensorboard_callback = tf.keras.callbacks.TensorBoard(
-                log_dir=log_dir)
+                log_dir=log_dir, update_freq='batch')
 
             crbi_model = tf.keras.Sequential()
             for l_id, (n_layer_output,
@@ -487,8 +505,6 @@ if __name__ == "__main__":
             crbi_model.add(tf.keras.layers.Dense(6, activation=None))
             opt = tf.keras.optimizers.SGD(learning_rate=LR, momentum=MOMENTUM)
             crbi_model.compile(optimizer='sgd', loss='mse')
-            # crbi_model.fit(x=crbi_dataset,
-            # y=None,
             crbi_model.fit(x=np.array(normalized_data_x, dtype=np.float32),
                            y=np.array(normalized_data_y, dtype=np.float32),
                            batch_size=BATCH_SIZE,
@@ -646,13 +662,16 @@ if __name__ == "__main__":
             d_output = util.denormalize(np.squeeze(output), output_mean,
                                         output_std)
             local_I_est = inertia_from_one_hot_vec(d_output)
-            print("-" * 80)
-            print("Ground Truth Local Inertia")
-            print(local_I)
-            print("Estimated Local Inertia")
-            print(local_I_est)
-            print("MSE")
-            print(((local_I - local_I_est)**2).sum())
+            if b_ik:
+                data_saver.add('gt_inertia', inertia_to_one_hot_vec(local_I))
+                data_saver.add(
+                    'gt_inertia_normalized',
+                    util.normalize(inertia_to_one_hot_vec(local_I),
+                                   output_mean, output_std))
+                data_saver.add('est_inertia_normalized',
+                               np.copy(np.squeeze(output)))
+                data_saver.add('est_inertia', np.copy(d_output))
+                data_saver.advance()
 
         # Disable forward step
         # p.stepSimulation()

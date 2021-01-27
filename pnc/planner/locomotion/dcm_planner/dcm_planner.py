@@ -3,7 +3,7 @@ import copy
 import numpy as np
 
 from util import util
-from util.util import HermiteCurveQuat
+from util import interpolation
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep, interpolate
 
 
@@ -241,8 +241,9 @@ class DCMPlanner(object):
                 mid_foot_stance = interpolate(stance_step, target_step, 0.5)
                 # Create the hermite quaternion curve object
                 self._base_quat_curves.append(
-                    HermiteCurveQuat(curr_base_quat, np.zeros(3),
-                                     mid_foot_stance.quat, np.zeros(3)))
+                    interpolation.HermiteCurveQuat(curr_base_quat, np.zeros(3),
+                                                   mid_foot_stance.quat,
+                                                   np.zeros(3)))
                 # Update the base orientation
                 curr_base_quat = np.copy(mid_foot_stance.quat)
                 step_counter += 1
@@ -252,8 +253,9 @@ class DCMPlanner(object):
                                               0.5)
                 curr_base_quat = mid_foot_stance.quat
                 self._base_quat_curves.append(
-                    HermiteCurveQuat(curr_base_quat, np.zeros(3),
-                                     curr_base_quat, np.zeros(3)))
+                    interpolation.HermiteCurveQuat(curr_base_quat,
+                                                   np.zeros(3), curr_base_quat,
+                                                   np.zeros(3)))
 
     def _compute_reference_com_trajectory(self):
         self._compute_total_trajectory_time()
