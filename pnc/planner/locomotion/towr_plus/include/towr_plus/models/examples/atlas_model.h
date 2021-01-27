@@ -35,10 +35,10 @@ public:
      0.386339  0.0325983   0.830916
   */
   AtlasDynamicModel()
-      //: SingleRigidBodyDynamics(100, 4.49, 4.62, 0.83, -0.03, 0.39, 0.03, 2)
-      //{}
-      : SingleRigidBodyDynamics(93.34, 18.58, 15.41, 4.08, -0.01, -0.03, 0.06,
-                                2) {} // TODO: Talose
+      //: SingleRigidBodyDynamics(98.4068, 18.58, 15.41, 4.08, -0.01, -0.03,
+      //0.06, 2) {}
+      : SingleRigidBodyDynamics(98.4068, 34., 27.5, 14.4, 0.15, 4.1, -0.06, 2) {
+  }
 };
 
 } /* namespace towr_plus */
