@@ -370,6 +370,24 @@ def generate_data(n_data, nominal_lf_iso, nominal_rf_iso, nominal_sensor_data,
     return data_x, data_y
 
 
+def save_weights_to_yaml(tf_model):
+    model_path = 'data/tf_model/atlas_crbi'
+    mlp_model = dict()
+    mlp_model['num_layer'] = len(tf_model.layers)
+    for l_id, l in enumerate(tf_model.layers):
+        mlp_model['w' + str(l_id)] = l.weights[0].numpy().tolist()
+        mlp_model['b' + str(l_id)] = l.weights[1].numpy().reshape(
+            1, l.weights[1].shape[0]).tolist()
+        # Activation Fn Idx: None: 0, Tanh: 1
+        if (l_id == (len(tf_model.layers) - 1)):
+            mlp_model['act_fn' + str(l_id)] = 0
+        else:
+            mlp_model['act_fn' + str(l_id)] = 1
+    with open(model_path + '/mlp_model.yaml', 'w') as f:
+        yml = YAML()
+        yml.dump(mlp_model, f)
+
+
 if __name__ == "__main__":
 
     # Environment Setup
@@ -528,6 +546,7 @@ if __name__ == "__main__":
             with open(model_path + '/data_stat.yaml', 'w') as f:
                 yml = YAML()
                 yml.dump(data_stats, f)
+            save_weights_to_yaml(crbi_model)
 
             b_regressor_trained = True
 
@@ -547,6 +566,7 @@ if __name__ == "__main__":
                 input_std = np.array(yml['input_std'])
                 output_mean = np.array(yml['output_mean'])
                 output_std = np.array(yml['output_std'])
+
             b_regressor_trained = True
 
         elif pybullet_util.is_key_triggered(keys, '3'):

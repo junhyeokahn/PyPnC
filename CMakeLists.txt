@@ -70,6 +70,9 @@ if(SNOPT_FOUND)
     target_link_libraries(atlas_one_step_yaml_test PRIVATE ifopt::ifopt_snopt)
 endif()
 
+add_executable(mlp_model_test test/mlp_model_test.cc)
+target_link_libraries(mlp_model_test my_util)
+
 SET (THIS_COM "${PROJECT_SOURCE_DIR}/" )
 if (SNOPT_FOUND)
     SET(BUILD_WITH_SNOPT 1)
