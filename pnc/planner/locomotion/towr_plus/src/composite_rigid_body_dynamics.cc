@@ -18,7 +18,7 @@ static Eigen::Matrix3d BuildInertiaTensor(double Ixx, double Iyy, double Izz,
 }
 
 // builds a cross product matrix out of "in", so in x v = X(in)*v
-CompositeRigidBodyDynamics::Jac Cross(const Eigen::Vector3d &in) {
+CompositeRigidBodyDynamics::Jac Cross2(const Eigen::Vector3d &in) {
   CompositeRigidBodyDynamics::Jac out(3, 3);
 
   out.coeffRef(0, 1) = -in(2);
@@ -63,7 +63,7 @@ CompositeRigidBodyDynamics::GetDynamicViolation() const {
 
   BaseAcc acc;
   acc.segment(AX, k3D) =
-      I_w * omega_dot_ + Cross(omega_) * (I_w * omega_) - tau_sum;
+      I_w * omega_dot_ + Cross2(omega_) * (I_w * omega_) - tau_sum;
   acc.segment(LX, k3D) =
       m() * com_acc_ - f_sum - Vector3d(0.0, 0.0, -m() * g()); // gravity force
   return acc;
@@ -77,7 +77,7 @@ CompositeRigidBodyDynamics::GetJacobianWrtBaseLin(
 
   Jac jac_tau_sum(k3D, n);
   for (const Vector3d &f : ee_force_) {
-    Jac jac_tau = Cross(f) * jac_pos_base_lin;
+    Jac jac_tau = Cross2(f) * jac_pos_base_lin;
     jac_tau_sum += jac_tau;
   }
 
@@ -121,8 +121,8 @@ CompositeRigidBodyDynamics::GetJacobianWrtBaseAng(
   Jac jac_ang_vel = base_euler.GetDerivOfAngVelWrtEulerNodes(t);
   Jac jac23 = I_w * jac_ang_vel;
 
-  Jac jac2 = Cross(omega_) * (jac21 + jac22 + jac23) -
-             Cross(I_w * omega_) * jac_ang_vel;
+  Jac jac2 = Cross2(omega_) * (jac21 + jac22 + jac23) -
+             Cross2(I_w * omega_) * jac_ang_vel;
 
   // Combine the two to get sensitivity to I_w*w + w x (I_w*w)
   int n = jac_ang_vel.cols();
@@ -136,7 +136,7 @@ CompositeRigidBodyDynamics::Jac
 CompositeRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
                                                 EE ee) const {
   Vector3d r = com_pos_ - ee_pos_.at(ee);
-  Jac jac_tau = -Cross(r) * jac_force;
+  Jac jac_tau = -Cross2(r) * jac_force;
 
   int n = jac_force.cols();
   Jac jac(k6D, n);
@@ -150,7 +150,7 @@ CompositeRigidBodyDynamics::Jac
 CompositeRigidBodyDynamics::GetJacobianWrtEEPos(const Jac &jac_ee_pos,
                                                 EE ee) const {
   Vector3d f = ee_force_.at(ee);
-  Jac jac_tau = Cross(f) * (-jac_ee_pos);
+  Jac jac_tau = Cross2(f) * (-jac_ee_pos);
 
   Jac jac(k6D, jac_tau.cols());
   jac.middleRows(AX, k3D) = -jac_tau;

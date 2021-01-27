@@ -165,6 +165,29 @@ std::string pretty_string(double vv) {
 }
 
 // =============================================================================
+// Stat
+// =============================================================================
+
+Eigen::VectorXd Normalize(const Eigen::VectorXd &v, const Eigen::VectorXd &mean,
+                          const Eigen::VectorXd &standard_dev) {
+  Eigen::VectorXd ret = v;
+  for (int i = 0; i < v.size(); ++i) {
+    ret[i] = (v[i] - mean[i]) / standard_dev[i];
+  }
+  return ret;
+}
+
+Eigen::VectorXd Denormalize(const Eigen::VectorXd &v,
+                            const Eigen::VectorXd &mean,
+                            const Eigen::VectorXd &standard_dev) {
+  Eigen::VectorXd ret = v;
+  for (int i = 0; i < v.size(); ++i) {
+    ret[i] = v[i] * standard_dev[i] + mean[i];
+  }
+  return ret;
+}
+
+// =============================================================================
 // Hermite Curves
 // =============================================================================
 

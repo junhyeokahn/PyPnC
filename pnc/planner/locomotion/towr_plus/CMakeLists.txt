@@ -11,6 +11,8 @@ add_library(towr_plus SHARED
   src/robot_model.cc
   src/dynamic_model.cc
   src/single_rigid_body_dynamics.cc
+  src/composite_rigid_body_dynamics.cc
+  src/composite_rigid_body_inertia.cc
   # constraints
   src/time_discretization_constraint.cc
   src/base_motion_constraint.cc

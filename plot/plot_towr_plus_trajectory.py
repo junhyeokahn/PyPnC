@@ -5,7 +5,7 @@ sys.path.append(cwd)
 import pickle
 import itertools
 
-import yaml  ## TODO Replace this to ruamel.yaml
+from ruamel.yaml import YAML
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -162,7 +162,7 @@ def main(args):
     with open(file, 'r') as stream:
         try:
             # Read Trajectory
-            data = yaml.load(stream, Loader=yaml.FullLoader)
+            data = YAML().load(stream)
             time = data["trajectory"]["time"]
             base_lin = np.array(data["trajectory"]["base_lin"])
             base_ang = np.array(data["trajectory"]["base_ang"])

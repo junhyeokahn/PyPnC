@@ -66,6 +66,16 @@ std::string pretty_string(Eigen::MatrixXd const &mm, std::string const &prefix);
 std::string pretty_string(double vv);
 
 // =============================================================================
+// Stat
+// =============================================================================
+Eigen::VectorXd Normalize(const Eigen::VectorXd &v, const Eigen::VectorXd &mean,
+                          const Eigen::VectorXd &standard_dev);
+
+Eigen::VectorXd Denormalize(const Eigen::VectorXd &v,
+                            const Eigen::VectorXd &mean,
+                            const Eigen::VectorXd &standard_dev);
+
+// =============================================================================
 // Hermite Curves
 // =============================================================================
 class HermiteCurve {
