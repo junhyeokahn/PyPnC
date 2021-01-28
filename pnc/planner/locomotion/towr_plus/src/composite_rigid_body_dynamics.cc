@@ -5,17 +5,10 @@ Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <util/util.hpp>
 
 #include <towr_plus/models/composite_rigid_body_dynamics.h>
+#include <towr_plus/models/composite_rigid_body_inertia.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 
 namespace towr_plus {
-
-// some Eigen helper functions
-static Eigen::Matrix3d BuildInertiaTensor(double Ixx, double Iyy, double Izz,
-                                          double Ixy, double Ixz, double Iyz) {
-  Eigen::Matrix3d I;
-  I << Ixx, -Ixy, -Ixz, -Ixy, Iyy, -Iyz, -Ixz, -Iyz, Izz;
-  return I;
-}
 
 // builds a cross product matrix out of "in", so in x v = X(in)*v
 CompositeRigidBodyDynamics::Jac Cross2(const Eigen::Vector3d &in) {
@@ -31,18 +24,17 @@ CompositeRigidBodyDynamics::Jac Cross2(const Eigen::Vector3d &in) {
   return out;
 }
 
-CompositeRigidBodyDynamics::CompositeRigidBodyDynamics(double mass, double Ixx,
-                                                       double Iyy, double Izz,
-                                                       double Ixy, double Ixz,
-                                                       double Iyz, int ee_count)
-    : CompositeRigidBodyDynamics(
-          mass, BuildInertiaTensor(Ixx, Iyy, Izz, Ixy, Ixz, Iyz), ee_count) {}
-
 CompositeRigidBodyDynamics::CompositeRigidBodyDynamics(
-    double mass, const Eigen::Matrix3d &inertia_b, int ee_count)
+    double mass, std::string model_path, std::string data_stat_path,
+    int ee_count)
     : DynamicModel(mass, ee_count) {
-  I_b = inertia_b.sparseView();
+
+  YAML::Node mlp_model_cfg = YAML::LoadFile(model_path);
+  YAML::Node data_stat_cfg = YAML::LoadFile(model_path);
+  crbi_ = new CompositeRigidBodyInertia(mlp_model_cfg, data_stat_cfg);
 }
+
+CompositeRigidBodyDynamics::~CompositeRigidBodyDynamics() { delete crbi_; }
 
 CompositeRigidBodyDynamics::BaseAcc
 CompositeRigidBodyDynamics::GetDynamicViolation() const {
@@ -59,6 +51,8 @@ CompositeRigidBodyDynamics::GetDynamicViolation() const {
   }
 
   // express inertia matrix in world frame based on current body orientation
+  Jac I_b =
+      crbi_->ComputeInertia(com_pos_, ee_pos_[0], ee_pos_[1]).sparseView();
   Jac I_w = w_R_b_.sparseView() * I_b * w_R_b_.transpose().sparseView();
 
   BaseAcc acc;

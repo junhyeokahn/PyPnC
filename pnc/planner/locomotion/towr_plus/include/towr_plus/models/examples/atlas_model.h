@@ -24,21 +24,19 @@ public:
   }
 };
 
-class AtlasDynamicModel : public SingleRigidBodyDynamics {
+// class AtlasDynamicModel : public SingleRigidBodyDynamics {
+// public:
+// AtlasDynamicModel()
+//: SingleRigidBodyDynamics(98.4068, 34., 27.5, 14.4, 0.15, 4.1, -0.06, 2) {
+//}
+//};
+
+class AtlasDynamicModel : public CompositeRigidBodyDynamics {
 public:
-  /* Atlas Reduced model
-   Mass:
-   98.4068
-   Inertia:
-      4.48975 -0.0282483   0.386339
-   -0.0282483    4.62886  0.0325983
-     0.386339  0.0325983   0.830916
-  */
   AtlasDynamicModel()
-      //: SingleRigidBodyDynamics(98.4068, 18.58, 15.41, 4.08, -0.01, -0.03,
-      //0.06, 2) {}
-      : SingleRigidBodyDynamics(98.4068, 34., 27.5, 14.4, 0.15, 4.1, -0.06, 2) {
-  }
+      : CompositeRigidBodyDynamics(
+            98.4068, THIS_COM "data/tf_model/atlas_crbi/mlp_model.yaml",
+            THIS_COM "data/tf_model/atlas_crbi/data_stat.yaml", 2) {}
 };
 
 } /* namespace towr_plus */

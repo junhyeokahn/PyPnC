@@ -9,7 +9,7 @@ system and stabilizing the system over the trajectories.
 - Create a virtual environment and install dependancies:<br/>
 ```$ conda env create -f environment.yml```
 - Activate the environment:<br/>
-```$ conda activate PyPnC```
+```$ conda activate pypnC```
 
 ## Running Examples
 ### Three Link Manipulator Control with Operational Space Control

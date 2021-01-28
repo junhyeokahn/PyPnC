@@ -6,17 +6,16 @@ Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 #include "dynamic_model.h"
 
+class CompositeRigidBodyInertia;
+
 namespace towr_plus {
 
 class CompositeRigidBodyDynamics : public DynamicModel {
 public:
-  CompositeRigidBodyDynamics(double mass, const Eigen::Matrix3d &inertia_b,
-                             int ee_count);
+  CompositeRigidBodyDynamics(double mass, std::string model_path,
+                             std::string data_stat_path, int ee_count);
 
-  CompositeRigidBodyDynamics(double mass, double Ixx, double Iyy, double Izz,
-                             double Ixy, double Ixz, double Iyz, int ee_count);
-
-  virtual ~CompositeRigidBodyDynamics() = default;
+  virtual ~CompositeRigidBodyDynamics();
 
   BaseAcc GetDynamicViolation() const override;
 
@@ -32,7 +31,7 @@ private:
   /** Inertia of entire robot around the CoM expressed in a frame anchored
    *  in the base.
    */
-  Eigen::SparseMatrix<double, Eigen::RowMajor> I_b;
+  CompositeRigidBodyInertia *crbi_;
 };
 
 } /* namespace towr_plus */

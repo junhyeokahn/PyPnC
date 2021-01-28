@@ -15,6 +15,7 @@ np.set_printoptions(precision=3)
 import tensorflow as tf
 from tqdm import tqdm
 from ruamel.yaml import YAML
+from casadi import *
 
 from pnc.data_saver import DataSaver
 from util import pybullet_util
@@ -388,6 +389,71 @@ def save_weights_to_yaml(tf_model):
         yml.dump(mlp_model, f)
 
 
+def generate_casadi_func(tf_model,
+                         input_mean,
+                         input_std,
+                         output_mean,
+                         output_std,
+                         generate_c_code=True):
+    c_code_path = cwd + "/data/tf_model/atlas_crbi"
+    ## Computational Graph
+    b = MX.sym('b', 3)
+    l = MX.sym('l', 3)
+    r = MX.sym('r', 3)
+    # Input
+    l_minus_b = l - b
+    r_minus_b = r - b
+    inp = vertcat(l_minus_b, r_minus_b)
+    normalized_inp = (inp - input_mean) / input_std  # (6, 1)
+    # MLP (Somewhat manual)
+    w0 = tf_model.layers[0].weights[0].numpy()  # (6, 64)
+    b0 = tf_model.layers[0].weights[1].numpy().reshape(1, -1)  # (1, 64)
+    w1 = tf_model.layers[1].weights[0].numpy()  # (64, 64)
+    b1 = tf_model.layers[1].weights[1].numpy().reshape(1, -1)  # (1, 64)
+    w2 = tf_model.layers[2].weights[0].numpy()  # (64, 6)
+    b2 = tf_model.layers[2].weights[1].numpy().reshape(1, -1)  # (6)
+    output = mtimes(
+        tanh(mtimes(tanh(mtimes(normalized_inp.T, w0) + b0), w1) + b1),
+        w2) + b2
+    denormalized_output = (output.T * output_std) + output_mean
+
+    # Define casadi function
+    func = Function('atlas_crbi', [b, l, r], [denormalized_output])
+    jac_func = func.jac()
+
+    if generate_c_code:
+        # Code generator
+        code_gen = CodeGenerator('atlas_crbi.c', dict(with_header=True))
+        code_gen.add(func)
+        code_gen.add(jac_func)
+        code_gen.generate()
+        shutil.move(
+            cwd + '/atlas_crbi.h', cwd +
+            "/pnc/planner/locomotion/towr_plus/include/towr_plus/models/examples/atlas_crbi.h"
+        )
+        shutil.move(cwd + '/atlas_crbi.c',
+                    cwd + "/pnc/planner/locomotion/towr_plus/src/atlas_crbi.c")
+
+    return func, jac_func
+
+
+def evaluate_crbi_model_using_casadi(cas_func, b, l, r):
+    out = cas_func(b, l, r)
+    return out
+
+
+def evaluate_crbi_model_using_tf(tf_model, b, l, r, input_mean, input_std,
+                                 output_mean, output_std):
+    inp1 = l - b
+    inp2 = r - b
+    inp = np.concatenate([inp1, inp2], axis=0)
+    normalized_inp = np.expand_dims(util.normalize(inp, input_mean, input_std),
+                                    axis=0)
+    output = tf_model(normalized_inp)
+    d_output = util.denormalize(np.squeeze(output), output_mean, output_std)
+    return d_output, output
+
+
 if __name__ == "__main__":
 
     # Environment Setup
@@ -548,6 +614,10 @@ if __name__ == "__main__":
                 yml.dump(data_stats, f)
             save_weights_to_yaml(crbi_model)
 
+            cas_func, cas_jac_func = generate_casadi_func(
+                crbi_model, input_mean, input_std, output_mean, output_std,
+                True)
+
             b_regressor_trained = True
 
             # Don't wanna mess up the visualizer
@@ -670,18 +740,12 @@ if __name__ == "__main__":
                              rot_world_base)
             rf_iso = pybullet_util.get_link_iso(robot, link_id["r_sole"])
             lf_iso = pybullet_util.get_link_iso(robot, link_id["l_sole"])
-            inp = np.concatenate([
-                lf_iso[0:3, 3] - sensor_data["base_com_pos"],
-                rf_iso[0:3, 3] - sensor_data['base_com_pos']
-            ],
-                                 axis=0)
-            normalized_inp = np.expand_dims(util.normalize(
-                inp, input_mean, input_std),
-                                            axis=0)
-            output = crbi_model(normalized_inp)
-            d_output = util.denormalize(np.squeeze(output), output_mean,
-                                        output_std)
-            local_I_est = inertia_from_one_hot_vec(d_output)
+
+            denormalized_output, output = evaluate_crbi_model_using_tf(
+                crbi_model, sensor_data["base_com_pos"], lf_iso[0:3, 3],
+                rf_iso[0:3, 3], input_mean, input_std, output_mean, output_std)
+
+            local_I_est = inertia_from_one_hot_vec(denormalized_output)
             if b_ik:
                 data_saver.add('gt_inertia', inertia_to_one_hot_vec(local_I))
                 data_saver.add(
@@ -690,7 +754,7 @@ if __name__ == "__main__":
                                    output_mean, output_std))
                 data_saver.add('est_inertia_normalized',
                                np.copy(np.squeeze(output)))
-                data_saver.add('est_inertia', np.copy(d_output))
+                data_saver.add('est_inertia', np.copy(denormalized_output))
                 data_saver.advance()
 
         # Disable forward step
