@@ -1,0 +1,22 @@
+name: pypnc
+channels:
+  - anaconda
+  - conda-forge
+dependencies:
+  - libcblas=3.9.0
+  - liblapack=3.9.0
+  - pinocchio=2.5.5
+  - python=3.7.9
+  - pip:
+      - conda-env-export==0.2.2
+      - flatbuffers==1.12
+      - ipdb==0.13.4
+      - matplotlib==3.3.3
+      - meshcat==0.0.19
+      - pybullet==3.0.8
+      - qpsolvers==1.5
+      - ruamel.yaml==0.16.12
+      - tensorflow==2.3.0
+      - tqdm==4.56.0
+      - yapf==0.30.0
+prefix: /home/junhyeok/anaconda3/envs/pypnc

@@ -7,9 +7,9 @@ system and stabilizing the system over the trajectories.
 - Clone the repository:<br/>
 ```$ git clone https://github.com/junhyeokahn/PyPnC.git```
 - Create a virtual environment and install dependancies:<br/>
-```$ conda env create -f environment.yml```
+```$ conda env create -f pypnc.yml```
 - Activate the environment:<br/>
-```$ conda activate PyPnC```
+```$ conda activate pypnc```
 
 ## Running Examples
 ### Three Link Manipulator Control with Operational Space Control
