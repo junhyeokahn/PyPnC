@@ -28,22 +28,22 @@ const char* atlas_crbi_name_out(casadi_int i);
 const casadi_int* atlas_crbi_sparsity_in(casadi_int i);
 const casadi_int* atlas_crbi_sparsity_out(casadi_int i);
 int atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w);
-int JAC_atlas_crbi(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
-int JAC_atlas_crbi_alloc_mem(void);
-int JAC_atlas_crbi_init_mem(int mem);
-void JAC_atlas_crbi_free_mem(int mem);
-int JAC_atlas_crbi_checkout(void);
-void JAC_atlas_crbi_release(int mem);
-void JAC_atlas_crbi_incref(void);
-void JAC_atlas_crbi_decref(void);
-casadi_int JAC_atlas_crbi_n_out(void);
-casadi_int JAC_atlas_crbi_n_in(void);
-casadi_real JAC_atlas_crbi_default_in(casadi_int i);
-const char* JAC_atlas_crbi_name_in(casadi_int i);
-const char* JAC_atlas_crbi_name_out(casadi_int i);
-const casadi_int* JAC_atlas_crbi_sparsity_in(casadi_int i);
-const casadi_int* JAC_atlas_crbi_sparsity_out(casadi_int i);
-int JAC_atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w);
+int jac_atlas_crbi(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
+int jac_atlas_crbi_alloc_mem(void);
+int jac_atlas_crbi_init_mem(int mem);
+void jac_atlas_crbi_free_mem(int mem);
+int jac_atlas_crbi_checkout(void);
+void jac_atlas_crbi_release(int mem);
+void jac_atlas_crbi_incref(void);
+void jac_atlas_crbi_decref(void);
+casadi_int jac_atlas_crbi_n_out(void);
+casadi_int jac_atlas_crbi_n_in(void);
+casadi_real jac_atlas_crbi_default_in(casadi_int i);
+const char* jac_atlas_crbi_name_in(casadi_int i);
+const char* jac_atlas_crbi_name_out(casadi_int i);
+const casadi_int* jac_atlas_crbi_sparsity_in(casadi_int i);
+const casadi_int* jac_atlas_crbi_sparsity_out(casadi_int i);
+int jac_atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

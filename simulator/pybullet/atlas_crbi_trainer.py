@@ -419,7 +419,9 @@ def generate_casadi_func(tf_model,
 
     # Define casadi function
     func = Function('atlas_crbi', [b, l, r], [denormalized_output])
-    jac_func = func.jac()
+    jac_func = func.jacobian()
+    print(func)
+    print(jac_func)
 
     if generate_c_code:
         # Code generator
@@ -552,6 +554,8 @@ if __name__ == "__main__":
 
         # Set base_pos, base_quat, joint_pos here for visualization
         if pybullet_util.is_key_triggered(keys, '8'):
+            # f, jac_f = generate_casadi_func(crbi_model, input_mean, input_std,
+            # output_mean, output_std, True)
             pass
         elif pybullet_util.is_key_triggered(keys, '5'):
             # Generate Dataset

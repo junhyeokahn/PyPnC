@@ -57,7 +57,6 @@ extern "C" {
 #define casadi_s21 CASADI_PREFIX(s21)
 #define casadi_s22 CASADI_PREFIX(s22)
 #define casadi_s23 CASADI_PREFIX(s23)
-#define casadi_s24 CASADI_PREFIX(s24)
 #define casadi_s3 CASADI_PREFIX(s3)
 #define casadi_s4 CASADI_PREFIX(s4)
 #define casadi_s5 CASADI_PREFIX(s5)
@@ -200,8 +199,7 @@ static const casadi_int casadi_s19[10] = {1, 6, 0, 0, 0, 0, 0, 1, 1, 0};
 static const casadi_int casadi_s20[5] = {6, 1, 0, 1, 5};
 static const casadi_int casadi_s21[10] = {1, 6, 0, 0, 0, 0, 0, 0, 1, 0};
 static const casadi_int casadi_s22[4] = {6, 1, 0, 0};
-static const casadi_int casadi_s23[24] = {6, 3, 0, 6, 12, 18, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
-static const casadi_int casadi_s24[6] = {6, 3, 0, 0, 0, 0};
+static const casadi_int casadi_s23[66] = {6, 9, 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
 
 static const casadi_real casadi_c0[6] = {3.3659757006434099e+01, 2.7306569969551074e+01, 1.4478295241798973e+01, 1.3168447578981862e-01, 4.0994702117187654e+00, -6.3065995812527975e-02};
 static const casadi_real casadi_c1[6] = {9.1420196802030729e-01, 8.1858271212998379e-01, 2.3385959356766842e-01, 9.9929231169650939e-02, 1.4400030225237148e-01, 1.0443997647617007e-01};
@@ -446,12 +444,12 @@ CASADI_SYMBOL_EXPORT int atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res,
   return 0;
 }
 
-/* JAC_atlas_crbi:(i0[3],i1[3],i2[3],o0[6x1,0nz])->(Do0Di0[6x3],Do0Di1[6x3,0nz],Do0Di2[6x3,0nz]) */
+/* jac_atlas_crbi:(i0[3],i1[3],i2[3],out_o0[6x1,0nz])->(jac[6x9]) */
 static int casadi_f1(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
   casadi_int i, j, k;
   casadi_real *rr, *ss, *tt;
   const casadi_real *cr, *cs;
-  casadi_real *w0=w+1, *w1=w+55, *w2=w+61, *w3=w+67, *w4=w+131, *w5=w+195, *w6=w+259, *w7=w+323, *w8=w+387, *w9=w+390, *w10=w+393, *w11=w+396, *w12=w+402, *w13=w+408, *w14=w+792, *w15=w+4888, w16, w17, *w18=w+4892, *w19=w+4894, w20, *w22=w+5279, *w23=w+5333;
+  casadi_real *w0=w+1, *w1=w+55, *w2=w+61, *w3=w+67, *w4=w+131, *w5=w+195, *w6=w+259, *w7=w+323, *w8=w+387, *w9=w+390, *w10=w+393, *w11=w+396, *w12=w+402, *w13=w+408, *w14=w+792, *w15=w+4888, w16, w17, *w18=w+4892, *w19=w+4894, w20, *w22=w+5279;
   /* #0: @0 = zeros(9x6) */
   casadi_clear(w0, 54);
   /* #1: @1 = [0.914202, 0.818583, 0.23386, 0.0999292, 0.144, 0.10444] */
@@ -916,71 +914,67 @@ static int casadi_f1(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   for (rr=w0+8, ss=w1; rr!=w0+62; rr+=9) *rr = *ss++;
   /* #198: @22 = @0' */
   for (i=0, rr=w22, cs=w0; i<6; ++i) for (j=0; j<9; ++j) rr[i+j*6] = *cs++;
-  /* #199: {@23, NULL, NULL} = horzsplit(@22) */
-  casadi_copy(w22, 18, w23);
-  /* #200: output[0][0] = @23 */
-  casadi_copy(w23, 18, res[0]);
+  /* #199: output[0][0] = @22 */
+  casadi_copy(w22, 54, res[0]);
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int JAC_atlas_crbi(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem){
+CASADI_SYMBOL_EXPORT int jac_atlas_crbi(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem){
   return casadi_f1(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT int JAC_atlas_crbi_alloc_mem(void) {
+CASADI_SYMBOL_EXPORT int jac_atlas_crbi_alloc_mem(void) {
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int JAC_atlas_crbi_init_mem(int mem) {
+CASADI_SYMBOL_EXPORT int jac_atlas_crbi_init_mem(int mem) {
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void JAC_atlas_crbi_free_mem(int mem) {
+CASADI_SYMBOL_EXPORT void jac_atlas_crbi_free_mem(int mem) {
 }
 
-CASADI_SYMBOL_EXPORT int JAC_atlas_crbi_checkout(void) {
+CASADI_SYMBOL_EXPORT int jac_atlas_crbi_checkout(void) {
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void JAC_atlas_crbi_release(int mem) {
+CASADI_SYMBOL_EXPORT void jac_atlas_crbi_release(int mem) {
 }
 
-CASADI_SYMBOL_EXPORT void JAC_atlas_crbi_incref(void) {
+CASADI_SYMBOL_EXPORT void jac_atlas_crbi_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void JAC_atlas_crbi_decref(void) {
+CASADI_SYMBOL_EXPORT void jac_atlas_crbi_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int JAC_atlas_crbi_n_in(void) { return 4;}
+CASADI_SYMBOL_EXPORT casadi_int jac_atlas_crbi_n_in(void) { return 4;}
 
-CASADI_SYMBOL_EXPORT casadi_int JAC_atlas_crbi_n_out(void) { return 3;}
+CASADI_SYMBOL_EXPORT casadi_int jac_atlas_crbi_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT casadi_real JAC_atlas_crbi_default_in(casadi_int i){
+CASADI_SYMBOL_EXPORT casadi_real jac_atlas_crbi_default_in(casadi_int i){
   switch (i) {
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* JAC_atlas_crbi_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* jac_atlas_crbi_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
     case 2: return "i2";
-    case 3: return "o0";
+    case 3: return "out_o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* JAC_atlas_crbi_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* jac_atlas_crbi_name_out(casadi_int i){
   switch (i) {
-    case 0: return "Do0Di0";
-    case 1: return "Do0Di1";
-    case 2: return "Do0Di2";
+    case 0: return "jac";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* JAC_atlas_crbi_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* jac_atlas_crbi_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s0;
@@ -990,20 +984,18 @@ CASADI_SYMBOL_EXPORT const casadi_int* JAC_atlas_crbi_sparsity_in(casadi_int i) 
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* JAC_atlas_crbi_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* jac_atlas_crbi_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s23;
-    case 1: return casadi_s24;
-    case 2: return casadi_s24;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int JAC_atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int jac_atlas_crbi_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 7;
-  if (sz_res) *sz_res = 6;
+  if (sz_res) *sz_res = 4;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 5351;
+  if (sz_w) *sz_w = 5333;
   return 0;
 }
 
