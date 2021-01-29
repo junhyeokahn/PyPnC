@@ -418,23 +418,24 @@ def generate_casadi_func(tf_model,
     denormalized_output = (output.T * output_std) + output_mean
 
     # Define casadi function
-    func = Function('atlas_crbi', [b, l, r], [denormalized_output])
+    func = Function('atlas_crbi_helper', [b, l, r], [denormalized_output])
     jac_func = func.jacobian()
     print(func)
     print(jac_func)
 
     if generate_c_code:
         # Code generator
-        code_gen = CodeGenerator('atlas_crbi.c', dict(with_header=True))
+        code_gen = CodeGenerator('atlas_crbi_helper.c', dict(with_header=True))
         code_gen.add(func)
         code_gen.add(jac_func)
         code_gen.generate()
         shutil.move(
-            cwd + '/atlas_crbi.h', cwd +
-            "/pnc/planner/locomotion/towr_plus/include/towr_plus/models/examples/atlas_crbi.h"
+            cwd + '/atlas_crbi_helper.h', cwd +
+            "/pnc/planner/locomotion/towr_plus/include/towr_plus/models/examples/atlas_crbi_helper.h"
         )
-        shutil.move(cwd + '/atlas_crbi.c',
-                    cwd + "/pnc/planner/locomotion/towr_plus/src/atlas_crbi.c")
+        shutil.move(
+            cwd + '/atlas_crbi_helper.c',
+            cwd + "/pnc/planner/locomotion/towr_plus/src/atlas_crbi_helper.c")
 
     return func, jac_func
 

@@ -13,6 +13,8 @@ add_library(towr_plus SHARED
   src/single_rigid_body_dynamics.cc
   src/composite_rigid_body_dynamics.cc
   src/composite_rigid_body_inertia.cc
+  src/atlas_crbi_helper.c
+  src/atlas_composite_rigid_body_inertia.cc
   # constraints
   src/time_discretization_constraint.cc
   src/base_motion_constraint.cc

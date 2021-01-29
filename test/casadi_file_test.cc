@@ -1,5 +1,5 @@
 #include <iostream>
-#include <towr_plus/models/examples/atlas_crbi.h>
+#include <towr_plus/models/examples/atlas_crbi_helper.h>
 
 #include <Eigen/Dense>
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  Eigen::MatrixXd f_in_ph = Eigen::MatrixXd::Zero(NUM_INPUT, DIM_PER_INPUT);
+  Eigen::MatrixXd f_in_ph = Eigen::MatrixXd::Ones(NUM_INPUT, DIM_PER_INPUT);
   Eigen::MatrixXd f_out_ph = Eigen::MatrixXd::Zero(1, DIM_OUTPUT);
   Eigen::MatrixXd jac_f_out_ph =
       Eigen::MatrixXd::Zero(DIM_OUTPUT, NUM_INPUT * DIM_PER_INPUT);

@@ -40,7 +40,7 @@ target_link_libraries(dubins_test PRIVATE dubins)
 target_link_libraries(dubins_test PRIVATE dubins)
 
 add_executable(casadi_file_test test/casadi_file_test.cc
-    pnc/planner/locomotion/towr_plus/src/atlas_crbi.c)
+    pnc/planner/locomotion/towr_plus/src/atlas_crbi_helper.c)
 
 #add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
 #target_link_libraries(atlas_two_step_yaml_test

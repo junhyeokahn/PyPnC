@@ -1,37 +1,15 @@
 #include <towr_plus/models/composite_rigid_body_inertia.h>
-#include <util/mlp_model.hpp>
 
 namespace towr_plus {
 
-CompositeRigidBodyInertia::CompositeRigidBodyInertia(
-    const YAML::Node &mlp_model_node, const YAML::Node &data_stat_node) {
-
-  mlp_model_ = new MLPModel(mlp_model_node);
-
-  readParameter(data_stat_node, "input_mean", input_mean_);
-  readParameter(data_stat_node, "input_std", input_std_);
-  readParameter(data_stat_node, "output_mean", output_mean_);
-  readParameter(data_stat_node, "output_std", output_std_);
+CompositeRigidBodyInertia::CompositeRigidBodyInertia(n_input, dim_per_input) {
+  n_input_ = n_input;
+  dim_per_input_ = dim_per_input;
+  n_output = 1;
+  dim_per_output_ = 6;
 }
 
-CompositeRigidBodyInertia::~CompositeRigidBodyInertia() { delete mlp_model_; }
-
-Eigen::MatrixXd
-CompositeRigidBodyInertia::ComputeInertia(const Eigen::Vector3d &base_pos,
-                                          const Eigen::Vector3d &lf_pos,
-                                          const Eigen::Vector3d &rf_pos) {
-  Eigen::Vector3d rel_lf_pos = lf_pos - base_pos;
-  Eigen::Vector3d rel_rf_pos = rf_pos - base_pos;
-  Eigen::VectorXd inp = Eigen::VectorXd::Zero(6);
-  inp.head(3) = rel_lf_pos;
-  inp.tail(3) = rel_rf_pos;
-  Eigen::VectorXd normalized_inp = Normalize(inp, input_mean_, input_std_);
-  Eigen::MatrixXd output = mlp_model_->GetOutput(normalized_inp.transpose());
-  Eigen::VectorXd denormalized_output =
-      Denormalize(output, output_mean_, output_std_);
-
-  return _inertia_from_one_hot_vector(denormalized_output);
-}
+CompositeRigidBodyInertia::~CompositeRigidBodyInertia() {}
 
 Eigen::MatrixXd CompositeRigidBodyInertia::_inertia_from_one_hot_vector(
     const Eigen::VectorXd &vec) {
@@ -48,6 +26,42 @@ Eigen::MatrixXd CompositeRigidBodyInertia::_inertia_from_one_hot_vector(
   ret(2, 1) = vec[5];
 
   return ret;
+}
+
+void _fill_double_array(const Eigen::MatrixXd &mat, double **x) {
+  for (int row = 0; row < mat.rows(); ++row) {
+    for (int col = 0; col < mat.cols(); ++col) {
+      x[col][row] = mat(col, row);
+    }
+  }
+}
+
+void _fill_double_array(const Eigen::MatrixXd &mat1,
+                        const Eigen::MatrixXd &mat2, double **x) {
+  for (int row = 0; row < mat1.rows(); ++row) {
+    for (int col = 0; col < mat1.cols(); ++col) {
+      x[row][col] = mat1(row, col);
+    }
+  }
+  for (int row = 0; row < mat2.rows(); ++row) {
+    for (int col = 0; col < mat2.cols(); ++col) {
+      x[mat1.rows() + row][col] = mat2(row, col);
+    }
+  }
+}
+
+void _fill_matrix(double **x, Eigen::MatrixXd &mat, int block_row,
+                  int block_col) {
+  int n_var(mat.cols() / block_col);
+  int idx(0);
+  for (int block_id = 0; block_id < n_var; ++block_id) {
+    for (int col = 0; col < block_col; ++col) {
+      for (int row = 0; row < block_row; ++row) {
+        mat(row, block_id * block_col + col) = x[0][idx];
+        idx += 1;
+      }
+    }
+  }
 }
 
 } /* namespace towr_plus */
