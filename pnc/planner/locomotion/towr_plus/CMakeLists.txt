@@ -10,9 +10,9 @@ add_library(towr_plus SHARED
   # models
   src/robot_model.cc
   src/dynamic_model.cc
-  src/single_rigid_body_dynamics.cc
   src/composite_rigid_body_dynamics.cc
   src/composite_rigid_body_inertia.cc
+  src/crbi_helper.cc
   src/atlas_crbi_helper.c
   src/atlas_composite_rigid_body_inertia.cc
   # constraints
@@ -34,10 +34,6 @@ add_library(towr_plus SHARED
   src/intermediate_node_cost.cc
   src/soft_constraint.cc
   # initialization
-  src/gait_generator.cc
-  src/monoped_gait_generator.cc
-  src/biped_gait_generator.cc
-  src/quadruped_gait_generator.cc
   src/footstep.cpp
   src/dcm_planner.cpp
   # terrain

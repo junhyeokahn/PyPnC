@@ -29,7 +29,7 @@ include_directories("${PROJECT_SOURCE_DIR}/pnc/planner/dubins")
 
 add_subdirectory(external_source)
 add_subdirectory(util)
-#add_subdirectory(pnc/planner/locomotion/towr_plus)
+add_subdirectory(pnc/planner/locomotion/towr_plus)
 add_subdirectory(pnc/planner/dubins)
 
 # Add Executables
@@ -42,38 +42,38 @@ target_link_libraries(dubins_test PRIVATE dubins)
 add_executable(casadi_file_test test/casadi_file_test.cc
     pnc/planner/locomotion/towr_plus/src/atlas_crbi_helper.c)
 
-#add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
-#target_link_libraries(atlas_two_step_yaml_test
-    #PRIVATE
-    #towr_plus
-    #ifopt::ifopt_ipopt
-    #my_yaml
-#)
-#if(SNOPT_FOUND)
-    #target_link_libraries(atlas_two_step_yaml_test PRIVATE ifopt::ifopt_snopt)
-#endif()
+add_executable(atlas_two_step_yaml_test test/atlas_two_step_yaml_test.cc)
+target_link_libraries(atlas_two_step_yaml_test
+    PRIVATE
+    towr_plus
+    ifopt::ifopt_ipopt
+    my_yaml
+)
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_two_step_yaml_test PRIVATE ifopt::ifopt_snopt)
+endif()
 
-#add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
-#target_link_libraries(atlas_no_step_yaml_test
-    #PRIVATE
-    #towr_plus
-    #ifopt::ifopt_ipopt
-    #my_yaml
-#)
-#if(SNOPT_FOUND)
-    #target_link_libraries(atlas_no_step_yaml_test PRIVATE ifopt::ifopt_snopt)
-#endif()
+add_executable(atlas_no_step_yaml_test test/atlas_no_step_yaml_test.cc)
+target_link_libraries(atlas_no_step_yaml_test
+    PRIVATE
+    towr_plus
+    ifopt::ifopt_ipopt
+    my_yaml
+)
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_no_step_yaml_test PRIVATE ifopt::ifopt_snopt)
+endif()
 
-#add_executable(atlas_one_step_yaml_test test/atlas_one_step_yaml_test.cc)
-#target_link_libraries(atlas_one_step_yaml_test
-    #PRIVATE
-    #towr_plus
-    #ifopt::ifopt_ipopt
-    #my_yaml
-#)
-#if(SNOPT_FOUND)
-    #target_link_libraries(atlas_one_step_yaml_test PRIVATE ifopt::ifopt_snopt)
-#endif()
+add_executable(atlas_one_step_yaml_test test/atlas_one_step_yaml_test.cc)
+target_link_libraries(atlas_one_step_yaml_test
+    PRIVATE
+    towr_plus
+    ifopt::ifopt_ipopt
+    my_yaml
+)
+if(SNOPT_FOUND)
+    target_link_libraries(atlas_one_step_yaml_test PRIVATE ifopt::ifopt_snopt)
+endif()
 
 add_executable(mlp_model_test test/mlp_model_test.cc)
 target_link_libraries(mlp_model_test my_util)

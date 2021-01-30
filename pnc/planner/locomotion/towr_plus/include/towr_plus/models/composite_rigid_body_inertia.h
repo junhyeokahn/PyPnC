@@ -12,7 +12,7 @@ namespace towr_plus {
 
 class CompositeRigidBodyInertia {
 public:
-  CompositeRigidBodyInertia();
+  CompositeRigidBodyInertia(int n_input, int dim_per_input);
 
   virtual ~CompositeRigidBodyInertia();
 
@@ -25,7 +25,7 @@ public:
                             const Eigen::Vector3d &lf_pos,
                             const Eigen::Vector3d &rf_pos) = 0;
 
-private:
+protected:
   // Create 3x3 inertia matrix
   Eigen::MatrixXd _inertia_from_one_hot_vector(const Eigen::VectorXd &vec);
   // Use this for filling function args
@@ -39,9 +39,9 @@ private:
                     int block_col);
 
   int n_input_;
-  int dim_per_intput_;
+  int dim_per_input_;
   int n_output_;
-  int dim_output_;
+  int dim_per_output_;
 };
 
 } /* namespace towr_plus */

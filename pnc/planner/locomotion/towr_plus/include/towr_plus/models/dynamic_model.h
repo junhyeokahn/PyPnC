@@ -34,6 +34,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #ifndef TOWR_MODELS_DYNAMIC_MODEL_H_
 #define TOWR_MODELS_DYNAMIC_MODEL_H_
 
+#include <towr_plus/models/crbi_helper.h>
 #include <towr_plus/variables/euler_converter.h>
 
 #include <Eigen/Dense>
@@ -113,8 +114,10 @@ public:
    * @return The 6xn Jacobian of dynamic violations with respect to
    *         variables defining the base linear spline (e.g. node values).
    */
-  virtual Jac GetJacobianWrtBaseLin(const Jac &jac_base_lin_pos,
-                                    const Jac &jac_base_lin_acc) const = 0;
+  virtual Jac
+  GetJacobianWrtBaseLin(const Jac &jac_base_lin_pos,
+                        const Jac &jac_acc_base_lin, double t,
+                        std::shared_ptr<CRBIHelper> crbi_helper) const = 0;
 
   /**
    * @brief How the base orientation affects the dynamic violation.
@@ -146,7 +149,13 @@ public:
    * @return The 6xn Jacobian of dynamic violations with respect to
    *         variables defining the foot positions (e.g. node values).
    */
-  virtual Jac GetJacobianWrtEEPos(const Jac &ee_pos, EE ee) const = 0;
+  virtual Jac
+  GetJacobianWrtEEPos(const Jac &ee_pos, EE ee, double t,
+                      std::shared_ptr<CRBIHelper> crbi_helper) const = 0;
+
+  virtual Jac GetJacobianWrtEEPosSchedule(
+      const Jac &ee_pos, EE ee, double t,
+      std::shared_ptr<CRBIHelper> crbi_helper) const = 0;
 
   /**
    * @returns The gravity acceleration [m/s^2] (positive)

@@ -11,7 +11,7 @@ Written by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 namespace towr_plus {
 
 // builds a cross product matrix out of "in", so in x v = X(in)*v
-CompositeRigidBodyDynamics::Jac Cross2(const Eigen::Vector3d &in) {
+CompositeRigidBodyDynamics::Jac Cross(const Eigen::Vector3d &in) {
   CompositeRigidBodyDynamics::Jac out(3, 3);
 
   out.coeffRef(0, 1) = -in(2);
@@ -25,16 +25,13 @@ CompositeRigidBodyDynamics::Jac Cross2(const Eigen::Vector3d &in) {
 }
 
 CompositeRigidBodyDynamics::CompositeRigidBodyDynamics(
-    double mass, std::string model_path, std::string data_stat_path,
-    int ee_count)
+    double mass, int ee_count, std::shared_ptr<CompositeRigidBodyInertia> crbi)
     : DynamicModel(mass, ee_count) {
 
-  YAML::Node mlp_model_cfg = YAML::LoadFile(model_path);
-  YAML::Node data_stat_cfg = YAML::LoadFile(model_path);
-  crbi_ = new CompositeRigidBodyInertia(mlp_model_cfg, data_stat_cfg);
+  crbi_ = crbi;
 }
 
-CompositeRigidBodyDynamics::~CompositeRigidBodyDynamics() { delete crbi_; }
+CompositeRigidBodyDynamics::~CompositeRigidBodyDynamics() {}
 
 CompositeRigidBodyDynamics::BaseAcc
 CompositeRigidBodyDynamics::GetDynamicViolation() const {
@@ -52,12 +49,12 @@ CompositeRigidBodyDynamics::GetDynamicViolation() const {
 
   // express inertia matrix in world frame based on current body orientation
   Jac I_b =
-      crbi_->ComputeInertia(com_pos_, ee_pos_[0], ee_pos_[1]).sparseView();
+      (crbi_->ComputeInertia(com_pos_, ee_pos_[0], ee_pos_[1])).sparseView();
   Jac I_w = w_R_b_.sparseView() * I_b * w_R_b_.transpose().sparseView();
 
   BaseAcc acc;
   acc.segment(AX, k3D) =
-      I_w * omega_dot_ + Cross2(omega_) * (I_w * omega_) - tau_sum;
+      I_w * omega_dot_ + Cross(omega_) * (I_w * omega_) - tau_sum;
   acc.segment(LX, k3D) =
       m() * com_acc_ - f_sum - Vector3d(0.0, 0.0, -m() * g()); // gravity force
   return acc;
@@ -65,18 +62,29 @@ CompositeRigidBodyDynamics::GetDynamicViolation() const {
 
 CompositeRigidBodyDynamics::Jac
 CompositeRigidBodyDynamics::GetJacobianWrtBaseLin(
-    const Jac &jac_pos_base_lin, const Jac &jac_acc_base_lin) const {
+    const Jac &jac_pos_base_lin, const Jac &jac_acc_base_lin, double t,
+    std::shared_ptr<CRBIHelper> crbi_helper) const {
   // build the com jacobian
   int n = jac_pos_base_lin.cols();
 
+  Eigen::Vector3d v11 = w_R_b_.transpose() * omega_dot_;
+  Jac jac11 =
+      crbi_helper->GetDerivativeOfInertiaMatrixWrtBaseLinNodesMult(t, v11);
+  Jac jac1 = w_R_b_.sparseView() * jac11;
+
+  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Jac jac21 =
+      crbi_helper->GetDerivativeOfInertiaMatrixWrtBaseLinNodesMult(t, v21);
+  Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
+
   Jac jac_tau_sum(k3D, n);
   for (const Vector3d &f : ee_force_) {
-    Jac jac_tau = Cross2(f) * jac_pos_base_lin;
+    Jac jac_tau = Cross(f) * jac_pos_base_lin;
     jac_tau_sum += jac_tau;
   }
 
   Jac jac(k6D, n);
-  jac.middleRows(AX, k3D) = -jac_tau_sum;
+  jac.middleRows(AX, k3D) = jac1 + jac2 - jac_tau_sum;
   jac.middleRows(LX, k3D) = m() * jac_acc_base_lin;
 
   return jac;
@@ -85,6 +93,8 @@ CompositeRigidBodyDynamics::GetJacobianWrtBaseLin(
 CompositeRigidBodyDynamics::Jac
 CompositeRigidBodyDynamics::GetJacobianWrtBaseAng(
     const EulerConverter &base_euler, double t) const {
+  Jac I_b =
+      (crbi_->ComputeInertia(com_pos_, ee_pos_[0], ee_pos_[1])).sparseView();
   Jac I_w = w_R_b_.sparseView() * I_b * w_R_b_.transpose().sparseView();
 
   // Derivative of R*I_b*R^T * wd
@@ -115,8 +125,8 @@ CompositeRigidBodyDynamics::GetJacobianWrtBaseAng(
   Jac jac_ang_vel = base_euler.GetDerivOfAngVelWrtEulerNodes(t);
   Jac jac23 = I_w * jac_ang_vel;
 
-  Jac jac2 = Cross2(omega_) * (jac21 + jac22 + jac23) -
-             Cross2(I_w * omega_) * jac_ang_vel;
+  Jac jac2 = Cross(omega_) * (jac21 + jac22 + jac23) -
+             Cross(I_w * omega_) * jac_ang_vel;
 
   // Combine the two to get sensitivity to I_w*w + w x (I_w*w)
   int n = jac_ang_vel.cols();
@@ -130,7 +140,7 @@ CompositeRigidBodyDynamics::Jac
 CompositeRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
                                                 EE ee) const {
   Vector3d r = com_pos_ - ee_pos_.at(ee);
-  Jac jac_tau = -Cross2(r) * jac_force;
+  Jac jac_tau = -Cross(r) * jac_force;
 
   int n = jac_force.cols();
   Jac jac(k6D, n);
@@ -141,10 +151,54 @@ CompositeRigidBodyDynamics::GetJacobianWrtForce(const Jac &jac_force,
 }
 
 CompositeRigidBodyDynamics::Jac
-CompositeRigidBodyDynamics::GetJacobianWrtEEPos(const Jac &jac_ee_pos,
-                                                EE ee) const {
+CompositeRigidBodyDynamics::GetJacobianWrtTrq(const Jac &jac_trq) const {
+  int n = jac_trq.cols();
+  Jac jac(k6D, n);
+  jac.middleRows(AX, k3D) = -jac_trq;
+
+  return jac;
+}
+
+CompositeRigidBodyDynamics::Jac CompositeRigidBodyDynamics::GetJacobianWrtEEPos(
+    const Jac &jac_ee_pos, EE ee, double t,
+    std::shared_ptr<CRBIHelper> crbi_helper) const {
+
+  Eigen::Vector3d v11 = w_R_b_.transpose() * omega_dot_;
+  Jac jac11 =
+      crbi_helper->GetDerivativeOfInertiaMatrixWrtEELinNodesMult(t, v11, ee);
+  Jac jac1 = w_R_b_.sparseView() * jac11;
+
+  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Jac jac21 =
+      crbi_helper->GetDerivativeOfInertiaMatrixWrtEELinNodesMult(t, v21, ee);
+  Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
+
   Vector3d f = ee_force_.at(ee);
-  Jac jac_tau = Cross2(f) * (-jac_ee_pos);
+  Jac jac_tau = Cross(f) * (-jac_ee_pos);
+
+  Jac jac(k6D, jac_tau.cols());
+  jac.middleRows(AX, k3D) = jac1 + jac2 - jac_tau;
+
+  // linear dynamics don't depend on endeffector position.
+  return jac;
+}
+
+CompositeRigidBodyDynamics::Jac
+CompositeRigidBodyDynamics::GetJacobianWrtEEPosSchedule(
+    const Jac &jac_ee_pos, EE ee, double t,
+    std::shared_ptr<CRBIHelper> crbi_helper) const {
+  Eigen::Vector3d v11 = w_R_b_.transpose() * omega_dot_;
+  Jac jac11 = crbi_helper->GetDerivativeOfInertiaMatrixWrtEEScheduleNodesMult(
+      t, v11, ee);
+  Jac jac1 = w_R_b_.sparseView() * jac11;
+
+  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Jac jac21 = crbi_helper->GetDerivativeOfInertiaMatrixWrtEEScheduleNodesMult(
+      t, v21, ee);
+  Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
+
+  Vector3d f = ee_force_.at(ee);
+  Jac jac_tau = Cross(f) * (-jac_ee_pos);
 
   Jac jac(k6D, jac_tau.cols());
   jac.middleRows(AX, k3D) = -jac_tau;
@@ -152,5 +206,4 @@ CompositeRigidBodyDynamics::GetJacobianWrtEEPos(const Jac &jac_ee_pos,
   // linear dynamics don't depend on endeffector position.
   return jac;
 }
-
 } /* namespace towr_plus */

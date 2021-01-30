@@ -45,7 +45,6 @@ namespace towr_plus {
 
 // has to start at zero
 enum BipedIDs { L, R };
-enum QuadrupedIDs { LF, RF, LH, RH };
 
 } // namespace towr_plus
 

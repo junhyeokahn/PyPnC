@@ -45,32 +45,33 @@ void _fill_matrix(double **x, Eigen::MatrixXd &mat, int block_row,
 
 int main(int argc, char *argv[]) {
 
-  int NUM_INPUT = atlas_crbi_n_in();
+  int NUM_INPUT = atlas_crbi_helper_n_in();
   int DIM_PER_INPUT = 3;
   int DIM_OUTPUT = 6;
 
   casadi_int f_sz_arg, f_sz_res, f_sz_iw, f_sz_w;
   casadi_int jac_f_sz_arg, jac_f_sz_res, jac_f_sz_iw, jac_f_sz_w;
 
-  atlas_crbi_work(&f_sz_arg, &f_sz_res, &f_sz_iw, &f_sz_w);
-  jac_atlas_crbi_work(&jac_f_sz_arg, &jac_f_sz_res, &jac_f_sz_iw, &jac_f_sz_w);
+  atlas_crbi_helper_work(&f_sz_arg, &f_sz_res, &f_sz_iw, &f_sz_w);
+  jac_atlas_crbi_helper_work(&jac_f_sz_arg, &jac_f_sz_res, &jac_f_sz_iw,
+                             &jac_f_sz_w);
 
   casadi_int f_iw[f_sz_iw];
   double f_w[f_sz_w];
   casadi_int jac_f_iw[jac_f_sz_iw];
   double jac_f_w[jac_f_sz_w];
 
-  double **f_x = new double *[atlas_crbi_n_in()];
-  for (int i(0); i < atlas_crbi_n_in(); ++i)
+  double **f_x = new double *[atlas_crbi_helper_n_in()];
+  for (int i(0); i < atlas_crbi_helper_n_in(); ++i)
     f_x[i] = new double[DIM_PER_INPUT];
 
-  double **f_y = new double *[atlas_crbi_n_out()];
-  for (int i(0); i < atlas_crbi_n_out(); ++i)
+  double **f_y = new double *[atlas_crbi_helper_n_out()];
+  for (int i(0); i < atlas_crbi_helper_n_out(); ++i)
     f_y[i] = new double[DIM_OUTPUT];
 
-  double **jac_f_x = new double *[jac_atlas_crbi_n_in()];
-  for (int i(0); i < jac_atlas_crbi_n_in(); ++i) {
-    if (i == jac_atlas_crbi_n_in() - 1) {
+  double **jac_f_x = new double *[jac_atlas_crbi_helper_n_in()];
+  for (int i(0); i < jac_atlas_crbi_helper_n_in(); ++i) {
+    if (i == jac_atlas_crbi_helper_n_in() - 1) {
       jac_f_x[i] = new double[DIM_OUTPUT];
     } else {
       jac_f_x[i] = new double[DIM_PER_INPUT];
@@ -82,18 +83,18 @@ int main(int argc, char *argv[]) {
   Eigen::MatrixXd jac_f_out_ph =
       Eigen::MatrixXd::Zero(DIM_OUTPUT, NUM_INPUT * DIM_PER_INPUT);
 
-  double **jac_f_y = new double *[jac_atlas_crbi_n_out()];
-  for (int i(0); i < jac_atlas_crbi_n_out(); ++i)
+  double **jac_f_y = new double *[jac_atlas_crbi_helper_n_out()];
+  for (int i(0); i < jac_atlas_crbi_helper_n_out(); ++i)
     jac_f_y[i] = new double[DIM_PER_INPUT * NUM_INPUT * DIM_OUTPUT];
 
   // ==============================
   // Function F
   // ==============================
-  std::cout << "f # in : " << atlas_crbi_n_in() << std::endl;
-  std::cout << "f # out : " << atlas_crbi_n_out() << std::endl;
+  std::cout << "f # in : " << atlas_crbi_helper_n_in() << std::endl;
+  std::cout << "f # out : " << atlas_crbi_helper_n_out() << std::endl;
   _fill_double_array(f_in_ph, f_x);
-  std::cout << atlas_crbi(const_cast<const double **>(f_x), f_y, f_iw, f_w,
-                          atlas_crbi_checkout())
+  std::cout << atlas_crbi_helper(const_cast<const double **>(f_x), f_y, f_iw,
+                                 f_w, atlas_crbi_helper_checkout())
             << std::endl;
   _fill_matrix(f_y, f_out_ph, 1, DIM_OUTPUT);
   std::cout << "f input" << std::endl;
@@ -104,11 +105,12 @@ int main(int argc, char *argv[]) {
   // ==============================
   // Jacobian
   // ==============================
-  std::cout << "jac f # in : " << jac_atlas_crbi_n_in() << std::endl;
-  std::cout << "jac f # out : " << jac_atlas_crbi_n_out() << std::endl;
+  std::cout << "jac f # in : " << jac_atlas_crbi_helper_n_in() << std::endl;
+  std::cout << "jac f # out : " << jac_atlas_crbi_helper_n_out() << std::endl;
   _fill_double_array(f_in_ph, f_out_ph, jac_f_x);
-  std::cout << jac_atlas_crbi(const_cast<const double **>(jac_f_x), jac_f_y,
-                              jac_f_iw, jac_f_w, jac_atlas_crbi_checkout())
+  std::cout << jac_atlas_crbi_helper(const_cast<const double **>(jac_f_x),
+                                     jac_f_y, jac_f_iw, jac_f_w,
+                                     jac_atlas_crbi_helper_checkout())
             << std::endl;
   _fill_matrix(jac_f_y, jac_f_out_ph, DIM_OUTPUT, DIM_PER_INPUT);
   std::cout << "raw" << std::endl;

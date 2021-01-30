@@ -2,10 +2,11 @@
 
 namespace towr_plus {
 
-CompositeRigidBodyInertia::CompositeRigidBodyInertia(n_input, dim_per_input) {
+CompositeRigidBodyInertia::CompositeRigidBodyInertia(int n_input,
+                                                     int dim_per_input) {
   n_input_ = n_input;
   dim_per_input_ = dim_per_input;
-  n_output = 1;
+  n_output_ = 1;
   dim_per_output_ = 6;
 }
 
@@ -28,7 +29,8 @@ Eigen::MatrixXd CompositeRigidBodyInertia::_inertia_from_one_hot_vector(
   return ret;
 }
 
-void _fill_double_array(const Eigen::MatrixXd &mat, double **x) {
+void CompositeRigidBodyInertia::_fill_double_array(const Eigen::MatrixXd &mat,
+                                                   double **x) {
   for (int row = 0; row < mat.rows(); ++row) {
     for (int col = 0; col < mat.cols(); ++col) {
       x[col][row] = mat(col, row);
@@ -36,8 +38,9 @@ void _fill_double_array(const Eigen::MatrixXd &mat, double **x) {
   }
 }
 
-void _fill_double_array(const Eigen::MatrixXd &mat1,
-                        const Eigen::MatrixXd &mat2, double **x) {
+void CompositeRigidBodyInertia::_fill_double_array(const Eigen::MatrixXd &mat1,
+                                                   const Eigen::MatrixXd &mat2,
+                                                   double **x) {
   for (int row = 0; row < mat1.rows(); ++row) {
     for (int col = 0; col < mat1.cols(); ++col) {
       x[row][col] = mat1(row, col);
@@ -50,8 +53,8 @@ void _fill_double_array(const Eigen::MatrixXd &mat1,
   }
 }
 
-void _fill_matrix(double **x, Eigen::MatrixXd &mat, int block_row,
-                  int block_col) {
+void CompositeRigidBodyInertia::_fill_matrix(double **x, Eigen::MatrixXd &mat,
+                                             int block_row, int block_col) {
   int n_var(mat.cols() / block_col);
   int idx(0);
   for (int block_id = 0; block_id < n_var; ++block_id) {

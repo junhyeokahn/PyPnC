@@ -72,11 +72,7 @@ struct RobotModel {
    * @ingroup Robots
    */
   enum Robot {
-    Monoped, ///< one-legged hopper
-    Biped,   ///< two-legged
-    Atlas,   ///< Boston Dynamic's Humanoid
-    Hyq,     ///< four-legged robot from IIT
-    Anymal,  ///< four-legged robot from Anybotics
+    Atlas, ///< Boston Dynamic's Humanoid
     ROBOT_COUNT
   };
 
@@ -88,11 +84,8 @@ struct RobotModel {
 };
 
 const static std::map<RobotModel::Robot, std::string> robot_names = {
-    {RobotModel::Monoped, "Monoped"},
-    {RobotModel::Biped, "Biped"},
     {RobotModel::Atlas, "Atlas"},
-    {RobotModel::Hyq, "Hyq"},
-    {RobotModel::Anymal, "Anymal"}};
+};
 
 } /* namespace towr_plus */
 

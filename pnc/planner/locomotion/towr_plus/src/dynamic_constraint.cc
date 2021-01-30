@@ -35,6 +35,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #include <util/util.hpp>
 
 #include <towr_plus/constraints/dynamic_constraint.h>
+#include <towr_plus/models/composite_rigid_body_dynamics.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 #include <towr_plus/variables/variable_names.h>
 
@@ -44,7 +45,13 @@ DynamicConstraint::DynamicConstraint(const DynamicModel::Ptr &m, double T,
                                      double dt,
                                      const SplineHolder &spline_holder)
     : TimeDiscretizationConstraint(T, dt, "dynamic") {
+
   model_ = m;
+  std::shared_ptr<CompositeRigidBodyInertia> crbi =
+      std::static_pointer_cast<CompositeRigidBodyDynamics>(model_)->GetCRBI();
+  crbi_helper_ = std::make_shared<CRBIHelper>(
+      crbi, spline_holder.base_linear_, spline_holder.ee_motion_linear_[0],
+      spline_holder.ee_motion_linear_[1]);
 
   // link with up-to-date spline variables
   base_linear_ = spline_holder.base_linear_;
@@ -89,8 +96,8 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
     Jacobian jac_base_lin_pos = base_linear_->GetJacobianWrtNodes(t, kPos);
     Jacobian jac_base_lin_acc = base_linear_->GetJacobianWrtNodes(t, kAcc);
 
-    jac_model =
-        model_->GetJacobianWrtBaseLin(jac_base_lin_pos, jac_base_lin_acc);
+    jac_model = model_->GetJacobianWrtBaseLin(
+        jac_base_lin_pos, jac_base_lin_acc, t, crbi_helper_);
   }
 
   if (var_set == id::base_ang_nodes) {
@@ -114,7 +121,7 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
     if (var_set == id::EEMotionLinNodes(ee)) {
       Jacobian jac_ee_pos =
           ee_motion_linear_.at(ee)->GetJacobianWrtNodes(t, kPos);
-      jac_model = model_->GetJacobianWrtEEPos(jac_ee_pos, ee);
+      jac_model = model_->GetJacobianWrtEEPos(jac_ee_pos, ee, t, crbi_helper_);
     }
 
     if (var_set == id::EESchedule(ee)) {
@@ -124,7 +131,8 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
 
       Jacobian jac_x_dT =
           ee_motion_linear_.at(ee)->GetJacobianOfPosWrtDurations(t);
-      jac_model += model_->GetJacobianWrtEEPos(jac_x_dT, ee);
+      jac_model +=
+          model_->GetJacobianWrtEEPosSchedule(jac_x_dT, ee, t, crbi_helper_);
 
       Jacobian jac_trq_dT =
           ee_wrench_angular_.at(ee)->GetJacobianOfPosWrtDurations(t);

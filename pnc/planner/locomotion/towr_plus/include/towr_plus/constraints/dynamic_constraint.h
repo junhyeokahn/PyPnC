@@ -14,7 +14,6 @@ modification, are permitted provided that the following conditions are met:
 * Neither the name of the copyright holder nor the names of its
   contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
-
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -34,6 +33,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 #ifndef TOWR_CONSTRAINTS_DYNAMIC_CONSTRAINT_H_
 #define TOWR_CONSTRAINTS_DYNAMIC_CONSTRAINT_H_
 
+#include <towr_plus/models/crbi_helper.h>
 #include <towr_plus/models/dynamic_model.h>
 #include <towr_plus/variables/euler_converter.h>
 #include <towr_plus/variables/spline.h>
@@ -80,6 +80,7 @@ public:
 
 private:
   NodeSpline::Ptr base_linear_;
+  std::shared_ptr<CRBIHelper> crbi_helper_;
   EulerConverter base_angular_;
   std::vector<NodeSpline::Ptr> ee_wrench_linear_;
   std::vector<NodeSpline::Ptr> ee_wrench_angular_;

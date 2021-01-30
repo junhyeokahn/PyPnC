@@ -1,8 +1,9 @@
 #pragma once
 
+#include <towr_plus/models/composite_rigid_body_dynamics.h>
 #include <towr_plus/models/endeffector_mappings.h>
+#include <towr_plus/models/examples/atlas_composite_rigid_body_inertia.h>
 #include <towr_plus/models/kinematic_model.h>
-#include <towr_plus/models/single_rigid_body_dynamics.h>
 
 namespace towr_plus {
 
@@ -24,19 +25,11 @@ public:
   }
 };
 
-// class AtlasDynamicModel : public SingleRigidBodyDynamics {
-// public:
-// AtlasDynamicModel()
-//: SingleRigidBodyDynamics(98.4068, 34., 27.5, 14.4, 0.15, 4.1, -0.06, 2) {
-//}
-//};
-
 class AtlasDynamicModel : public CompositeRigidBodyDynamics {
 public:
   AtlasDynamicModel()
       : CompositeRigidBodyDynamics(
-            98.4068, THIS_COM "data/tf_model/atlas_crbi/mlp_model.yaml",
-            THIS_COM "data/tf_model/atlas_crbi/data_stat.yaml", 2) {}
+            98.4068, 2, std::make_shared<AtlasCompositeRigidBodyInertia>()) {}
 };
 
 } /* namespace towr_plus */

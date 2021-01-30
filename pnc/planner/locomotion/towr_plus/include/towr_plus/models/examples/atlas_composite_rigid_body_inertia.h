@@ -10,13 +10,13 @@ public:
   AtlasCompositeRigidBodyInertia();
   virtual ~AtlasCompositeRigidBodyInertia();
 
-  Eigen::MatrixXd ComputeInertia(const Eigen::VectorXd &base_pos,
-                                 const Eigen::VectorXd &lf_pos,
-                                 const Eigen::VectorXd &rf_pos);
+  Eigen::MatrixXd ComputeInertia(const Eigen::Vector3d &base_pos,
+                                 const Eigen::Vector3d &lf_pos,
+                                 const Eigen::Vector3d &rf_pos);
 
-  Eigen::MatrixXd ComputeDerivativeWrtInput(const Eigen::VectorXd &base_pos,
-                                            const Eigen::VectorXd &lf_pos,
-                                            const Eigen::VectorXd &rf_pos);
+  Eigen::MatrixXd ComputeDerivativeWrtInput(const Eigen::Vector3d &base_pos,
+                                            const Eigen::Vector3d &lf_pos,
+                                            const Eigen::Vector3d &rf_pos);
 
 private:
   casadi_int f_sz_arg_;
