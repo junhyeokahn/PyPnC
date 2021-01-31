@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-from plot.util import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_vector_traj
+from plot.helper import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_vector_traj
 
 tasks = [
     'com_pos', 'com_vel', 'pelvis_com_quat', 'pelvis_com_ang_vel', 'joint_pos',

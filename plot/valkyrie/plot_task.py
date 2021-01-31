@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-from plot.util import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_vector_traj
+from plot.helper import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_vector_traj
 
 tasks = [
     'com_pos', 'com_vel', 'pelvis_quat', 'pelvis_ang_vel', 'joint_pos',
@@ -50,7 +50,7 @@ with open('data/history.pkl', 'rb') as file:
             d = pickle.load(file)
             time.append(d['time'])
             for topic in tasks:
-                des[topic].append(d[topic+'_des'])
+                des[topic].append(d[topic + '_des'])
                 act[topic].append(d[topic])
             for topic in weights:
                 w[topic].append(d[topic])
@@ -61,11 +61,10 @@ with open('data/history.pkl', 'rb') as file:
             break
 
 for k, v in des.items():
-    des[k] = np.stack(v,axis=0)
+    des[k] = np.stack(v, axis=0)
 for k, v in act.items():
-    act[k] = np.stack(v,axis=0)
-rf_cmd = np.stack(rf_cmd,axis=0)
-
+    act[k] = np.stack(v, axis=0)
+rf_cmd = np.stack(rf_cmd, axis=0)
 
 ## =============================================================================
 ## Plot Task

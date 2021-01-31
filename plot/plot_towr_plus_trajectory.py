@@ -6,6 +6,7 @@ import pickle
 import itertools
 
 from ruamel.yaml import YAML
+import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -24,6 +25,8 @@ import matplotlib.patches as patches
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import Axes3D
 
+from util import util
+
 line_styles = {0: '--', 1: '-', 2: '--', 3: '-'}
 colors = {0: 'red', 1: 'magenta', 2: 'blue', 3: 'cyan'}
 line_colors = {0: 'cornflowerblue', 1: 'sandybrown', 2: 'seagreen', 3: 'gold'}
@@ -38,6 +41,66 @@ xyz_label = [r'$x$', r'$y$', r'$z$']
 dxdydz_label = [r'$\dot{x}$', r'$\dot{y}$', r'$\dot{z}$']
 frc_label = [r'$f_x$', r'$f_y$', r'$f_z$']
 trq_label = [r'$\tau_x$', r'$\tau_y$', r'$\tau_z$']
+
+
+def inertia_from_one_hot_vec(vec):
+    ret = np.zeros((3, 3))
+
+    ret[0, 0] = vec[0]
+    ret[1, 1] = vec[1]
+    ret[2, 2] = vec[2]
+
+    ret[0, 1] = vec[3]
+    ret[1, 0] = vec[3]
+    ret[0, 2] = vec[4]
+    ret[2, 0] = vec[4]
+    ret[1, 2] = vec[5]
+    ret[2, 1] = vec[5]
+
+    return ret
+
+
+def compute_inertia_ellipsoids(base_lin, lf_lin, rf_lin, base_ang, tf_model,
+                               input_mean, input_std, output_mean, output_std):
+    n_data = base_lin.shape[0]
+    ret_x, ret_y, ret_z = [None] * n_data, [None] * n_data, [None] * n_data
+    for i in range(n_data):
+        inp1 = lf_lin[i] - base_lin[i]
+        inp2 = rf_lin[i] - base_lin[i]
+        inp = np.concatenate([inp1, inp2], axis=0)
+        normalized_inp = np.expand_dims(util.normalize(inp, input_mean,
+                                                       input_std),
+                                        axis=0)
+        output = tf_model(normalized_inp)
+        d_output = util.denormalize(np.squeeze(output), output_mean,
+                                    output_std)
+
+        local_I = inertia_from_one_hot_vec(d_output)
+        rot_w_base = euler_to_rot(base_ang[i])
+        global_I = np.dot(np.dot(rot_w_base, local_I), rot_w_base.transpose())
+        ret_x[i], ret_y[i], ret_z[i] = get_ellipsoid(global_I, base_lin[i])
+
+    return ret_x, ret_y, ret_z
+
+
+def get_ellipsoid(A, center):
+    U, s, rotation = np.linalg.svd(A)
+    radii = 1.0 / np.sqrt(s)
+
+    scale = 3.
+    radii = radii / scale
+
+    u = np.linspace(0.0, 2.0 * np.pi, 100)
+    v = np.linspace(0.0, np.pi, 100)
+    x = radii[0] * np.outer(np.cos(u), np.sin(v))
+    y = radii[1] * np.outer(np.sin(u), np.sin(v))
+    z = radii[2] * np.outer(np.ones_like(u), np.cos(v))
+    for i in range(len(x)):
+        for j in range(len(x)):
+            [x[i, j], y[i, j],
+             z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotation) + center
+
+    return x, y, z
 
 
 def set_axes_equal(ax):
@@ -265,7 +328,13 @@ def main(args):
         except yaml.YAMLError as exc:
             print(exc)
 
-    arrow_ends = compute_arrow_vec(base_ang[:, 0:3])
+    crbi_model = tf.keras.models.load_model(args.crbi_model_path)
+    with open(args.crbi_model_path + '/data_stat.yaml', 'r') as f:
+        yml = YAML().load(f)
+        input_mean = np.array(yml['input_mean'])
+        input_std = np.array(yml['input_std'])
+        output_mean = np.array(yml['output_mean'])
+        output_std = np.array(yml['output_std'])
 
     # ==========================================================================
     # Plot Motion
@@ -279,16 +348,35 @@ def main(args):
                     zs=base_lin[:, 2],
                     linewidth=3,
                     color='black')
-    num_interval = 50
+
+    num_interval = 100
+
+    arrow_ends = compute_arrow_vec(base_ang[::num_interval, 0:3])
+
+    inertia_ellipsoids_x, inertia_ellipsoids_y, inertia_ellipsoids_z = compute_inertia_ellipsoids(
+        base_lin[::num_interval, 0:3], ee_motion_lin[0][::num_interval, 0:3],
+        ee_motion_lin[1][::num_interval, 0:3], base_ang[::num_interval, 0:3],
+        crbi_model, input_mean, input_std, output_mean, output_std)
+
     com_motion.quiver(base_lin[::num_interval, 0],
                       base_lin[::num_interval, 1],
                       base_lin[::num_interval, 2],
-                      arrow_ends[::num_interval, 0],
-                      arrow_ends[::num_interval, 1],
-                      arrow_ends[::num_interval, 2],
+                      arrow_ends[:, 0],
+                      arrow_ends[:, 1],
+                      arrow_ends[:, 2],
                       length=0.07,
                       linewidth=3,
                       color='slategrey')
+    [
+        com_motion.plot_wireframe(x,
+                                  y,
+                                  z,
+                                  rstride=4,
+                                  cstride=4,
+                                  color='b',
+                                  alpha=0.2) for x, y, z in
+        zip(inertia_ellipsoids_x, inertia_ellipsoids_y, inertia_ellipsoids_z)
+    ]
 
     # plot left foot
     for i, (pos, ori) in enumerate(zip(contact_pos[0], contact_ori[0])):
@@ -411,5 +499,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", type=str)
+    parser.add_argument("--crbi_model_path", type=str)
     args = parser.parse_args()
     main(args)
