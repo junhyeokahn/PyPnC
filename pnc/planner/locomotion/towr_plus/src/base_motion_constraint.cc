@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
+#include <iostream>
+
 #include <towr_plus/constraints/base_motion_constraint.h>
 #include <towr_plus/variables/cartesian_dimensions.h>
 #include <towr_plus/variables/spline_holder.h>
@@ -39,23 +41,22 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 namespace towr_plus {
 
 BaseMotionConstraint::BaseMotionConstraint(double T, double dt,
-                                           const SplineHolder &spline_holder)
+                                           const SplineHolder &spline_holder,
+                                           double min_height, double max_height)
     : TimeDiscretizationConstraint(T, dt, "baseMotion") {
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = spline_holder.base_angular_;
 
-  double dev_rad = 0.05;
+  double dev_rad = 0.1;
   node_bounds_.resize(k6D);
   node_bounds_.at(AX) = Bounds(-dev_rad, dev_rad);
   node_bounds_.at(AY) = Bounds(-dev_rad, dev_rad);
-  node_bounds_.at(AZ) = ifopt::NoBound; // Bounds(-dev_rad, dev_rad);
-  // node_bounds_.at(AZ) = Bounds(-dev_rad, dev_rad);
+  node_bounds_.at(AZ) = ifopt::NoBound;
 
   double z_init = base_linear_->GetPoint(0.0).p().z();
   node_bounds_.at(LX) = ifopt::NoBound;
-  node_bounds_.at(LY) = ifopt::NoBound; // Bounds(-0.05, 0.05);
-  node_bounds_.at(LZ) =
-      Bounds(z_init - 0.02, z_init + 0.1); // allow to move dev_z cm up and down
+  node_bounds_.at(LY) = ifopt::NoBound;
+  node_bounds_.at(LZ) = Bounds(min_height, max_height);
 
   int n_constraints_per_node = node_bounds_.size();
   SetRows(GetNumberOfNodes() * n_constraints_per_node);

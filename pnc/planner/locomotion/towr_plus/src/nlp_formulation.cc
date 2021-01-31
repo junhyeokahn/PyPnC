@@ -353,8 +353,26 @@ NlpFormulation::GetConstraint(Parameters::ConstraintName name,
 
 NlpFormulation::ContraintPtrVec
 NlpFormulation::MakeBaseRangeOfMotionConstraint(const SplineHolder &s) const {
+  // Figure out min and max height of com
+  double buf(0.025);
+  double min_z(initial_base_.lin.p()(2));
+  double max_z(initial_base_.lin.p()(2));
+  double nominal_height(initial_base_.lin.p()(2));
+  int n_check(100);
+  double init_x = initial_base_.lin.p()(0);
+  double init_y = initial_base_.lin.p()(1);
+  double fin_x = final_base_.lin.p()(0);
+  double fin_y = final_base_.lin.p()(1);
+  for (int i = 0; i < n_check; ++i) {
+    double x_check = init_x + i * (fin_x - init_x) / n_check;
+    double y_check = init_y + i * (fin_y - init_y) / n_check;
+    double nominal_z = terrain_->GetHeight(x_check, y_check) + nominal_height;
+    min_z = std::min(nominal_z, min_z);
+    max_z = std::max(nominal_z, max_z);
+  }
   return {std::make_shared<BaseMotionConstraint>(
-      params_.GetTotalTime(), params_.dt_constraint_base_motion_, s)};
+      params_.GetTotalTime(), params_.dt_constraint_base_motion_, s,
+      min_z - buf, max_z + buf)};
 }
 
 NlpFormulation::ContraintPtrVec

@@ -28,7 +28,7 @@ locomotion_param:
     dt_constraint_dynamic: 0.1
     dt_constraint_base_motion: 0.025
     b_optimize_timings: true
-    bound_phase_duration: [0.15, 0.15]
+    bound_phase_duration: [0.25, 0.25]
 
     ## =========================================================================
     ## Consistency with DCM Planner

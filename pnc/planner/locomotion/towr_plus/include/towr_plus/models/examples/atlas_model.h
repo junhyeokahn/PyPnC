@@ -21,7 +21,7 @@ public:
     nominal_stance_.at(R) << x_nominal_b, -y_nominal_b, z_nominal_b;
 
     max_dev_from_nominal_ << 0.18, 0.1, 0.05;
-    min_dev_from_nominal_ << -0.18, -0.1, -0.05;
+    min_dev_from_nominal_ << -0.18, -0.1, -0.01;
   }
 };
 
