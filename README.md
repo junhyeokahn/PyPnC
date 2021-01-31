@@ -23,8 +23,8 @@ system and stabilizing the system over the trajectories.
 ```$ python plot/atlas/plot_task.py --file=data/history.pkl```
 ### TOWR+
 - Compile and run the code:<br/>
-```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_two_step_yaml_test```
+```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_two_step```
 - Plot the optimized trajectory:<br/>
-```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step_yaml_test.yaml```
+```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step.yaml```
 - Visualize the optimized trajectory with Atlas:<br/>
-```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_two_step_yaml_test.yaml```
+```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_two_step.yaml```
