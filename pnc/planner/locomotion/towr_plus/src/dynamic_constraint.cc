@@ -140,6 +140,17 @@ void DynamicConstraint::UpdateJacobianAtInstance(double t, int k,
     }
   }
 
+  // std::cout << "\n-------------------------------------\n" << std::endl;
+  // std::cout << var_set << std::endl;
+  // for (int i = 0; i < jac_model.outerSize(); ++i) {
+  // for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(
+  // jac_model, i);
+  // it; ++it) {
+  // std::cout << "(" << it.row() << "," << it.col() << ") \t";
+  //}
+  //}
+  // std::cout << "jac col : " << jac.cols() << std::endl;
+
   jac.middleRows(GetRow(k, AX), k6D) = jac_model;
 }
 

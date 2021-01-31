@@ -67,6 +67,7 @@ int main() {
     auto solver = std::make_shared<ifopt::IpoptSolver>();
     // solver->SetOption("derivative_test", "first-order");
     // solver->SetOption("derivative_test_tol", 1e-3);
+    // solver->SetOption("derivative_test_print_all", "yes");
     // nlp.PrintCurrent();
     // exit(0);
     solver->SetOption("jacobian_approximation", "exact");

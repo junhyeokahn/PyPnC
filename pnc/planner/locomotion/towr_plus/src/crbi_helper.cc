@@ -55,7 +55,7 @@ CRBIHelper::GetDerivativeOfInertiaMatrixWrtEELinNodes(double t, int ee) {
   Jacobian jac_inertia_wrt_nodes;
   if (ee == 0) {
     jac_inertia_wrt_nodes = jac_inertia.block(0, 3, 6, 3).sparseView() *
-                            rf_pos_linear_->GetJacobianWrtNodes(t, kPos);
+                            lf_pos_linear_->GetJacobianWrtNodes(t, kPos);
   } else if (ee == 1) {
     jac_inertia_wrt_nodes = jac_inertia.block(0, 6, 6, 3).sparseView() *
                             rf_pos_linear_->GetJacobianWrtNodes(t, kPos);
@@ -91,11 +91,10 @@ CRBIHelper::GetDerivativeOfInertiaMatrixWrtEEScheduleNodes(double t, int ee) {
   Jacobian jac_inertia_wrt_nodes;
   if (ee == 0) {
     jac_inertia_wrt_nodes = jac_inertia.block(0, 3, 6, 3).sparseView() *
-                            rf_pos_linear_->GetJacobianOfPosWrtDurations(t);
+                            lf_pos_linear_->GetJacobianOfPosWrtDurations(t);
   } else if (ee == 1) {
     jac_inertia_wrt_nodes = jac_inertia.block(0, 6, 6, 3).sparseView() *
                             rf_pos_linear_->GetJacobianOfPosWrtDurations(t);
-
   } else {
   }
 

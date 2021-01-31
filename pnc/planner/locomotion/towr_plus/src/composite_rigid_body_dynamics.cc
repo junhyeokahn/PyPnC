@@ -43,7 +43,7 @@ CompositeRigidBodyDynamics::GetDynamicViolation() const {
 
   for (int ee = 0; ee < ee_pos_.size(); ++ee) {
     Vector3d f = ee_force_.at(ee);
-    tau_sum += f.cross(com_pos_ - ee_pos_.at(ee));
+    tau_sum += f.cross(com_pos_ - ee_pos_.at(ee)) + ee_trq_.at(ee);
     f_sum += f;
   }
 
@@ -72,7 +72,7 @@ CompositeRigidBodyDynamics::GetJacobianWrtBaseLin(
       crbi_helper->GetDerivativeOfInertiaMatrixWrtBaseLinNodesMult(t, v11);
   Jac jac1 = w_R_b_.sparseView() * jac11;
 
-  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Eigen::Vector3d v21 = w_R_b_.transpose() * omega_;
   Jac jac21 =
       crbi_helper->GetDerivativeOfInertiaMatrixWrtBaseLinNodesMult(t, v21);
   Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
@@ -168,7 +168,7 @@ CompositeRigidBodyDynamics::Jac CompositeRigidBodyDynamics::GetJacobianWrtEEPos(
       crbi_helper->GetDerivativeOfInertiaMatrixWrtEELinNodesMult(t, v11, ee);
   Jac jac1 = w_R_b_.sparseView() * jac11;
 
-  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Eigen::Vector3d v21 = w_R_b_.transpose() * omega_;
   Jac jac21 =
       crbi_helper->GetDerivativeOfInertiaMatrixWrtEELinNodesMult(t, v21, ee);
   Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
@@ -192,7 +192,7 @@ CompositeRigidBodyDynamics::GetJacobianWrtEEPosSchedule(
       t, v11, ee);
   Jac jac1 = w_R_b_.sparseView() * jac11;
 
-  Eigen::Vector3d v21 = w_R_b_ * omega_;
+  Eigen::Vector3d v21 = w_R_b_.transpose() * omega_;
   Jac jac21 = crbi_helper->GetDerivativeOfInertiaMatrixWrtEEScheduleNodesMult(
       t, v21, ee);
   Jac jac2 = Cross(omega_) * w_R_b_.sparseView() * jac21;
@@ -201,7 +201,7 @@ CompositeRigidBodyDynamics::GetJacobianWrtEEPosSchedule(
   Jac jac_tau = Cross(f) * (-jac_ee_pos);
 
   Jac jac(k6D, jac_tau.cols());
-  jac.middleRows(AX, k3D) = -jac_tau;
+  jac.middleRows(AX, k3D) = jac1 + jac2 - jac_tau;
 
   // linear dynamics don't depend on endeffector position.
   return jac;

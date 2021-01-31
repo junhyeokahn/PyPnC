@@ -72,7 +72,19 @@ AtlasCompositeRigidBodyInertia::ComputeInertia(const Eigen::Vector3d &base_pos,
                     atlas_crbi_helper_checkout());
   _fill_matrix(f_y_, f_out_ph_, n_output_, dim_per_output_);
 
-  return jac_f_out_ph_;
+  Eigen::MatrixXd ret = Eigen::MatrixXd::Zero(3, 3);
+  ret(0, 0) = f_out_ph_(0, 0);
+  ret(1, 1) = f_out_ph_(0, 1);
+  ret(2, 2) = f_out_ph_(0, 2);
+
+  ret(0, 1) = f_out_ph_(0, 3);
+  ret(1, 0) = f_out_ph_(0, 3);
+  ret(0, 2) = f_out_ph_(0, 4);
+  ret(2, 0) = f_out_ph_(0, 4);
+  ret(1, 2) = f_out_ph_(0, 5);
+  ret(2, 1) = f_out_ph_(0, 5);
+
+  return ret;
 }
 
 Eigen::MatrixXd AtlasCompositeRigidBodyInertia::ComputeDerivativeWrtInput(
