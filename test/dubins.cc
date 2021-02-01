@@ -9,13 +9,10 @@ int printConfiguration(double q[3], double x, void *user_data) {
 
 int main() {
   double q0[] = {0, 0, 0};
-  double q1[] = {4, 4, 3.142};
-  double turning_radius = 1.0;
+  double q1[] = {0.3, -0.3, -1.57};
+  double turning_radius = 0.25;
   DubinsPath path;
   dubins_shortest_path(&path, q0, q1, turning_radius);
-  std::cout << dubins_path_length(&path) << std::endl;
-  double q_res[3];
-  dubins_path_sample(&path, 0.7, q_res);
-  std::cout << q_res[0] << "," << q_res[1] << "," << q_res[2] << std::endl;
+  dubins_path_sample_many(&path, 0.1, printConfiguration, NULL);
   return 0;
 }

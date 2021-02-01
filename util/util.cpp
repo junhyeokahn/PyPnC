@@ -34,6 +34,12 @@ Eigen::Quaternion<double> euler_xyz_to_quat(const Eigen::Vector3d &euler_xyz) {
 Eigen::Vector3d quat_to_euler_xyz(const Eigen::Quaternion<double> &quat) {
   Eigen::Vector3d eigen_order_euler_angles =
       quat.toRotationMatrix().eulerAngles(2, 1, 0);
+  for (int i = 0; i < 3; ++i) {
+    if (eigen_order_euler_angles[i] >= M_PI / 2.)
+      eigen_order_euler_angles[i] -= M_PI;
+    if (eigen_order_euler_angles[i] <= -M_PI / 2.)
+      eigen_order_euler_angles[i] += M_PI;
+  }
   Eigen::Vector3d ret(eigen_order_euler_angles[2], eigen_order_euler_angles[1],
                       eigen_order_euler_angles[0]);
   return ret;

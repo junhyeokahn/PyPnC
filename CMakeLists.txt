@@ -33,29 +33,23 @@ add_subdirectory(pnc/planner/locomotion/towr_plus)
 add_subdirectory(pnc/planner/dubins)
 
 # Add Executables
-add_executable(atlas_one_step simulator/towr_plus/atlas_one_step.cpp)
-target_link_libraries(atlas_one_step
-    PRIVATE
-    towr_plus
-    ifopt::ifopt_ipopt
-    my_yaml
-)
-if(SNOPT_FOUND)
-    target_link_libraries(atlas_one_step PRIVATE ifopt::ifopt_snopt)
-endif()
+add_executable(dubin_test test/dubins.cc)
+target_link_libraries(dubin_test dubins)
 
-add_executable(atlas_two_step simulator/towr_plus/atlas_two_step.cpp)
-target_link_libraries(atlas_two_step
-    PRIVATE
-    towr_plus
-    ifopt::ifopt_ipopt
-    my_yaml
-)
-if(SNOPT_FOUND)
-    target_link_libraries(atlas_two_step PRIVATE ifopt::ifopt_snopt)
-endif()
+foreach(example atlas_one_step atlas_two_step atlas_six_step atlas_steering)
 
+    add_executable(${example} simulator/towr_plus/${example}.cpp)
+    target_link_libraries(${example}
+        PRIVATE
+        towr_plus
+        ifopt::ifopt_ipopt
+        my_yaml
+    )
+    if(SNOPT_FOUND)
+        target_link_libraries(${example} PRIVATE ifopt::ifopt_snopt)
+    endif()
 
+endforeach(example)
 
 SET (THIS_COM "${PROJECT_SOURCE_DIR}/" )
 if (SNOPT_FOUND)

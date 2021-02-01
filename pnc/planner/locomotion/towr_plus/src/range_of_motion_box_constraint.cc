@@ -50,7 +50,10 @@ RangeOfMotionBoxConstraint::RangeOfMotionBoxConstraint(
   max_deviation_from_nominal_ = model->GetMaximumDeviationFromNominal();
   min_deviation_from_nominal_ = model->GetMinimumDeviationFromNominal();
   max_cos_ = cos(0.);
-  min_cos_ = cos(0.175); // << 10 deg
+  // TODO:  Maybe make this as a variable
+  // min_cos_ = cos(0.175); // << 10 deg
+  min_cos_ = cos(0.261); // << 15 deg
+  // min_cos_ = cos(0.785); // << 45 deg
   nominal_ee_pos_B_ = model->GetNominalStanceInBase().at(ee);
   ee_ = ee;
 

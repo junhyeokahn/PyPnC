@@ -241,6 +241,12 @@ NlpFormulation::MakeEEMotionAngVariables() const {
     // Little detail: Eigen returns zyx order
     final_foot_euler_angles << foot_rot.eulerAngles(2, 1, 0)(2),
         foot_rot.eulerAngles(2, 1, 0)(1), foot_rot.eulerAngles(2, 1, 0)(0);
+    for (int i = 0; i < 3; ++i) {
+      if (final_foot_euler_angles[i] >= M_PI / 2.)
+        final_foot_euler_angles[i] -= M_PI;
+      if (final_foot_euler_angles[i] <= -M_PI / 2.)
+        final_foot_euler_angles[i] += M_PI;
+    }
 
     if (b_initialize_) {
       ang_nodes->SetVariables(one_hot_ee_motion_ang_.at(ee));
@@ -784,7 +790,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
                    initial_base_.ang.at(kPos)(2)};
     double q1[] = {final_base_.lin.at(kPos)(0), final_base_.lin.at(kPos)(1),
                    final_base_.ang.at(kPos)(2)};
-    double turning_radius = 1.0;
+    double turning_radius = 0.25;
     int res = dubins_shortest_path(&dp, q0, q1, turning_radius);
     assert(res == 0);
     double total_dp_len = dubins_path_length(&dp);
@@ -858,6 +864,9 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   dcm_planner_.initialize_footsteps_rvrp(footstep_list, left_foot_start,
                                          right_foot_start, dcm_pos_start,
                                          dcm_vel_start);
+  // for (int i = 0; i < footstep_list.size(); ++i)
+  // footstep_list[i].printInfo();
+
   // ===========================================================================
   // Get solutions and fill one-hot vectors
   // ===========================================================================

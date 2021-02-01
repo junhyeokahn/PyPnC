@@ -87,7 +87,7 @@ def get_ellipsoid(A, center):
     U, s, rotation = np.linalg.svd(A)
     radii = 1.0 / np.sqrt(s)
 
-    scale = 3.
+    scale = 2.
     radii = radii / scale
 
     u = np.linspace(0.0, 2.0 * np.pi, 100)
