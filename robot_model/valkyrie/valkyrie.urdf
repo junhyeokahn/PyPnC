@@ -7,27 +7,27 @@
       <mass value="1.41984"/>
       <inertia ixx="0.0039688" ixy="-1.5797E-06" ixz="-0.00089293" iyy="0.0041178" iyz="-6.8415E-07" izz="0.0035243"/>
     </inertial>
-    <!-- <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="meshes/multisense/head.dae" />
-      </geometry>
-      <material name="">
-        <color rgba="0.9098 0.44314 0.031373 1" />
-      </material>
-    </visual> -->
-    <collision>
-      <origin rpy="0 0 0" xyz="-0.0503 0 -0.00195"/>
-      <geometry>
-        <box size="0.1311 0.12 0.0591"/>
-      </geometry>
-    </collision>
-    <collision>
-      <origin rpy="0 0 0" xyz="-0.093 0 0.0868"/>
-      <geometry>
-        <box size="0.0468 0.12 0.1184"/>
-      </geometry>
-    </collision>
+     <!--<visual>-->
+      <!--<origin xyz="0 0 0" rpy="0 0 0" />-->
+      <!--<geometry>-->
+        <!--<mesh filename="package://meshes/multisense/head.dae" />-->
+      <!--</geometry>-->
+      <!--<material name="">-->
+        <!--<color rgba="0.9098 0.44314 0.031373 1" />-->
+      <!--</material>-->
+    <!--</visual>-->
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="-0.0503 0 -0.00195"/>-->
+      <!--<geometry>-->
+        <!--<box size="0.1311 0.12 0.0591"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="-0.093 0 0.0868"/>-->
+      <!--<geometry>-->
+        <!--<box size="0.0468 0.12 0.1184"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
   </link>
   <link name="hokuyo_link">
     <inertial>
@@ -40,24 +40,24 @@
       <!--origin xyz="0.045 -0.001163 -0.08809" rpy="-0.314 0 0" /-->
       <origin rpy="-0.314 0 0" xyz="0.045 -0.0261018277 -0.08342369"/>
       <geometry>
-        <mesh filename="meshes/multisense/head_camera.obj"/>
+          <mesh filename="package://meshes/multisense/head_camera.obj"/>
       </geometry>
       <material name="hokuyo_orange">
         <color rgba="0.72941 0.35686 0.023529 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.01885 0 -0.02119"/>
-      <geometry>
-        <box size="0.08 0.06 0.04238"/>
-      </geometry>
-    </collision>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.03 0 0.0235"/>
-      <geometry>
-        <cylinder length="0.047" radius="0.024425"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0.01885 0 -0.02119"/>-->
+      <!--<geometry>-->
+        <!--<box size="0.08 0.06 0.04238"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0.03 0 0.0235"/>-->
+      <!--<geometry>-->
+        <!--<cylinder length="0.047" radius="0.024425"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
   </link>
   <gazebo reference="head">
     <mu1>0.9</mu1>
@@ -243,21 +243,6 @@
     <!-- putting it at the same z-level as the stereo -->
     <origin rpy="0 0 0" xyz="-0.0475 0.035 0.0"/>
   </joint>
-  <!--Yaw-->
-  <!--pitch-->
-  <!--roll-->
-  <!-- Pulley-1 diameter = 0.01707m -->
-  <!-- Pulley-2 diameter = 0.0127m -->
-  <!-- Pulley-3 diameter = 0.01016 -->
-  <!-- Pulley-1 diameter = 0.01707m -->
-  <!-- Pulley-2 diameter = 0.0127m -->
-  <!-- Pulley-3 diameter = 0.01016 -->
-  <!-- Pulley-1 diameter = 0.01707m -->
-  <!-- Pulley-2 diameter = 0.0127m -->
-  <!-- Pulley-3 diameter = 0.01016 -->
-  <!-- Pulley-1 diameter = 0.01707m -->
-  <!-- Pulley-2 diameter = 0.0127m -->
-  <!-- Pulley-3 diameter = 0.01016 -->
   <link name="pelvis">
     <inertial>
       <mass value="8.22"/>
@@ -266,20 +251,21 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/pelvis/pelvis.obj"/>
+          <mesh filename="package://meshes/pelvis/pelvis.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white">
         <color rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/pelvis/pelvis.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
-  </link> <link name="torsoYawLink">
+    <!--<collision>-->
+      <!--<geometry>-->
+        <!--<mesh filename="package://meshes/pelvis/pelvis.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
+  </link>
+  <link name="torsoYawLink">
     <inertial>
       <mass value="0.5"/>
       <origin rpy="0 0 0" xyz="0.000000 0.000000 -0.010000"/>
@@ -287,17 +273,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/torso/torsoyaw.obj"/>
+          <mesh filename="package://meshes/torso/torsoyaw.obj"/>
       </geometry>
       <material name="copper"><color rgba=".6 .53 .4 1" /></material>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/torso/torsoyaw.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/torso/torsoyaw.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="torsoPitchLink">
     <inertial>
@@ -307,17 +293,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/torso/torsopitch.obj"/>
+          <mesh filename="package://meshes/torso/torsopitch.obj"/>
       </geometry>
       <material name="copper"><color rgba=".6 .53 .4 1" /></material>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/torso/torsopitch.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/torso/torsopitch.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="torso">
     <inertial>
@@ -327,19 +313,19 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/torso/torso_textured.obj"/>
+          <mesh filename="package://meshes/torso/torso_textured.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white">
         <color rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/torso/torso.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/torso/torso.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <joint name="torsoYaw" type="revolute">
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
@@ -388,17 +374,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/head/neckj1.obj"/>
+          <mesh filename="package://meshes/head/neckj1.obj"/>
       </geometry>
       <material name="copper"><color rgba=".6 .53 .4 1" /></material>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/head/neckj1.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/head/neckj1.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="neckYawLink">
     <inertial>
@@ -408,17 +394,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/head/neckj2.obj"/>
+          <mesh filename="package://meshes/head/neckj2.obj"/>
       </geometry>
       <material name="copper"><color rgba=".6 .53 .4 1" /></material>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/head/neckj2.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/head/neckj2.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="upperNeckPitchLink">
     <inertial>
@@ -428,17 +414,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/head/head_multisense_visor_textured.obj"/>
+          <mesh filename="package://meshes/head/head_multisense_visor_textured.obj"/>
       </geometry>
       <material name="white"><color rgba="1 1 1 1" /></material>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/head/head_multisense.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/head/head_multisense.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <joint name="lowerNeckPitch" type="revolute">
     <origin rpy="0.0 0.0 0.0" xyz="0.0203518 0.0 0.33845"/>
@@ -487,17 +473,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj1_right.obj"/>
+          <mesh filename="package://meshes/arms/aj1_right.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj1_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj1_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightShoulderRollLink">
     <inertial>
@@ -507,17 +493,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj2_right_texture.obj"/>
+          <mesh filename="package://meshes/arms/aj2_right_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj2_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj2_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightShoulderYawLink">
     <inertial>
@@ -527,17 +513,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj3_right_texture.obj"/>
+          <mesh filename="package://meshes/arms/aj3_right_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj3_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj3_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightElbowPitchLink">
     <inertial>
@@ -547,17 +533,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/right_elbow_mass_sim.obj"/>
+          <mesh filename="package://meshes/arms/right_elbow_mass_sim.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="grey"><color rgba=".5 .5 .5 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/right_elbow_mass_sim.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/right_elbow_mass_sim.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <joint name="rightShoulderPitch" type="revolute">
     <origin rpy="0.0 0.0 0.0" xyz="-0.0316 0.0 0.2984"/>
@@ -619,17 +605,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj1_left.obj"/>
+          <mesh filename="package://meshes/arms/aj1_left.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj1_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj1_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftShoulderRollLink">
     <inertial>
@@ -639,17 +625,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj2_left_texture.obj"/>
+          <mesh filename="package://meshes/arms/aj2_left_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj2_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj2_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftShoulderYawLink">
     <inertial>
@@ -659,17 +645,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/aj3_left_texture.obj"/>
+          <mesh filename="package://meshes/arms/aj3_left_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/aj3_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/aj3_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftElbowPitchLink">
     <inertial>
@@ -679,17 +665,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/arms/left_elbow_mass_sim.obj"/>
+          <mesh filename="package://meshes/arms/left_elbow_mass_sim.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="grey"><color rgba=".5 .5 .5 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/arms/left_elbow_mass_sim.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/arms/left_elbow_mass_sim.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <joint name="leftShoulderPitch" type="revolute">
     <origin rpy="0.0 0.0 0.0" xyz="-0.0316 0.0 0.2984"/>
@@ -751,16 +737,16 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj1_right.obj"/>
+          <mesh filename="package://meshes/legs/lj1_right.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj1_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj1_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightHipRollLink">
     <inertial>
@@ -770,17 +756,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj2_right_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj2_right_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj2_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj2_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightHipPitchLink">
     <inertial>
@@ -790,17 +776,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj3_right_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj3_right_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj3_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj3_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightKneePitchLink">
     <inertial>
@@ -810,17 +796,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj4_right_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj4_right_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj4_right.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj4_right.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightAnklePitchLink">
     <inertial>
@@ -830,17 +816,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj5_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj5_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj5.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj5.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="rightFoot">
     <inertial>
@@ -850,7 +836,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/foot_texture.obj"/>
+          <mesh filename="package://meshes/legs/foot_texture.obj"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
@@ -959,17 +945,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj1_left.obj"/>
+          <mesh filename="package://meshes/legs/lj1_left.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj1_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj1_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftHipRollLink">
     <inertial>
@@ -979,17 +965,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj2_left_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj2_left_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj2_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj2_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftHipPitchLink">
     <inertial>
@@ -999,17 +985,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj3_left_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj3_left_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj3_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj3_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftKneePitchLink">
     <inertial>
@@ -1019,17 +1005,17 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj4_left_texture.obj"/>
+          <mesh filename="package://meshes/legs/lj4_left_texture.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj4_left.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj4_left.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftAnklePitchLink">
     <inertial>
@@ -1039,16 +1025,16 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/lj5.obj"/>
+          <mesh filename="package://meshes/legs/lj5.obj"/>
       </geometry>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
     </visual>
-    <collision>
-      <geometry>
-        <mesh filename="meshes/legs/lj5.obj"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-    </collision>
+    <!--<collision>-->
+      <!--<geometry>-->
+          <!--<mesh filename="package://meshes/legs/lj5.obj"/>-->
+      <!--</geometry>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+    <!--</collision>-->
   </link>
   <link name="leftFoot">
     <inertial>
@@ -1058,7 +1044,7 @@
     </inertial>
     <visual>
       <geometry>
-        <mesh filename="meshes/legs/foot_texture.obj"/>
+          <mesh filename="package://meshes/legs/foot_texture.obj"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="white"><color rgba="1 1 1 1" /></material>

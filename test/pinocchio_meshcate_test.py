@@ -13,8 +13,10 @@ import numpy as np
 
 from pinocchio.visualize import MeshcatVisualizer
 
-urdf_filename = cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf"
-package_dir = cwd + "/robot_model/atlas/"
+# urdf_filename = cwd + "/robot_model/atlas/atlas.urdf"
+# package_dir = cwd + "/robot_model/atlas/"
+urdf_filename = cwd + "/robot_model/valkyrie/valkyrie.urdf"
+package_dir = cwd + "/robot_model/valkyrie/"
 
 model, collision_model, visual_model = pin.buildModelsFromUrdf(
     urdf_filename, package_dir, pin.JointModelFreeFlyer())
@@ -35,5 +37,5 @@ viz.loadViewerModel()
 q0 = pin.neutral(model)
 for i in range(1000):
     q0[0] += 0.001
-    print(i, q0)
+    # print(i, q0)
     viz.display(q0)

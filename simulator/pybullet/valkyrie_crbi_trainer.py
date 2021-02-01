@@ -29,7 +29,7 @@ VIDEO_RECORD = False
 PRINT_FREQ = 10
 DT = 0.01
 PRINT_ROBOT_INFO = False
-INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
+INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 2.5 - 1.365 - 0.11]
 INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 DYN_LIB = "pinocchio"  # "dart"
 
@@ -46,7 +46,7 @@ SWING_HEIGHT_LB, SWING_HEIGHT_UB = 0.03, 0.20
 
 SWING_TIME_LB, SWING_TIME_UB = 0.35, 0.75
 
-BASE_HEIGHT_LB, BASE_HEIGHT_UB = 0.7, 0.8
+BASE_HEIGHT_LB, BASE_HEIGHT_UB = 1.0, 1.1
 
 ## Dataset Generation
 N_CPU_DATA_GEN = 5
@@ -90,24 +90,20 @@ def inertia_to_one_hot_vec(inertia):
 
 
 def set_initial_config(robot, joint_id):
-    # shoulder_x
-    p.resetJointState(robot, joint_id["l_arm_shx"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_arm_shx"], np.pi / 4, 0.)
-    # elbow_y
-    p.resetJointState(robot, joint_id["l_arm_ely"], -np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_arm_ely"], np.pi / 2, 0.)
-    # elbow_x
-    p.resetJointState(robot, joint_id["l_arm_elx"], -np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_arm_elx"], -np.pi / 2, 0.)
-    # hip_y
-    p.resetJointState(robot, joint_id["l_leg_hpy"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_leg_hpy"], -np.pi / 4, 0.)
-    # knee
-    p.resetJointState(robot, joint_id["l_leg_kny"], np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_leg_kny"], np.pi / 2, 0.)
-    # ankle
-    p.resetJointState(robot, joint_id["l_leg_aky"], -np.pi / 4, 0.)
-    p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["leftHipPitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["rightHipPitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["leftKneePitch"], 1.2, 0.)
+    p.resetJointState(robot, joint_id["rightKneePitch"], 1.2, 0.)
+    p.resetJointState(robot, joint_id["leftAnklePitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["rightAnklePitch"], -0.6, 0.)
+    p.resetJointState(robot, joint_id["rightShoulderPitch"], 0.2, 0.)
+    p.resetJointState(robot, joint_id["leftShoulderPitch"], 0.2, 0.)
+    p.resetJointState(robot, joint_id["leftShoulderRoll"], -1.1, 0.)
+    p.resetJointState(robot, joint_id["rightShoulderRoll"], 1.1, 0.)
+    p.resetJointState(robot, joint_id["rightElbowPitch"], 1.57, 0.)
+    p.resetJointState(robot, joint_id["leftElbowPitch"], -1.57, 0.)
+    # p.resetJointState(robot, joint_id["leftForearmYaw"], 1.5, 0.)
+    # p.resetJointState(robot, joint_id["rightForearmYaw"], 1.5, 0.)
 
 
 def sample_swing_config(nominal_lf_iso, nominal_rf_iso, side):
@@ -280,8 +276,8 @@ def _do_generate_data(n_data,
 
     from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
     robot_sys = PinocchioRobotSystem(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        cwd + "/robot_model/atlas", False, False)
+        cwd + "/robot_model/valkyrie/valkyrie.urdf",
+        cwd + "/robot_model/valkyrie", False, False)
 
     data_x, data_y = [], []
 
@@ -418,24 +414,25 @@ def generate_casadi_func(tf_model,
     denormalized_output = (output.T * output_std) + output_mean
 
     # Define casadi function
-    func = Function('atlas_crbi_helper', [b, l, r], [denormalized_output])
+    func = Function('valkyrie_crbi_helper', [b, l, r], [denormalized_output])
     jac_func = func.jacobian()
     print(func)
     print(jac_func)
 
     if generate_c_code:
         # Code generator
-        code_gen = CodeGenerator('atlas_crbi_helper.c', dict(with_header=True))
+        code_gen = CodeGenerator('valkyrie_crbi_helper.c',
+                                 dict(with_header=True))
         code_gen.add(func)
         code_gen.add(jac_func)
         code_gen.generate()
         shutil.move(
-            cwd + '/atlas_crbi_helper.h', cwd +
-            "/pnc/planner/locomotion/towr_plus/include/towr_plus/models/examples/atlas_crbi_helper.h"
+            cwd + '/valkyrie_crbi_helper.h', cwd +
+            "/pnc/planner/locomotion/towr_plus/include/towr_plus/models/examples/valkyrie_crbi_helper.h"
         )
         shutil.move(
-            cwd + '/atlas_crbi_helper.c',
-            cwd + "/pnc/planner/locomotion/towr_plus/src/atlas_crbi_helper.c")
+            cwd + '/valkyrie_crbi_helper.c', cwd +
+            "/pnc/planner/locomotion/towr_plus/src/valkyrie_crbi_helper.c")
 
     return func, jac_func
 
@@ -478,58 +475,54 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(
-        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        cwd +
-        "/../drl/code/valkyrie/envs/assets/valkyrie_bullet_mass_sims.urdf",
-        INITIAL_POS_WORLD_TO_BASEJOINT,
-        INITIAL_QUAT_WORLD_TO_BASEJOINT)
+    robot = p.loadURDF(cwd + "/robot_model/valkyrie/valkyrie.urdf",
+                       INITIAL_POS_WORLD_TO_BASEJOINT,
+                       INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 
     # Robot Configuration : 0 << Left Foot, 1 << Right Foot
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
-        robot, INITIAL_POS_WORLD_TO_BASEJOINT, INITIAL_QUAT_WORLD_TO_BASEJOINT)
+        robot, INITIAL_POS_WORLD_TO_BASEJOINT, INITIAL_QUAT_WORLD_TO_BASEJOINT,
+        True)
 
-    # joint_screws_in_ee_at_home, ee_SE3_at_home = dict(), dict()
-    # open_chain_joints, base_link, ee_link = dict(), dict(), dict()
-    # base_link[0] = 'pelvis'
-    # ee_link[0] = 'l_sole'
-    # open_chain_joints[0] = [
-    # 'l_leg_hpz', 'l_leg_hpx', 'l_leg_hpy', 'l_leg_kny', 'l_leg_aky',
-    # 'l_leg_akx'
-    # ]
-    # base_link[1] = 'pelvis'
-    # ee_link[1] = 'r_sole'
-    # open_chain_joints[1] = [
-    # 'r_leg_hpz', 'r_leg_hpx', 'r_leg_hpy', 'r_leg_kny', 'r_leg_aky',
-    # 'r_leg_akx'
-    # ]
+    joint_screws_in_ee_at_home, ee_SE3_at_home = dict(), dict()
+    open_chain_joints, base_link, ee_link = dict(), dict(), dict()
+    base_link[0] = 'pelvis'
+    ee_link[0] = 'leftCOP_Frame'
+    open_chain_joints[0] = [
+        'leftHipYaw', 'leftHipRoll', 'leftHipPitch', 'leftKneePitch',
+        'leftAnklePitch', 'leftAnkleRoll'
+    ]
+    base_link[1] = 'pelvis'
+    ee_link[1] = 'rightCOP_Frame'
+    open_chain_joints[1] = [
+        'rightHipYaw', 'rightHipRoll', 'rightHipPitch', 'rightKneePitch',
+        'rightAnklePitch', 'rightAnkleRoll'
+    ]
 
-    # for ee in range(2):
-    # joint_screws_in_ee_at_home[ee], ee_SE3_at_home[
-    # ee] = pybullet_util.get_kinematics_config(robot, joint_id, link_id,
-    # open_chain_joints[ee],
-    # base_link[ee],
-    # ee_link[ee])
+    for ee in range(2):
+        joint_screws_in_ee_at_home[ee], ee_SE3_at_home[
+            ee] = pybullet_util.get_kinematics_config(robot, joint_id, link_id,
+                                                      open_chain_joints[ee],
+                                                      base_link[ee],
+                                                      ee_link[ee])
 
     # Initial Config
-    # set_initial_config(robot, joint_id)
+    set_initial_config(robot, joint_id)
 
     # Joint Friction
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
     if DYN_LIB == 'dart':
         from pnc.robot_system.dart_robot_system import DartRobotSystem
-        # robot_sys = DartRobotSystem(
-        # cwd +
-        # "/robot_model/atlas/atlas_v4_with_multisense_relative_path.urdf",
-        # False, True)
+        robot_sys = DartRobotSystem(
+            cwd + "/robot_model/valkyrie/valkyrie_rel_path.urdf", False, True)
     elif DYN_LIB == 'pinocchio':
         from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
-        # robot_sys = PinocchioRobotSystem(
-        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        # cwd + "/robot_model/atlas", False, True)
+        robot_sys = PinocchioRobotSystem(
+            cwd + "/robot_model/valkyrie/valkyrie.urdf",
+            cwd + "/robot_model/valkyrie", False, True)
     else:
         raise ValueError
 
@@ -544,8 +537,10 @@ if __name__ == "__main__":
     nominal_sensor_data = pybullet_util.get_sensor_data(
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
-    # nominal_lf_iso = pybullet_util.get_link_iso(robot, link_id['l_sole'])
-    # nominal_rf_iso = pybullet_util.get_link_iso(robot, link_id['r_sole'])
+    nominal_lf_iso = pybullet_util.get_link_iso(robot,
+                                                link_id['leftCOP_Frame'])
+    nominal_rf_iso = pybullet_util.get_link_iso(robot,
+                                                link_id['rightCOP_Frame'])
     base_pos = np.copy(nominal_sensor_data['base_com_pos'])
     base_quat = np.copy(nominal_sensor_data['base_com_quat'])
     joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
@@ -748,8 +743,10 @@ if __name__ == "__main__":
             world_I = robot_sys.Ig[0:3, 0:3]
             local_I = np.dot(np.dot(rot_world_base.transpose(), world_I),
                              rot_world_base)
-            rf_iso = pybullet_util.get_link_iso(robot, link_id["r_sole"])
-            lf_iso = pybullet_util.get_link_iso(robot, link_id["l_sole"])
+            rf_iso = pybullet_util.get_link_iso(robot,
+                                                link_id["rightCOP_Frame"])
+            lf_iso = pybullet_util.get_link_iso(robot,
+                                                link_id["leftCOP_Frame"])
 
             denormalized_output, output = evaluate_crbi_model_using_tf(
                 crbi_model, sensor_data["base_com_pos"], lf_iso[0:3, 3],
