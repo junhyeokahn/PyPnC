@@ -791,6 +791,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
     double q1[] = {final_base_.lin.at(kPos)(0), final_base_.lin.at(kPos)(1),
                    final_base_.ang.at(kPos)(2)};
     double turning_radius = 0.25;
+    // double turning_radius = 0.5;
     int res = dubins_shortest_path(&dp, q0, q1, turning_radius);
     assert(res == 0);
     double total_dp_len = dubins_path_length(&dp);

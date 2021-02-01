@@ -43,11 +43,11 @@ int main() {
     nlp.AddCostSet(c);
   }
 
-  Eigen::VectorXd initial_vars = nlp.GetVariableValues();
-  sol.from_one_hot_vector(initial_vars);
-  sol.to_yaml();
-  nlp.PrintCurrent();
-  exit(0);
+  // Eigen::VectorXd initial_vars = nlp.GetVariableValues();
+  // sol.from_one_hot_vector(initial_vars);
+  // sol.to_yaml();
+  // nlp.PrintCurrent();
+  // exit(0);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   // solver->SetOption("derivative_test", "first-order");

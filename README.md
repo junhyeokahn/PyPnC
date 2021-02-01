@@ -21,8 +21,8 @@ system and stabilizing the system over the trajectories.
 - Send walking commands through keystroke interface. For example, press ```8``` for forward walking, press ```5``` for in-place walking, press ```4``` for leftward walking, press ```6``` for rightward walking, press ```2``` for backward walking, press ```7``` for ccw turning, and press ```9``` for cw turning.
 - Plot the results:<br/>
 ```$ python plot/atlas/plot_task.py --file=data/history.pkl```
-### TOWR+
-- Train a Composite Rigid Body Inertia model and generate files for optimization:<br/>
+### Atlas Locomotion Planning with TOWR+
+- Train a Composite Rigid Body Inertia network and generate files for optimization:<br/>
 ```$ python simulator/pybullet/atlas_crbi_trainer.py``` and press ```5``` for training
 - Run ```TOWR+```:<br/>
 ```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_two_step```
