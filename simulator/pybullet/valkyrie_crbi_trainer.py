@@ -102,8 +102,6 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["rightShoulderRoll"], 1.1, 0.)
     p.resetJointState(robot, joint_id["rightElbowPitch"], 1.57, 0.)
     p.resetJointState(robot, joint_id["leftElbowPitch"], -1.57, 0.)
-    # p.resetJointState(robot, joint_id["leftForearmYaw"], 1.5, 0.)
-    # p.resetJointState(robot, joint_id["rightForearmYaw"], 1.5, 0.)
 
 
 def sample_swing_config(nominal_lf_iso, nominal_rf_iso, side):

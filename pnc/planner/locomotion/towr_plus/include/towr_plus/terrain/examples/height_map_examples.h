@@ -49,7 +49,7 @@ namespace towr_plus {
 class FlatGround : public HeightMap {
 public:
   FlatGround(double height = 0.0);
-  double GetHeight(double x, double y)  const override { return height_; };
+  double GetHeight(double x, double y) const override { return height_; };
 
 private:
   double height_; // [m]
@@ -60,16 +60,17 @@ private:
  */
 class Block : public HeightMap {
 public:
-  double GetHeight(double x, double y)  const override;
+  double GetHeight(double x, double y) const override;
   double GetHeightDerivWrtX(double x, double y) const override;
 
 private:
   double block_start = 0.7;
-  double length_     = 3.5;
-  double height_     = 0.5; // [m]
+  double length_ = 3.5;
+  double height_ = 0.5; // [m]
+  double block_end = block_start + length_;
 
   double eps_ = 0.03; // approximate as slope
-  const double slope_ = height_/eps_;
+  const double slope_ = height_ / eps_;
 };
 
 /**
@@ -80,9 +81,9 @@ public:
   double GetHeight(double x, double y) const override;
 
 private:
-  double first_step_start_  = 1.0;
-  double first_step_width_  = 0.4;
-  double height_first_step  = 0.2;
+  double first_step_start_ = 1.0;
+  double first_step_width_ = 0.4;
+  double height_first_step = 0.2;
   double height_second_step = 0.4;
   double width_top = 1.0;
 };
@@ -101,8 +102,8 @@ private:
   const double w = 0.5;
   const double h = 1.5;
 
-  const double slope_ = h/w;
-  const double dx = w/2.0;
+  const double slope_ = h / w;
+  const double dx = w / 2.0;
   const double xc = gap_start_ + dx; // gap center
   const double gap_end_x = gap_start_ + w;
 
@@ -110,13 +111,14 @@ private:
   // see matlab/gap_height_map.m
   // coefficients of 2nd order polynomial
   // h = a*x^2 + b*x + c
-  const double a = (4*h)/(w*w);
-  const double b = -(8*h*xc)/(w*w);
-  const double c = -(h*(w - 2*xc)*(w + 2*xc))/(w*w);
+  const double a = (4 * h) / (w * w);
+  const double b = -(8 * h * xc) / (w * w);
+  const double c = -(h * (w - 2 * xc) * (w + 2 * xc)) / (w * w);
 };
 
 /**
- * @brief Sample terrain with an increasing and then decreasing slope in x-direction.
+ * @brief Sample terrain with an increasing and then decreasing slope in
+ * x-direction.
  */
 class Slope : public HeightMap {
 public:
@@ -125,13 +127,13 @@ public:
 
 private:
   const double slope_start_ = 1.0;
-  const double up_length_   = 1.0;
+  const double up_length_ = 1.0;
   const double down_length_ = 1.0;
   const double height_center = 0.7;
 
-  const double x_down_start_ = slope_start_+up_length_;
+  const double x_down_start_ = slope_start_ + up_length_;
   const double x_flat_start_ = x_down_start_ + down_length_;
-  const double slope_ = height_center/up_length_;
+  const double slope_ = height_center / up_length_;
 };
 
 /**
@@ -144,11 +146,11 @@ public:
 
 private:
   const double x_start_ = 1.0;
-  const double length_  = 1.5;
+  const double length_ = 1.5;
   const double y_start_ = 0.5; // distance to start of slope from center at z=0
-  const double slope_   = 3.0;
+  const double slope_ = 3.0;
 
-  const double x_end_ = x_start_+length_;
+  const double x_end_ = x_start_ + length_;
 };
 
 /**
@@ -161,12 +163,12 @@ public:
 
 private:
   const double x_start_ = 0.5;
-  const double length_  = 1.0;
+  const double length_ = 1.0;
   const double y_start_ = 0.5; // distance to start of slope from center at z=0
-  const double slope_   = 2;
+  const double slope_ = 2;
 
-  const double x_end1_ = x_start_+length_;
-  const double x_end2_ = x_start_+2*length_;
+  const double x_end1_ = x_start_ + length_;
+  const double x_end2_ = x_start_ + 2 * length_;
 };
 
 /** @}*/
