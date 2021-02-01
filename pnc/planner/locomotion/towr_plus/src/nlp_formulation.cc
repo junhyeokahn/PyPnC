@@ -861,7 +861,8 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
     }
   } else if (traj_type == "turning") {
 
-    double turn_radians_per_step = final_base_.ang.p()[2] / (n_lf + n_rf - 1);
+    double turn_radians_per_step =
+        final_base_.ang.p()[2] / ((n_lf + n_rf) / 2.);
     Eigen::Quaterniond foot_rotate(
         Eigen::AngleAxisd(turn_radians_per_step, Eigen::Vector3d::UnitZ()));
 
@@ -876,12 +877,12 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
       left_footstep.setPosOriSide(
           mid_footstep_rotated.position +
               mid_footstep_rotated.R_ori *
-                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(0)[1] / 2.0, 0),
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(0)[1], 0),
           mid_footstep_rotated.orientation, LEFT_ROBOT_SIDE);
       right_footstep.setPosOriSide(
           mid_footstep_rotated.position +
               mid_footstep_rotated.R_ori *
-                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(1)[1] / 2.0, 0),
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(1)[1], 0),
           mid_footstep_rotated.orientation, RIGHT_ROBOT_SIDE);
 
       if (turn_radians_per_step > 0) {
@@ -893,6 +894,42 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
       }
       mid_footstep = mid_footstep_rotated;
     }
+  } else if (traj_type == "side") {
+    double strafe_distance = final_base_.lin.p()[1] / ((n_lf + n_rf) / 2.);
+    Footstep left_footstep, right_footstep;
+    Footstep mid_footstep = mid_foot_stance;
+    Footstep mid_footstep_translated = mid_footstep;
+    assert(n_lf == n_rf);
+    for (int i = 0; i < (n_lf + n_rf) / 2; ++i) {
+      mid_footstep_translated.setPosOri(
+          mid_footstep.position +
+              mid_footstep.R_ori * Eigen::Vector3d(0.0, strafe_distance, 0.0),
+          mid_footstep.orientation);
+
+      left_footstep.setPosOriSide(
+          mid_footstep_translated.position +
+              mid_footstep_translated.R_ori *
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(0)[1], 0),
+          mid_footstep_translated.orientation, LEFT_ROBOT_SIDE);
+      right_footstep.setPosOriSide(
+          mid_footstep_translated.position +
+              mid_footstep_translated.R_ori *
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(1)[1], 0),
+          mid_footstep_translated.orientation, RIGHT_ROBOT_SIDE);
+
+      if (strafe_distance > 0) {
+        // Left strafe
+        footstep_list.push_back(left_footstep);
+        footstep_list.push_back(right_footstep);
+      } else {
+        // Right strafe
+        footstep_list.push_back(right_footstep);
+        footstep_list.push_back(left_footstep);
+      }
+      mid_footstep = mid_footstep_translated;
+    }
+  } else {
+    assert(false); // Wrong type
   }
   Footstep left_foot_start = Footstep(
       initial_ee_motion_lin_.at(0),
@@ -912,6 +949,7 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   dcm_planner_.initialize_footsteps_rvrp(footstep_list, left_foot_start,
                                          right_foot_start, dcm_pos_start,
                                          dcm_vel_start);
+
   // for (int i = 0; i < footstep_list.size(); ++i)
   // footstep_list[i].printInfo();
 

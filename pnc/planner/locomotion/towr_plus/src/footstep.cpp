@@ -1,4 +1,5 @@
 #include <towr_plus/initialization/footstep.hpp>
+#include <util/util.hpp>
 
 Footstep::Footstep() {
   position.setZero();
@@ -55,8 +56,11 @@ void Footstep::printInfo() {
 
   std::cout << "pos: " << position[0] << ", " << position[1] << ", "
             << position[2] << std::endl;
-  std::cout << "ori: " << orientation.x() << ", " << orientation.y() << ", "
-            << orientation.z() << ", " << orientation.w() << std::endl;
+  std::cout << "ori in quat: " << orientation.x() << ", " << orientation.y()
+            << ", " << orientation.z() << ", " << orientation.w() << std::endl;
+  Eigen::Vector3d euler = quat_to_euler_xyz(orientation);
+  std::cout << "ori in euler: " << euler[0] << ", " << euler[1] << ", "
+            << euler[2] << std::endl;
 }
 
 void Footstep::computeMidfeet(const Footstep &footstep1,
