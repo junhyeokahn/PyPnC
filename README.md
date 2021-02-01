@@ -3,7 +3,7 @@ PyPnC is a python library designed for generating trajectories for a robot
 system and stabilizing the system over the trajectories.
 
 ## Installation
-- Install [conda](https://docs.anaconda.com/anaconda/install/)
+- Install [anaconda](https://docs.anaconda.com/anaconda/install/)
 - Clone the repository:<br/>
 ```$ git clone https://github.com/junhyeokahn/PyPnC.git```
 - Create a virtual environment and install dependancies:<br/>
@@ -22,9 +22,18 @@ system and stabilizing the system over the trajectories.
 - Plot the results:<br/>
 ```$ python plot/atlas/plot_task.py --file=data/history.pkl```
 ### TOWR+
-- Compile and run the code:<br/>
+- Train a Composite Rigid Body Inertia model and generate files for optimization:<br/>
+```$ python simulator/pybullet/atlas_crbi_trainer.py``` and press ```5``` for training
+- Run ```TOWR+```:<br/>
 ```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_two_step```
 - Plot the optimized trajectory:<br/>
-```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step.yaml```
-- Visualize the optimized trajectory with Atlas:<br/>
+```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step.yaml --crbi_model_path=data/tf_model/atlas_crbi```
+- Replay the optimized trajectory with the robot:<br/>
 ```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_two_step.yaml```
+
+## Implemented Features
+### Planner
+- Divergent Component of Motion: [paper](https://ieeexplore.ieee.org/document/7063218) | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/planner/locomotion/dcm_planner)
+- TOWR+: paper | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/planner/locomotion/towr_plus)
+### Controller
+- Implicite Hierarchical Whole Body Controller: paper | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/wbc)
