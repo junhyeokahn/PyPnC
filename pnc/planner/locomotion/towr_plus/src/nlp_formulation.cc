@@ -784,6 +784,28 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
   // Fill footstep_list based on the trjectory type
   // ===========================================================================
   std::vector<Footstep> footstep_list;
+
+  int n_lf = (params_.ee_phase_durations_.at(0).size() - 1) / 2;
+  int n_rf = (params_.ee_phase_durations_.at(1).size() - 1) / 2;
+  int robot_side;
+  if (params_.ee_phase_durations_.at(0)[0] <=
+      params_.ee_phase_durations_.at(1)[0]) {
+    robot_side = LEFT_ROBOT_SIDE; // Lift left foot first
+  } else {
+    robot_side = RIGHT_ROBOT_SIDE; // Lift right foot first
+  }
+  Footstep left_foot_stance, right_foot_stance, mid_foot_stance;
+  Eigen::Vector3d lfoot_pos = initial_ee_motion_lin_.at(0);
+  Eigen::Quaternion<double> lfoot_ori(
+      euler_xyz_to_rot(initial_ee_motion_ang_.at(0)));
+  left_foot_stance.setPosOriSide(lfoot_pos, lfoot_ori, LEFT_ROBOT_SIDE);
+  Eigen::Vector3d rfoot_pos = initial_ee_motion_lin_.at(1);
+  Eigen::Quaternion<double> rfoot_ori(
+      euler_xyz_to_rot(initial_ee_motion_ang_.at(1)));
+  right_foot_stance.setPosOriSide(rfoot_pos, rfoot_ori, RIGHT_ROBOT_SIDE);
+  mid_foot_stance.computeMidfeet(left_foot_stance, right_foot_stance,
+                                 mid_foot_stance);
+
   if (traj_type == "dubins") {
     DubinsPath dp;
     double q0[] = {initial_base_.lin.at(kPos)(0), initial_base_.lin.at(kPos)(1),
@@ -796,15 +818,6 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
     assert(res == 0);
     double total_dp_len = dubins_path_length(&dp);
 
-    int n_lf = (params_.ee_phase_durations_.at(0).size() - 1) / 2;
-    int n_rf = (params_.ee_phase_durations_.at(1).size() - 1) / 2;
-    int robot_side;
-    if (params_.ee_phase_durations_.at(0)[0] <=
-        params_.ee_phase_durations_.at(1)[0]) {
-      robot_side = LEFT_ROBOT_SIDE; // Lift left foot first
-    } else {
-      robot_side = RIGHT_ROBOT_SIDE; // Lift right foot first
-    }
     for (int i = 0; i < n_lf + n_rf; ++i) {
       Eigen::Vector3d base_pos, ee_pos;
       Eigen::Quaternion<double> ee_quat;
@@ -845,6 +858,40 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
         footstep_list.push_back(Footstep(ee_pos, ee_quat, robot_side));
         robot_side = LEFT_ROBOT_SIDE;
       }
+    }
+  } else if (traj_type == "turning") {
+
+    double turn_radians_per_step = final_base_.ang.p()[2] / (n_lf + n_rf - 1);
+    Eigen::Quaterniond foot_rotate(
+        Eigen::AngleAxisd(turn_radians_per_step, Eigen::Vector3d::UnitZ()));
+
+    Footstep left_footstep, right_footstep;
+    Footstep mid_footstep = mid_foot_stance;
+    Footstep mid_footstep_rotated = mid_footstep;
+    assert(n_lf == n_rf);
+    for (int i = 0; i < (n_lf + n_rf) / 2; ++i) {
+      mid_footstep_rotated.setPosOri(mid_footstep.position,
+                                     foot_rotate * mid_footstep.orientation);
+
+      left_footstep.setPosOriSide(
+          mid_footstep_rotated.position +
+              mid_footstep_rotated.R_ori *
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(0)[1] / 2.0, 0),
+          mid_footstep_rotated.orientation, LEFT_ROBOT_SIDE);
+      right_footstep.setPosOriSide(
+          mid_footstep_rotated.position +
+              mid_footstep_rotated.R_ori *
+                  Eigen::Vector3d(0, initial_ee_motion_lin_.at(1)[1] / 2.0, 0),
+          mid_footstep_rotated.orientation, RIGHT_ROBOT_SIDE);
+
+      if (turn_radians_per_step > 0) {
+        footstep_list.push_back(left_footstep);
+        footstep_list.push_back(right_footstep);
+      } else {
+        footstep_list.push_back(right_footstep);
+        footstep_list.push_back(left_footstep);
+      }
+      mid_footstep = mid_footstep_rotated;
     }
   }
   Footstep left_foot_start = Footstep(

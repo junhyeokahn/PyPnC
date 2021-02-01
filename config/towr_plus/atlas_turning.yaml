@@ -13,7 +13,7 @@ locomotion_task:
         0: [0., 0., 0.]
         1: [0., 0., 0.]
 
-    final_base_lin: [0.55, 0.35, 0.766, 0., 0., 0.]
+    final_base_lin: [0., 0., 0.766, 0., 0., 0.]
     final_base_ang: [0., 0., 0.785, 0., 0., 0.]
 
     terrain_type: "flat_ground"

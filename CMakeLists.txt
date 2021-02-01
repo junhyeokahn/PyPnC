@@ -36,7 +36,7 @@ add_subdirectory(pnc/planner/dubins)
 add_executable(dubin_test test/dubins.cc)
 target_link_libraries(dubin_test dubins)
 
-foreach(example atlas_one_step atlas_two_step atlas_six_step atlas_steering)
+foreach(example atlas_one_step atlas_two_step atlas_six_step atlas_turning atlas_steering)
 
     add_executable(${example} simulator/towr_plus/${example}.cpp)
     target_link_libraries(${example}
