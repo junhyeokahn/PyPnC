@@ -25,11 +25,11 @@ system and stabilizing the system over the trajectories.
 - Train a Composite Rigid Body Inertia network and generate files for optimization:<br/>
 ```$ python simulator/pybullet/atlas_crbi_trainer.py``` and press ```5``` for training
 - Run ```TOWR+```:<br/>
-```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_two_step```
+```$ mkdir build && cd build && cmake .. && make -j6 && ./atlas_forward_walk```
 - Plot the optimized trajectory:<br/>
-```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_two_step.yaml --crbi_model_path=data/tf_model/atlas_crbi```
+```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_forward_walk.yaml --crbi_model_path=data/tf_model/atlas_crbi```
 - Replay the optimized trajectory with the robot:<br/>
-```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_two_step.yaml```
+```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_forward_walk.yaml```
 
 ## Implemented Features
 ### Planner

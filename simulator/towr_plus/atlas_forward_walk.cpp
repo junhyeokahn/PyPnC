@@ -11,17 +11,17 @@
 
 int main() {
   YAML::Node cfg =
-      YAML::LoadFile(THIS_COM "config/towr_plus/atlas_six_step.yaml");
+      YAML::LoadFile(THIS_COM "config/towr_plus/atlas_forward_walk.yaml");
   Clock clock = Clock();
   double time_solving(0.);
 
   // Locomotion Task
-  LocomotionTask task = LocomotionTask("atlas_six_step");
+  LocomotionTask task = LocomotionTask("atlas_forward_walk");
   task.from_yaml(cfg["locomotion_task"]);
 
   // Locomotion Solution
   LocomotionSolution sol =
-      LocomotionSolution("atlas_six_step", cfg["locomotion_param"]);
+      LocomotionSolution("atlas_forward_walk", cfg["locomotion_param"]);
 
   // Construct NLP from locomotion task
   NlpFormulation formulation;
