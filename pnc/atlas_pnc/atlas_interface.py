@@ -23,13 +23,12 @@ class AtlasInterface(Interface):
         if PnCConfig.DYN_LIB == "dart":
             from pnc.robot_system.dart_robot_system import DartRobotSystem
             self._robot = DartRobotSystem(
-                cwd +
-                "/robot_model/atlas/atlas_v4_with_multisense_relative_path.urdf",
-                False, PnCConfig.PRINT_ROBOT_INFO)
+                cwd + "/robot_model/atlas/atlas_rel_path.urdf", False,
+                PnCConfig.PRINT_ROBOT_INFO)
         elif PnCConfig.DYN_LIB == "pinocchio":
             from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
             self._robot = PinocchioRobotSystem(
-                cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+                cwd + "/robot_model/atlas/atlas.urdf",
                 cwd + "/robot_model/atlas", False, PnCConfig.PRINT_ROBOT_INFO)
         else:
             raise ValueError("wrong dynamics library")

@@ -373,7 +373,7 @@ def main(args):
                                   z,
                                   rstride=4,
                                   cstride=4,
-                                  color='b',
+                                  color='gray',
                                   alpha=0.2) for x, y, z in
         zip(inertia_ellipsoids_x, inertia_ellipsoids_y, inertia_ellipsoids_z)
     ]

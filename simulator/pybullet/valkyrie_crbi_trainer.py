@@ -279,8 +279,9 @@ def _do_generate_data(n_data,
         np.random.seed(rseed)
 
     from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
-    robot_sys = PinocchioRobotSystem(cwd + "/robot_model/atlas/atlas.urdf",
-                                     cwd + "/robot_model/atlas", False, False)
+    robot_sys = PinocchioRobotSystem(
+        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        cwd + "/robot_model/atlas", False, False)
 
     data_x, data_y = [], []
 
@@ -371,7 +372,7 @@ def generate_data(n_data, nominal_lf_iso, nominal_rf_iso, nominal_sensor_data,
 
 
 def save_weights_to_yaml(tf_model):
-    model_path = 'data/tf_model/atlas_crbi'
+    model_path = 'data/tf_model/valkyrie_crbi'
     mlp_model = dict()
     mlp_model['num_layer'] = len(tf_model.layers)
     for l_id, l in enumerate(tf_model.layers):
@@ -394,7 +395,7 @@ def generate_casadi_func(tf_model,
                          output_mean,
                          output_std,
                          generate_c_code=True):
-    c_code_path = cwd + "/data/tf_model/atlas_crbi"
+    c_code_path = cwd + "/data/tf_model/valkyrie_crbi"
     ## Computational Graph
     b = MX.sym('b', 3)
     l = MX.sym('l', 3)
@@ -470,15 +471,19 @@ if __name__ == "__main__":
         if not os.path.exists('video'):
             os.makedirs('video')
         for f in os.listdir('video'):
-            if f == "atlas_crbi.mp4":
+            if f == "valkyrie_crbi.mp4":
                 os.remove('video/' + f)
-        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas_crbi.mp4")
+        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4,
+                            "video/valkyrie_crbi.mp4")
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(cwd + "/robot_model/atlas/atlas.urdf",
-                       INITIAL_POS_WORLD_TO_BASEJOINT,
-                       INITIAL_QUAT_WORLD_TO_BASEJOINT)
+    robot = p.loadURDF(
+        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        cwd +
+        "/../drl/code/valkyrie/envs/assets/valkyrie_bullet_mass_sims.urdf",
+        INITIAL_POS_WORLD_TO_BASEJOINT,
+        INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 
@@ -486,48 +491,50 @@ if __name__ == "__main__":
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
         robot, INITIAL_POS_WORLD_TO_BASEJOINT, INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
-    joint_screws_in_ee_at_home, ee_SE3_at_home = dict(), dict()
-    open_chain_joints, base_link, ee_link = dict(), dict(), dict()
-    base_link[0] = 'pelvis'
-    ee_link[0] = 'l_sole'
-    open_chain_joints[0] = [
-        'l_leg_hpz', 'l_leg_hpx', 'l_leg_hpy', 'l_leg_kny', 'l_leg_aky',
-        'l_leg_akx'
-    ]
-    base_link[1] = 'pelvis'
-    ee_link[1] = 'r_sole'
-    open_chain_joints[1] = [
-        'r_leg_hpz', 'r_leg_hpx', 'r_leg_hpy', 'r_leg_kny', 'r_leg_aky',
-        'r_leg_akx'
-    ]
+    # joint_screws_in_ee_at_home, ee_SE3_at_home = dict(), dict()
+    # open_chain_joints, base_link, ee_link = dict(), dict(), dict()
+    # base_link[0] = 'pelvis'
+    # ee_link[0] = 'l_sole'
+    # open_chain_joints[0] = [
+    # 'l_leg_hpz', 'l_leg_hpx', 'l_leg_hpy', 'l_leg_kny', 'l_leg_aky',
+    # 'l_leg_akx'
+    # ]
+    # base_link[1] = 'pelvis'
+    # ee_link[1] = 'r_sole'
+    # open_chain_joints[1] = [
+    # 'r_leg_hpz', 'r_leg_hpx', 'r_leg_hpy', 'r_leg_kny', 'r_leg_aky',
+    # 'r_leg_akx'
+    # ]
 
-    for ee in range(2):
-        joint_screws_in_ee_at_home[ee], ee_SE3_at_home[
-            ee] = pybullet_util.get_kinematics_config(robot, joint_id, link_id,
-                                                      open_chain_joints[ee],
-                                                      base_link[ee],
-                                                      ee_link[ee])
+    # for ee in range(2):
+    # joint_screws_in_ee_at_home[ee], ee_SE3_at_home[
+    # ee] = pybullet_util.get_kinematics_config(robot, joint_id, link_id,
+    # open_chain_joints[ee],
+    # base_link[ee],
+    # ee_link[ee])
 
     # Initial Config
-    set_initial_config(robot, joint_id)
+    # set_initial_config(robot, joint_id)
 
     # Joint Friction
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
     if DYN_LIB == 'dart':
         from pnc.robot_system.dart_robot_system import DartRobotSystem
-        robot_sys = DartRobotSystem(
-            cwd + "/robot_model/atlas/atlas_rel_path.urdf", False, True)
+        # robot_sys = DartRobotSystem(
+        # cwd +
+        # "/robot_model/atlas/atlas_v4_with_multisense_relative_path.urdf",
+        # False, True)
     elif DYN_LIB == 'pinocchio':
         from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
-        robot_sys = PinocchioRobotSystem(cwd + "/robot_model/atlas/atlas.urdf",
-                                         cwd + "/robot_model/atlas", False,
-                                         True)
+        # robot_sys = PinocchioRobotSystem(
+        # cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        # cwd + "/robot_model/atlas", False, True)
     else:
         raise ValueError
 
     # DataSaver
-    data_saver = DataSaver("atlas_crbi_validation.pkl")
+    data_saver = DataSaver("valkyrie_crbi_validation.pkl")
 
     # Run Sim
     t = 0
@@ -537,8 +544,8 @@ if __name__ == "__main__":
     nominal_sensor_data = pybullet_util.get_sensor_data(
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
-    nominal_lf_iso = pybullet_util.get_link_iso(robot, link_id['l_sole'])
-    nominal_rf_iso = pybullet_util.get_link_iso(robot, link_id['r_sole'])
+    # nominal_lf_iso = pybullet_util.get_link_iso(robot, link_id['l_sole'])
+    # nominal_rf_iso = pybullet_util.get_link_iso(robot, link_id['r_sole'])
     base_pos = np.copy(nominal_sensor_data['base_com_pos'])
     base_quat = np.copy(nominal_sensor_data['base_com_quat'])
     joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
@@ -577,7 +584,7 @@ if __name__ == "__main__":
             output_mean, output_std, normalized_data_y = util.normalize_data(
                 data_y)
 
-            log_dir = "data/tensorboard/atlas_crbi"
+            log_dir = "data/tensorboard/valkyrie_crbi"
             if os.path.exists(log_dir):
                 shutil.rmtree(log_dir)
             tensorboard_callback = tf.keras.callbacks.TensorBoard(
@@ -601,10 +608,10 @@ if __name__ == "__main__":
                            workers=4,
                            use_multiprocessing=True,
                            callbacks=[tensorboard_callback])
-            model_path = 'data/tf_model/atlas_crbi'
+            model_path = 'data/tf_model/valkyrie_crbi'
             if os.path.exists(model_path):
                 shutil.rmtree(model_path)
-            crbi_model.save("data/tf_model/atlas_crbi")
+            crbi_model.save("data/tf_model/valkyrie_crbi")
             data_stats = {
                 'input_mean': input_mean.tolist(),
                 'input_std': input_std.tolist(),
@@ -630,8 +637,9 @@ if __name__ == "__main__":
         elif pybullet_util.is_key_triggered(keys, '4'):
             print("-" * 80)
             print("Pressed 4: Load Pre-trained CRBI Model")
-            crbi_model = tf.keras.models.load_model("data/tf_model/atlas_crbi")
-            model_path = 'data/tf_model/atlas_crbi'
+            crbi_model = tf.keras.models.load_model(
+                "data/tf_model/valkyrie_crbi")
+            model_path = 'data/tf_model/valkyrie_crbi'
             with open(model_path + '/data_stat.yaml', 'r') as f:
                 yml = YAML().load(f)
                 input_mean = np.array(yml['input_mean'])

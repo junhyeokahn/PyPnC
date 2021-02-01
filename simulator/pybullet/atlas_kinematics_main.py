@@ -96,9 +96,9 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
-        INITIAL_POS_WORLD_TO_BASEJOINT, INITIAL_QUAT_WORLD_TO_BASEJOINT)
+    robot = p.loadURDF(cwd + "/robot_model/atlas/atlas.urdf",
+                       INITIAL_POS_WORLD_TO_BASEJOINT,
+                       INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
