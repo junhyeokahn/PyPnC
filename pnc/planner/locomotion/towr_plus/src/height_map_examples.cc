@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 ******************************************************************************/
 
+#include <iostream>
 #include <towr_plus/terrain/examples/height_map_examples.h>
 
 namespace towr_plus {
@@ -70,14 +71,17 @@ double Block::GetHeightDerivWrtX(double x, double y) const {
 double Stairs::GetHeight(double x, double y) const {
   double h = 0.0;
 
-  if (x >= first_step_start_)
+  if (x >= first_step_start_) {
     h = height_first_step;
+  }
 
-  if (x >= first_step_start_ + first_step_width_)
+  if (x >= first_step_start_ + first_step_width_) {
     h = height_second_step;
+  }
 
-  if (x >= first_step_start_ + first_step_width_ + width_top)
+  if (x >= first_step_start_ + first_step_width_ + width_top) {
     h = 0.0;
+  }
 
   return h;
 }

@@ -103,6 +103,10 @@ if __name__ == "__main__":
         block = p.loadURDF(cwd + "/robot_model/ground/block.urdf",
                            [0, 0, 0.15],
                            useFixedBase=True)
+    elif file == "data/atlas_stair.yaml":
+        stair = p.loadURDF(cwd + "/robot_model/ground/stair.urdf",
+                           [0.2, 0, 0.],
+                           useFixedBase=True)
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)

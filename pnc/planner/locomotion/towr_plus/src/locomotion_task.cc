@@ -39,6 +39,8 @@ void LocomotionTask::from_yaml(const YAML::Node &node) {
     terrain = std::make_shared<FlatGround>(0.);
   } else if (terrain_type == "block") {
     terrain = std::make_shared<Block>();
+  } else if (terrain_type == "stair") {
+    terrain = std::make_shared<Stairs>();
   } else {
     std::cout << "Wrong Terrain Type" << std::endl;
     exit(0);
