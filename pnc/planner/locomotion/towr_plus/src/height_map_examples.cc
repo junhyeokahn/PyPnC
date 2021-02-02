@@ -48,7 +48,7 @@ double Block::GetHeight(double x, double y) const {
     h = height_;
 
   if (block_end - eps_ <= x && x <= block_end)
-    h = -slope * (x - (block_end - eps_)) + height_;
+    h = -slope_ * (x - (block_end - eps_)) + height_;
 
   return h;
 }

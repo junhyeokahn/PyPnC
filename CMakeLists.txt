@@ -37,7 +37,8 @@ add_executable(dubin_test test/dubins.cc)
 target_link_libraries(dubin_test dubins)
 
 foreach(example atlas_forward_walk atlas_turning atlas_side_walk
-                atlas_steer_walk atlas_round_walk)
+                atlas_steer_walk atlas_round_walk
+                atlas_block)
 
     add_executable(${example} simulator/towr_plus/${example}.cpp)
     target_link_libraries(${example}

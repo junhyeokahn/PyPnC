@@ -1003,8 +1003,8 @@ void NlpFormulation::initialize_from_dcm_planner(const std::string &traj_type) {
                                          right_foot_start, dcm_pos_start,
                                          dcm_vel_start);
 
-  for (int i = 0; i < footstep_list.size(); ++i)
-    footstep_list[i].printInfo();
+  // for (int i = 0; i < footstep_list.size(); ++i)
+  // footstep_list[i].printInfo();
 
   // ===========================================================================
   // Get solutions and fill one-hot vectors

@@ -86,6 +86,14 @@ public:
     return min_dev_from_nominal_;
   }
 
+  Eigen::Vector3d SetMaximumDeviationFromNominal(const Eigen::Vector3d &v) {
+    max_dev_from_nominal_ = v;
+  }
+
+  Eigen::Vector3d SetMinimumDeviationFromNominal(const Eigen::Vector3d &v) {
+    min_dev_from_nominal_ = v;
+  }
+
   /**
    * @returns returns the number of endeffectors of this robot.
    */
