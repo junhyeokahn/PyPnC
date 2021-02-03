@@ -107,6 +107,10 @@ if __name__ == "__main__":
         stair = p.loadURDF(cwd + "/robot_model/ground/stair.urdf",
                            [0.2, 0, 0.],
                            useFixedBase=True)
+    elif file == "data/atlas_slope.yaml":
+        gap = p.loadURDF(cwd + "/robot_model/ground/slope.urdf",
+                         [0.325, 0, -0.125],
+                         useFixedBase=True)
 
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)

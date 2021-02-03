@@ -98,8 +98,8 @@ public:
   double GetHeightDerivWrtXX(double x, double y) const override;
 
 private:
-  const double gap_start_ = 1.0;
-  const double w = 0.5;
+  const double gap_start_ = 0.4;
+  const double w = 0.1;
   const double h = 1.5;
 
   const double slope_ = h / w;
@@ -126,10 +126,10 @@ public:
   double GetHeightDerivWrtX(double x, double y) const override;
 
 private:
-  const double slope_start_ = 1.0;
-  const double up_length_ = 1.0;
-  const double down_length_ = 1.0;
-  const double height_center = 0.7;
+  const double slope_start_ = 0.15;
+  const double up_length_ = 0.3;
+  const double down_length_ = 0.3;
+  const double height_center = 0.05;
 
   const double x_down_start_ = slope_start_ + up_length_;
   const double x_flat_start_ = x_down_start_ + down_length_;
