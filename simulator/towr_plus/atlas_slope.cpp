@@ -28,7 +28,6 @@ int main() {
 
   formulation.model_ = RobotModel(RobotModel::Atlas);
   Eigen::Vector3d max_dev(0.3, 0.1, 0.2);
-  // Eigen::Vector3d max_dev(0.3, 0.1, 0.15);
   Eigen::Vector3d min_dev(-0.3, -0.1, -0.02);
   formulation.model_.kinematic_model_->SetMaximumDeviationFromNominal(max_dev);
   formulation.model_.kinematic_model_->SetMinimumDeviationFromNominal(min_dev);
