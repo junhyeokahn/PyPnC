@@ -542,6 +542,7 @@ if __name__ == "__main__":
     base_pos = np.copy(nominal_sensor_data['base_com_pos'])
     base_quat = np.copy(nominal_sensor_data['base_com_quat'])
     joint_pos = copy.deepcopy(nominal_sensor_data['joint_pos'])
+    __import__('ipdb').set_trace()
     s = 0.
     b_ik = False
     b_regressor_trained = False

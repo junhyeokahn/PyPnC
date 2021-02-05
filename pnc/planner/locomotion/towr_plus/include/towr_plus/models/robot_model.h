@@ -72,7 +72,8 @@ struct RobotModel {
    * @ingroup Robots
    */
   enum Robot {
-    Atlas, ///< Boston Dynamic's Humanoid
+    Atlas,    ///< Boston Dynamic's Humanoid
+    Valkyrie, ///< Nasa's Humanoid
     ROBOT_COUNT
   };
 
@@ -85,6 +86,7 @@ struct RobotModel {
 
 const static std::map<RobotModel::Robot, std::string> robot_names = {
     {RobotModel::Atlas, "Atlas"},
+    {RobotModel::Valkyrie, "Valkyrie"},
 };
 
 } /* namespace towr_plus */

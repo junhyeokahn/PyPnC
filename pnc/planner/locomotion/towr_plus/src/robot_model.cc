@@ -33,6 +33,7 @@ Modified by Junhyeok Ahn (junhyeokahn91@gmail.com) for towr+
 
 #include <stdio.h>
 #include <towr_plus/models/examples/atlas_model.h>
+#include <towr_plus/models/examples/valkyrie_model.h>
 #include <towr_plus/models/robot_model.h>
 
 #include <iostream>
@@ -44,6 +45,10 @@ RobotModel::RobotModel(Robot robot) {
   case Atlas:
     dynamic_model_ = std::make_shared<AtlasDynamicModel>();
     kinematic_model_ = std::make_shared<AtlasKinematicModel>();
+    break;
+  case Valkyrie:
+    dynamic_model_ = std::make_shared<ValkyrieDynamicModel>();
+    kinematic_model_ = std::make_shared<ValkyrieKinematicModel>();
     break;
   default:
     assert(false); // Error: Robot model not implemented.
