@@ -1,7 +1,12 @@
+import os
+import sys
 from collections import OrderedDict
 
 import pybullet as p
 import numpy as np
+from tqdm import tqdm
+import cv2
+import imageio
 
 from util import util
 from util import liegroup
@@ -250,6 +255,19 @@ def get_camera_image_from_link(robot, link, fov, aspect, nearval, farval):
     return width, height, rgb_img, depth_img, seg_img
 
 
+def make_video(video_dir, delete_jpgs=True):
+    images = []
+    for file in tqdm(sorted(os.listdir(video_dir)),
+                     desc='converting jpgs to gif'):
+        filename = video_dir + '/' + file
+        im = cv2.imread(filename)
+        im = im[:, :, [2, 1, 0]]  # << BGR to RGB
+        images.append(im)
+        if delete_jpgs:
+            os.remove(filename)
+    imageio.mimsave(video_dir + '/video.gif', images[:-1], duration=0.01)
+
+
 def get_camera_image(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_roll,
                      fov, render_width, render_height, nearval, farval):
     view_matrix = p.computeViewMatrixFromYawPitchRoll(
@@ -259,7 +277,7 @@ def get_camera_image(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_roll,
         pitch=cam_pitch,
         roll=cam_roll,
         upAxisIndex=2)
-    proj_matrix = p.computeProjectionMatrixFOV(fov=60,
+    proj_matrix = p.computeProjectionMatrixFOV(fov=fov,
                                                aspect=float(render_width) /
                                                float(render_height),
                                                nearVal=nearval,

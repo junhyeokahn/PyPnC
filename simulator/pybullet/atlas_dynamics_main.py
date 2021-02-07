@@ -5,7 +5,10 @@ sys.path.append(cwd)
 import time, math
 from collections import OrderedDict
 import copy
+import signal
+import shutil
 
+import cv2
 import pybullet as p
 import numpy as np
 np.set_printoptions(precision=2)
@@ -38,6 +41,15 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
 
 
+def signal_handler(signal, frame):
+    if SimConfig.VIDEO_RECORD:
+        pybullet_util.make_video(video_dir)
+    p.disconnect()
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
 if __name__ == "__main__":
 
     # Environment Setup
@@ -50,11 +62,10 @@ if __name__ == "__main__":
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
                                 numSubSteps=SimConfig.N_SUBSTEP)
     if SimConfig.VIDEO_RECORD:
-        if not os.path.exists('video'):
-            os.makedirs('video')
-        for f in os.listdir('video'):
-            os.remove('video/' + f)
-        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas.mp4")
+        video_dir = 'video/atlas_pnc'
+        if os.path.exists(video_dir):
+            shutil.rmtree(video_dir)
+        os.makedirs(video_dir)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -128,6 +139,15 @@ if __name__ == "__main__":
 
         # Apply Trq
         pybullet_util.set_motor_trq(robot, joint_id, command)
+
+        # Save Image
+        if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):
+            frame = pybullet_util.get_camera_image([1.2, 0.5, 1.], 2.0, 120,
+                                                   -15, 0, 60., 1920, 1080,
+                                                   0.1, 100.)
+            frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
+            filename = video_dir + '/step%06d.jpg' % count
+            cv2.imwrite(filename, frame)
 
         p.stepSimulation()
 

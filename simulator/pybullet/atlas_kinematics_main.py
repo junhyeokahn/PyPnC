@@ -85,10 +85,10 @@ if __name__ == "__main__":
 
     # Environment Setup
     p.connect(p.GUI)
-    p.resetDebugVisualizerCamera(cameraDistance=1.5,
+    p.resetDebugVisualizerCamera(cameraDistance=2.0,
                                  cameraYaw=120,
-                                 cameraPitch=-30,
-                                 cameraTargetPosition=[1, 0.5, 1.5])
+                                 cameraPitch=-15,
+                                 cameraTargetPosition=[1, 0.5, 1.])
     p.setGravity(0, 0, -9.81)
     p.setPhysicsEngineParameter(fixedTimeStep=DT, numSubSteps=1)
     if VIDEO_RECORD:
@@ -223,16 +223,7 @@ if __name__ == "__main__":
         if vis_idx == len(vis_time) - 1:
             vis_idx = 0
             if VIDEO_RECORD:
-                images = []
-                for file in tqdm(sorted(os.listdir(video_dir)),
-                                 desc='converting jpgs to gif'):
-                    filename = video_dir + '/' + file
-                    im = cv2.imread(filename)
-                    images.append(im)
-                    os.remove(filename)
-                imageio.mimsave(video_dir + '/video.gif',
-                                images[:-1],
-                                duration=0.01)
+                pybullet_util.make_video(video_dir, False)
             p.disconnect()
             exit()
         else:
@@ -244,9 +235,10 @@ if __name__ == "__main__":
 
         # Save Image
         if (VIDEO_RECORD) and (count % RECORD_FREQ == 0):
-            frame = pybullet_util.get_camera_image([1, 0.5, 1.5], 1.5, 120,
-                                                   -30, 0, 60., 1920, 1080,
-                                                   0.1, 100.)
+            frame = pybullet_util.get_camera_image([1.4, 0.5, 1.], 2.0, 120,
+                                                   -15, 0, 60, 1920, 1080, 0.1,
+                                                   500.)
+            frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
             filename = video_dir + '/step%06d.jpg' % count
             cv2.imwrite(filename, frame)
 
