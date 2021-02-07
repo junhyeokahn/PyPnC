@@ -22,6 +22,7 @@ system and stabilizing the system over the trajectories.
 - Plot the results:<br/>
 ```$ python plot/atlas/plot_task.py --file=data/history.pkl```
 ### Atlas Locomotion Planning with TOWR+
+- For TOWR+, install additional dependancy [ifopt](https://github.com/ethz-adrl/ifopt)
 - Train a Composite Rigid Body Inertia network and generate files for optimization:<br/>
 ```$ python simulator/pybullet/atlas_crbi_trainer.py``` and press ```5``` for training
 - Run ```TOWR+```:<br/>
