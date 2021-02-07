@@ -5,8 +5,12 @@ sys.path.append(cwd)
 import time
 import math
 import copy
+import shutil
 from collections import OrderedDict
 
+from tqdm import tqdm
+import cv2
+import imageio
 from ruamel.yaml import YAML
 import pybullet as p
 import numpy as np
@@ -21,7 +25,8 @@ from util import robot_kinematics
 DT = 0.01
 
 PRINT_ROBOT_INFO = False
-VIDEO_RECORD = False
+VIDEO_RECORD = True
+RECORD_FREQ = 10
 
 INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
 INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
@@ -87,12 +92,10 @@ if __name__ == "__main__":
     p.setGravity(0, 0, -9.81)
     p.setPhysicsEngineParameter(fixedTimeStep=DT, numSubSteps=1)
     if VIDEO_RECORD:
-        if not os.path.exists('video'):
-            os.makedirs('video')
-        for f in os.listdir('video'):
-            if f == 'atlas_kin.mp4':
-                os.remove('video/' + f)
-        p.startStateLogging(p.STATE_LOGGING_VIDEO_MP4, "video/atlas_kin.mp4")
+        video_dir = 'video/' + file.split('/')[-1].split('.')[0]
+        if os.path.exists(video_dir):
+            shutil.rmtree(video_dir)
+        os.makedirs(video_dir)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -219,12 +222,33 @@ if __name__ == "__main__":
         # Handle timings
         if vis_idx == len(vis_time) - 1:
             vis_idx = 0
+            if VIDEO_RECORD:
+                images = []
+                for file in tqdm(sorted(os.listdir(video_dir)),
+                                 desc='converting jpgs to gif'):
+                    filename = video_dir + '/' + file
+                    im = cv2.imread(filename)
+                    images.append(im)
+                    os.remove(filename)
+                imageio.mimsave(video_dir + '/video.gif',
+                                images[:-1],
+                                duration=0.01)
+            p.disconnect()
+            exit()
         else:
             vis_idx += 1
 
         # Visualize config
         pybullet_util.set_config(robot, joint_id, link_id, base_pos, base_quat,
                                  joint_pos)
+
+        # Save Image
+        if (VIDEO_RECORD) and (count % RECORD_FREQ == 0):
+            frame = pybullet_util.get_camera_image([1, 0.5, 1.5], 1.5, 120,
+                                                   -30, 0, 60., 1920, 1080,
+                                                   0.1, 100.)
+            filename = video_dir + '/step%06d.jpg' % count
+            cv2.imwrite(filename, frame)
 
         # Disable forward step
         # p.stepSimulation()

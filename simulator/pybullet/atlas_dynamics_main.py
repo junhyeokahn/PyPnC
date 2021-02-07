@@ -77,11 +77,6 @@ if __name__ == "__main__":
     # Joint Friction
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
-    #camera intrinsic parameter
-    fov, aspect, nearval, farval = 60.0, 2.0, 0.1, 10
-    projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, nearval,
-                                                     farval)
-
     # Construct Interface
     interface = AtlasInterface()
 
@@ -94,8 +89,8 @@ if __name__ == "__main__":
 
         # Get SensorData
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
-            camera_img = pybullet_util.get_camera_image(
-                robot, link_id, projection_matrix)
+            camera_img = pybullet_util.get_camera_image_from_link(
+                robot, link_id['head'], 60., 2., 0.1, 10)
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
                                                     pos_basejoint_to_basecom,
                                                     rot_basejoint_to_basecom)

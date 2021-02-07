@@ -11,9 +11,11 @@ dependencies:
       - casadi==3.5.5
       - conda-env-export==0.2.2
       - flatbuffers==1.12
+      - imageio==2.9.0
       - ipdb==0.13.4
       - matplotlib==3.3.3
       - meshcat==0.0.19
+      - opencv-python==4.5.1.48
       - pybullet==3.0.8
       - qpsolvers==1.5
       - ruamel.yaml==0.16.12

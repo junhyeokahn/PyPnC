@@ -225,9 +225,10 @@ def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
     return sensor_data
 
 
-def get_camera_image(robot, link_id, projection_matrix):
-    link_info = p.getLinkState(robot, link_id['head'], 1,
-                               1)  #Get head link info
+def get_camera_image_from_link(robot, link, fov, aspect, nearval, farval):
+    projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, nearval,
+                                                     farval)
+    link_info = p.getLinkState(robot, link, 1, 1)  #Get head link info
     link_pos = link_info[0]  #Get link com pos wrt world
     link_ori = link_info[1]  #Get link com ori wrt world
     rot = p.getMatrixFromQuaternion(link_ori)
@@ -247,6 +248,32 @@ def get_camera_image(robot, link_id, projection_matrix):
         view_matrix,
         projection_matrix)
     return width, height, rgb_img, depth_img, seg_img
+
+
+def get_camera_image(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_roll,
+                     fov, render_width, render_height, nearval, farval):
+    view_matrix = p.computeViewMatrixFromYawPitchRoll(
+        cameraTargetPosition=cam_target_pos,
+        distance=cam_dist,
+        yaw=cam_yaw,
+        pitch=cam_pitch,
+        roll=cam_roll,
+        upAxisIndex=2)
+    proj_matrix = p.computeProjectionMatrixFOV(fov=60,
+                                               aspect=float(render_width) /
+                                               float(render_height),
+                                               nearVal=nearval,
+                                               farVal=farval)
+    (_, _, px, _, _) = p.getCameraImage(width=render_width,
+                                        height=render_height,
+                                        renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                                        viewMatrix=view_matrix,
+                                        projectionMatrix=proj_matrix)
+    rgb_array = np.array(px, dtype=np.uint8)
+    rgb_array = np.reshape(np.array(px), (render_height, render_width, -1))
+    rgb_array = rgb_array[:, :, :3]
+
+    return rgb_array
 
 
 def is_key_triggered(keys, key):
