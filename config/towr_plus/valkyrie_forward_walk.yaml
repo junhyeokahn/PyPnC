@@ -2,7 +2,7 @@ solver: "ipopt"
 
 locomotion_task:
 
-    initial_base_lin: [0., 0., 1.02, 0., 0., 0.]
+    initial_base_lin: [0., 0., 0.98, 0., 0., 0.]
     initial_base_ang: [0., 0., 0., 0., 0., 0.]
 
     # Left Foot: 0, Right Foot: 1
@@ -13,7 +13,7 @@ locomotion_task:
         0: [0., 0., 0.]
         1: [0., 0., 0.]
 
-    final_base_lin: [0.8, 0.0, 1.02, 0., 0., 0.]
+    final_base_lin: [0.8, 0.0, 0.98, 0., 0., 0.]
     final_base_ang: [0., 0., 0., 0., 0., 0.]
 
     terrain_type: "flat_ground"
@@ -23,7 +23,7 @@ locomotion_param:
     duration_base_polynomial: 0.1
     force_polynomials_per_stance_phase: 3
     ee_polynomials_per_swing_phase: 2
-    force_limit_in_normal_direction: 1000.
+    force_limit_in_normal_direction: 1500.
     dt_constraint_range_of_motion: 0.08
     dt_constraint_dynamic: 0.1
     dt_constraint_base_motion: 0.025
@@ -44,8 +44,8 @@ locomotion_param:
     # LF: {1.5ds, ss, 2ds+ss, ss, 2ds+ss, ss, ds+b}
     # RF: {2.5ds+ss, ss, 2ds+ss, ss, 2ds+ss+b}
     ee_phase_durations:
-        0: [0.675, 0.75, 1.65, 0.75, 1.65, 0.75, 1.929252]
-        1: [1.875, 0.75, 1.65, 0.75, 1.65, 0.75, 0.729252]
+        0: [0.675, 0.75, 1.65, 0.75, 1.65, 0.75, 1.572]
+        1: [1.875, 0.75, 1.65, 0.75, 1.65, 0.75, 0.372]
     ee_in_contact_at_start:
         0: True
         1: True

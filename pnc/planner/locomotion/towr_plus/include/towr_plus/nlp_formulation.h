@@ -113,6 +113,8 @@ public:
   HeightMap::Ptr terrain_;
   Parameters params_;
 
+  double rom_buf;
+
   void from_locomotion_task(const LocomotionTask &task);
   // traj_type : "dubins"
   void initialize_from_dcm_planner(const std::string &traj_type);

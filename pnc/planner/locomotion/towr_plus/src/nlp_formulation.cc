@@ -67,6 +67,8 @@ NlpFormulation::NlpFormulation() {
           "**********";
   cout << "\n\n";
 
+  rom_buf = 0.025;
+
   one_hot_ee_motion_lin_.resize(2);
   one_hot_ee_motion_ang_.resize(2);
   one_hot_ee_wrench_lin_.resize(2);
@@ -360,7 +362,6 @@ NlpFormulation::GetConstraint(Parameters::ConstraintName name,
 NlpFormulation::ContraintPtrVec
 NlpFormulation::MakeBaseRangeOfMotionConstraint(const SplineHolder &s) const {
   // Figure out min and max height of com
-  double buf(0.025);
   double min_z(initial_base_.lin.p()(2));
   double max_z(initial_base_.lin.p()(2));
   double nominal_height(initial_base_.lin.p()(2));
@@ -378,7 +379,7 @@ NlpFormulation::MakeBaseRangeOfMotionConstraint(const SplineHolder &s) const {
   }
   return {std::make_shared<BaseMotionConstraint>(
       params_.GetTotalTime(), params_.dt_constraint_base_motion_, s,
-      min_z - buf, max_z + buf)};
+      min_z - rom_buf, max_z + rom_buf)};
 }
 
 NlpFormulation::ContraintPtrVec

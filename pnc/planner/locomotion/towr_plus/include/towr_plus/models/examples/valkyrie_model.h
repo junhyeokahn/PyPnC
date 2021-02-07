@@ -12,7 +12,7 @@ public:
   ValkyrieKinematicModel() : KinematicModel(2) {
     const double x_nominal_b = 0.;
     const double y_nominal_b = 0.137;
-    const double z_nominal_b = -1.02;
+    const double z_nominal_b = -0.98;
 
     foot_half_length_ = 0.135;
     foot_half_width_ = 0.08;
