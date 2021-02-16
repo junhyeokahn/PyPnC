@@ -110,15 +110,13 @@ class BasicTask(Task):
         elif self._task_type == "LINK_XYZ":
             self._jacobian = self._robot.get_link_jacobian(
                 self._target_id)[3:6, :]
-            self._jacobian_dot_q_dot = np.dot(
-                self._robot.get_link_jacobian_dot(self._target_id)[3:6, :],
-                self._robot.get_q_dot())
+            self._jacobian_dot_q_dot = self._robot.get_link_jacobian_dot_times_qdot(
+                self._target_id)[3:6]
         elif self._task_type == "LINK_ORI":
             self._jacobian = self._robot.get_link_jacobian(
                 self._target_id)[0:3, :]
-            self._jacobian_dot_q_dot = np.dot(
-                self._robot.get_link_jacobian_dot(self._target_id)[0:3, :],
-                self._robot.get_q_dot())
+            self._jacobian_dot_q_dot = self._robot.get_link_jacobian_dot_times_qdot(
+                self._target_id)[0:3]
         elif self._task_type == "COM":
             self._jacobian = self._robot.get_com_lin_jacobian()
             self._jacobian_dot_q_dot = np.dot(

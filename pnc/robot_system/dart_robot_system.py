@@ -224,14 +224,10 @@ class DartRobotSystem(RobotSystem):
                                    self._link_id[link_id].getLocalCOM(),
                                    dart.dynamics.Frame.World()))
 
-    def get_link_jacobian_dot(self, link_id):
-        ## TODO (I thought this should be the one I need to use but comparing
-        ## to the pinocchio, it seems to be wrong
-        # return self._skel.getJacobianClassicDeriv(
-        # self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
-        # dart.dynamics.Frame.World())
+    def get_link_jacobian_dot_times_qdot(self, link_id):
 
-        return np.copy(
-            self._skel.getJacobianSpatialDeriv(
-                self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
-                dart.dynamics.Frame.World()))
+        jac_dot = self._skel.getJacobianClassicDeriv(
+            self._link_id[link_id], self._link_id[link_id].getLocalCOM(),
+            dart.dynamics.Frame.World())
+
+        return np.dot(jac_dot, self.get_q_dot())

@@ -23,9 +23,8 @@ class PointContact(Contact):
     def _update_jacobian(self):
         self._jacobian = self._robot.get_link_jacobian(
             self._link_id)[self._dim_contact:, :]
-        self._jacobian_dot_q_dot = np.dot(
-            self._robot.get_link_jacobian_dot(
-                self._link_id)[self._dim_contact:, :], self._robot.get_q_dot())
+        self._jacobian_dot_q_dot = self._robot.get_link_jacobian_dot_times_qdot(
+            self._link_id)
 
     def _update_cone_constraint(self):
         rot = self._robot.get_link_iso(self._link_id)[0:3, 0:3].transpose()
@@ -68,9 +67,8 @@ class SurfaceContact(Contact):
 
     def _update_jacobian(self):
         self._jacobian = self._robot.get_link_jacobian(self._link_id)
-        self._jacobian_dot_q_dot = np.dot(
-            self._robot.get_link_jacobian_dot(self._link_id),
-            self._robot.get_q_dot())
+        self._jacobian_dot_q_dot = self._robot.get_link_jacobian_dot_times_qdot(
+            self._link_id)
 
     def _update_cone_constraint(self):
         self._cone_constraint_mat = np.zeros((16 + 2, self._dim_contact))

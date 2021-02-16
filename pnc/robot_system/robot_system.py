@@ -382,7 +382,7 @@ class RobotSystem(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_link_jacobian_dot(self, link_id):
+    def get_link_jacobian_dot_times_qdot(self, link_id):
         """
         Parameters
         ----------
@@ -390,6 +390,6 @@ class RobotSystem(abc.ABC):
             Link ID
         Returns
         -------
-            Link CoM Jacobian Dot
+            Link CoM jacobian_dot times qdot
         """
         pass

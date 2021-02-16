@@ -249,17 +249,17 @@ class PinocchioRobotSystem(RobotSystem):
 
         return np.copy(ret)
 
-    def get_link_jacobian_dot(self, link_id):
+    def get_link_jacobian_dot_times_qdot(self, link_id):
         frame_id = self._model.getFrameId(link_id)
-        pin.computeJointJacobiansTimeVariation(self._model, self._data,
-                                               self._q, self._q_dot)
-        jac_dot = pin.getFrameJacobianTimeVariation(
+
+        pin.forwardKinematics(self._model, self._data, self._q, self._q_dot,
+                              0 * self._q_dot)
+        jdot_qdot = pin.getFrameClassicalAcceleration(
             self._model, self._data, frame_id,
             pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
 
-        # Pinocchio has linear on top of angular
-        ret = np.zeros_like(jac_dot)
-        ret[0:3] = jac_dot[3:6]
-        ret[3:6] = jac_dot[0:3]
+        ret = np.zeros_like(jdot_qdot)
+        ret[0:3] = jdot_qdot.angular
+        ret[3:6] = jdot_qdot.linear
 
         return np.copy(ret)
