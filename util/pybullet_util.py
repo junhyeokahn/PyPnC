@@ -230,7 +230,8 @@ def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
     return sensor_data
 
 
-def get_camera_image_from_link(robot, link, fov, aspect, nearval, farval):
+def get_camera_image_from_link(robot, link, pic_width, pic_height,fov, nearval, farval):
+    aspect = pic_width / pic_height
     projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, nearval,
                                                      farval)
     link_info = p.getLinkState(robot, link, 1, 1)  #Get head link info
@@ -246,13 +247,13 @@ def get_camera_image_from_link(robot, link, fov, aspect, nearval, farval):
     camera_target_pos = link_pos + np.dot(rot, 1.0 * global_camera_x_unit)
     camera_up_vector = np.dot(rot, global_camera_z_unit)
     view_matrix = p.computeViewMatrix(camera_eye_pos, camera_target_pos,
-                                      camera_up_vector)
+                                      camera_up_vector) #SE3_camera_to_world
     width, height, rgb_img, depth_img, seg_img = p.getCameraImage(
-        50,  #image width
-        10,  #image height
+        pic_width,  #image width
+        pic_height,  #image height
         view_matrix,
         projection_matrix)
-    return width, height, rgb_img, depth_img, seg_img
+    return width, height, rgb_img, depth_img, seg_img, view_matrix, projection_matrix, camera_eye_pos
 
 
 def make_video(video_dir, delete_jpgs=True):
@@ -305,3 +306,29 @@ def set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos):
     p.resetBasePositionAndOrientation(robot, base_pos, base_quat)
     for k, v in joint_pos.items():
         p.resetJointState(robot, joint_id[k], v, 0.)
+
+def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor, d_ver):
+    view_matrix = np.asarray(view_matrix).reshape([4,4], order='F')
+    projection_matrix = np.asarray(projection_matrix).reshape([4,4], order='F')
+    trans_world_to_pix = np.linalg.inv(np.matmul(projection_matrix, view_matrix))
+    trans_camera_to_pix = np.linalg.inv(projection_matrix)
+    img_height = (depth_buffer.shape)[0]
+    img_width = (depth_buffer.shape)[1]
+
+    wf_point_cloud_data = np.empty([np.int(img_height/d_ver), np.int(img_width/d_hor), 3])
+    cf_point_cloud_data = np.empty([np.int(img_height/d_ver), np.int(img_width/d_hor), 3])
+
+    for h in range(0, img_height, d_ver):
+        for w in range(0, img_width, d_hor):
+            x = (2*w-img_width)/img_width
+            y = -(2*h-img_height)/img_height
+            z = 2*depth_buffer[h,w]-1
+            pix_pos = np.asarray([x,y,z,1])
+            point_in_world = np.matmul(trans_world_to_pix,pix_pos)
+            point_in_camera = np.matmul(trans_camera_to_pix,pix_pos)
+            wf_point_cloud_data[np.int(h/d_ver),np.int(w/d_hor),:] = (point_in_world/point_in_world[3])[:3]#world frame
+            cf_point_cloud_data[np.int(h/d_ver),np.int(w/d_hor),:] = (point_in_world/point_in_world[3])[:3]#camera frame
+
+    return wf_point_cloud_data, cf_point_cloud_data
+
+
