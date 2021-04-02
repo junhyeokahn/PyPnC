@@ -80,4 +80,36 @@ for i in range(3):
                     linestyle="--")
     axes[i, 1].set_ylabel(ylabel_right[i])
 
+fig, axes = plt.subplots(3, 2, constrained_layout=True)
+for i in range(3):
+    axes[i, 0].plot(x,
+                    100 * (-gt_inertia[:, i] + est_inertia[:, i]) /
+                    gt_inertia[:, i],
+                    color='r',
+                    linewidth=3)
+    axes[i, 0].plot(x,
+                    100 * (-gt_inertia[:, i] + gt_inertia[0, i]) /
+                    gt_inertia[:, i],
+                    color='b',
+                    linewidth=3)
+    axes[i, 0].set_ylabel(ylabel_left[i])
+    axes[i, 1].plot(x,
+                    100 * (-gt_inertia[:, i + 3] + est_inertia[:, i + 3]) /
+                    gt_inertia[:, i + 3],
+                    color='r',
+                    linewidth=3)
+    axes[i, 1].plot(x,
+                    100 * (-gt_inertia[:, i + 3] + gt_inertia[0, i + 3]) /
+                    gt_inertia[:, i + 3],
+                    color='b',
+                    linewidth=3)
+    axes[i, 1].set_ylabel(ylabel_right[i])
+
+mean_square_error = np.mean((gt_inertia - est_inertia)**2, axis=0)
+print("L")
+print(mean_square_error)
+print("N")
+nominal_mean_square_error = np.mean((gt_inertia - gt_inertia[0, :])**2, axis=0)
+print(nominal_mean_square_error)
+
 plt.show()

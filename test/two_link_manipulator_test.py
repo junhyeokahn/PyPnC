@@ -44,8 +44,8 @@ def analytic_jacobian_dot(q, qdot):
 
 
 # Arbitrary q and qdot
-q = np.array([0.1, 0.1])
-qdot = np.array([0.01, 0.01])
+q = np.array([0.2, 0.1])
+qdot = np.array([0.012323, 0.01])
 
 # Update Robot
 dart_robot_sys.update_system(None, None, None, None, None, None, None, None, {
@@ -63,6 +63,13 @@ pin_robot_sys.update_system(None, None, None, None, None, None, None, None, {
     'j1': qdot[1]
 })
 
+# Compare EE SE(3)
+print("=" * 80)
+print("EE SE3")
+print("=" * 80)
+print(dart_robot_sys.get_link_iso('ee'))
+print(pin_robot_sys.get_link_iso('ee'))
+
 # Compare jacobian
 jac_pin = pin_robot_sys.get_link_jacobian('ee')
 jac_dart = dart_robot_sys.get_link_jacobian('ee')
@@ -77,35 +84,16 @@ print(jac_dart)
 print("analytic jacobian")
 print(an_jac)
 
-# Compare jacobian time derivative
-jac_dot_pin = pin_robot_sys.get_link_jacobian_dot('ee')
-jac_dot_dart = dart_robot_sys.get_link_jacobian_dot('ee')
-an_jac_dot = analytic_jacobian_dot(q, qdot)
-print("=" * 80)
-print("Jacobian Dot")
-print("=" * 80)
-print("jacobian dot from pinocchio")
-print(jac_dot_pin)
-print("jacobian dot from dart")
-print(jac_dot_dart)
-print("analytic jacobian dot")
-print(an_jac_dot)
-
-jdot_qdot_pin = np.dot(jac_dot_pin, qdot)
 jodt_qdot_pin_classic = pin_robot_sys.get_link_jacobian_dot_times_qdot('ee')
-jdot_qdot_dart = np.dot(jac_dot_dart, qdot)
 jodt_qdot_dart_classic = dart_robot_sys.get_link_jacobian_dot_times_qdot('ee')
+an_jac_dot = analytic_jacobian_dot(q, qdot)
 jdot_qdot_an = np.dot(an_jac_dot, qdot)
 print("=" * 80)
 print("Jacobian Dot * Q Dot")
 print("=" * 80)
-print("jdotqdot from pinocchio")
-print(jdot_qdot_pin)
 print("classical jdotqdot from pinocchio")
 print(jodt_qdot_pin_classic)
 print("classical jdotqdot from dart")
 print(jodt_qdot_dart_classic)
-print("jdotqdot from dart")
-print(jdot_qdot_dart)
 print("analytic jdotqdot")
 print(jdot_qdot_an)

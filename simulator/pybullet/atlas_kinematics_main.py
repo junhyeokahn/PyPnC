@@ -16,6 +16,7 @@ import pybullet as p
 import numpy as np
 np.set_printoptions(precision=3)
 
+from pnc.data_saver import DataSaver
 from util import pybullet_util
 from util import util
 from util import liegroup
@@ -34,7 +35,63 @@ INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", type=str)
+parser.add_argument("--crbi", type=bool, default=False)
 args = parser.parse_args()
+if args.crbi:
+    import tensorflow as tf
+    b_crbi = True
+    crbi_model = tf.keras.models.load_model('data/tf_model/atlas_crbi')
+    with open('data/tf_model/atlas_crbi/data_stat.yaml', 'r') as f:
+        yml = YAML().load(f)
+        input_mean = np.array(yml['input_mean'])
+        input_std = np.array(yml['input_std'])
+        output_mean = np.array(yml['output_mean'])
+        output_std = np.array(yml['output_std'])
+
+    from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
+    robot_sys = PinocchioRobotSystem(cwd + "/robot_model/atlas/atlas.urdf",
+                                     cwd + "/robot_model/atlas", False, True)
+
+    def evaluate_crbi_model_using_tf(tf_model, b, l, r, input_mean, input_std,
+                                     output_mean, output_std):
+        inp1 = l - b
+        inp2 = r - b
+        inp = np.concatenate([inp1, inp2], axis=0)
+        normalized_inp = np.expand_dims(util.normalize(inp, input_mean,
+                                                       input_std),
+                                        axis=0)
+        output = tf_model(normalized_inp)
+        d_output = util.denormalize(np.squeeze(output), output_mean,
+                                    output_std)
+        return d_output, output
+
+    def inertia_from_one_hot_vec(vec):
+        ret = np.zeros((3, 3))
+
+        ret[0, 0] = vec[0]
+        ret[1, 1] = vec[1]
+        ret[2, 2] = vec[2]
+
+        ret[0, 1] = vec[3]
+        ret[1, 0] = vec[3]
+        ret[0, 2] = vec[4]
+        ret[2, 0] = vec[4]
+        ret[1, 2] = vec[5]
+        ret[2, 1] = vec[5]
+
+        return ret
+
+    def inertia_to_one_hot_vec(inertia):
+        ret = np.zeros(6)
+        ret[0] = inertia[0, 0]
+        ret[1] = inertia[1, 1]
+        ret[2] = inertia[2, 2]
+        ret[3] = inertia[0, 1]
+        ret[4] = inertia[0, 2]
+        ret[5] = inertia[1, 2]
+        return ret
+else:
+    b_crbi = False
 
 ## Parse file
 file = args.file
@@ -150,6 +207,9 @@ if __name__ == "__main__":
     # Joint Friction
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
+    # DataSaver
+    data_saver = DataSaver("atlas_crbi_validation.pkl")
+
     # Run Sim
     t = 0
     dt = DT
@@ -232,6 +292,37 @@ if __name__ == "__main__":
         # Visualize config
         pybullet_util.set_config(robot, joint_id, link_id, base_pos, base_quat,
                                  joint_pos)
+
+        if b_crbi and VIDEO_RECORD:
+            robot_sys.update_system(
+                sensor_data["base_com_pos"], sensor_data["base_com_quat"],
+                sensor_data["base_com_lin_vel"],
+                sensor_data["base_com_ang_vel"], sensor_data["base_joint_pos"],
+                sensor_data["base_joint_quat"],
+                sensor_data["base_joint_lin_vel"],
+                sensor_data["base_joint_ang_vel"], sensor_data["joint_pos"],
+                sensor_data["joint_vel"], True)
+            rot_world_base = util.quat_to_rot(sensor_data['base_com_quat'])
+            world_I = robot_sys.Ig[0:3, 0:3]
+            local_I = np.dot(np.dot(rot_world_base.transpose(), world_I),
+                             rot_world_base)
+            rf_iso = pybullet_util.get_link_iso(robot, link_id["r_sole"])
+            lf_iso = pybullet_util.get_link_iso(robot, link_id["l_sole"])
+
+            denormalized_output, output = evaluate_crbi_model_using_tf(
+                crbi_model, sensor_data["base_com_pos"], lf_iso[0:3, 3],
+                rf_iso[0:3, 3], input_mean, input_std, output_mean, output_std)
+
+            local_I_est = inertia_from_one_hot_vec(denormalized_output)
+            data_saver.add('gt_inertia', inertia_to_one_hot_vec(local_I))
+            data_saver.add(
+                'gt_inertia_normalized',
+                util.normalize(inertia_to_one_hot_vec(local_I), output_mean,
+                               output_std))
+            data_saver.add('est_inertia_normalized',
+                           np.copy(np.squeeze(output)))
+            data_saver.add('est_inertia', np.copy(denormalized_output))
+            data_saver.advance()
 
         # Save Image
         if (VIDEO_RECORD) and (count % RECORD_FREQ == 0):

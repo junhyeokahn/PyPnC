@@ -428,6 +428,7 @@ def main(args):
                            linewidths=2,
                            edgecolors='k')
         axes[i, 1].set_ylabel(motion_label[i])
+        axes[2, 0].set_ylim(0.6, 0.9)
         for ee in range(2):
             if i < 3:
                 # Draw EE Ang Motion
@@ -442,6 +443,8 @@ def main(args):
                                         linewidths=2,
                                         edgecolors='k')
                 axes[i, 2 + ee].set_ylabel(xyz_label[i])
+                if i != 2:
+                    axes[i, 2 + ee].set_ylim(-np.pi / 2, np.pi / 2)
                 # Draw EE Ang Wrench
                 axes[i, 4 + ee].plot(time,
                                      ee_wrench_ang[ee][:, i],
