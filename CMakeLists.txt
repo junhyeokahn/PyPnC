@@ -36,8 +36,8 @@ add_subdirectory(pnc/planner/dubins)
 add_executable(dubin_test test/dubins.cc)
 target_link_libraries(dubin_test dubins)
 
-foreach(example atlas_one_step atlas_two_step atlas_three_step atlas_four_step
-                atlas_five_step atlas_six_step
+foreach(example atlas_half_step atlas_one_step atlas_two_step atlas_three_step
+                atlas_four_step atlas_five_step atlas_six_step
                 atlas_forward_walk atlas_turning atlas_side_walk
                 atlas_steer_walk atlas_round_walk
                 atlas_block atlas_stair atlas_slope
