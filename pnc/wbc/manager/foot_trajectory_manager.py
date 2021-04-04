@@ -107,7 +107,7 @@ class FootTrajectoryManager(object):
 
         self._pos_task.update_desired(foot_pos_des, foot_vel_des, foot_acc_des)
         self._ori_task.update_desired(foot_quat_des, foot_ang_vel_des,
-                                      foot_acc_des)
+                                      foot_ang_acc_des)
 
     @property
     def swing_height(self):
