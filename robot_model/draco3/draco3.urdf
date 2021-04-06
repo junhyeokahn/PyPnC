@@ -19,6 +19,20 @@
     </inertial>
   </link>
 
+  <!--=============================== torso_com (torso_com_link) ===========================-->
+  <joint name="torso_com" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.0310745 -0.000497416 0.137484"/>
+    <parent link="torso_link"/>
+    <child link="torso_com_link"/>
+  </joint>
+  <link name="torso_com_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+
   <!--=============================== neck_pitch (neck_pitch_link) ===========================-->
   <joint name="neck_pitch" type="revolute">
     <origin rpy="0 0 0" xyz="-0.0025 0 0.352"/>

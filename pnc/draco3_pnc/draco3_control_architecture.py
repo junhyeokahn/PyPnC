@@ -1,6 +1,6 @@
 import numpy as np
 
-from config.atlas_config import WalkingConfig, WBCConfig, WalkingState
+from config.draco3_config import WalkingConfig, WBCConfig, WalkingState
 from pnc.control_architecture import ControlArchitecture
 from pnc.planner.locomotion.dcm_planner.dcm_planner import DCMPlanner
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
@@ -10,28 +10,28 @@ from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTraject
 from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
 from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
-from pnc.atlas_pnc.atlas_task_force_container import AtlasTaskForceContainer
-from pnc.atlas_pnc.atlas_controller import AtlasController
-from pnc.atlas_pnc.atlas_state_machine.double_support_stand import DoubleSupportStand
-from pnc.atlas_pnc.atlas_state_machine.double_support_balance import DoubleSupportBalance
-from pnc.atlas_pnc.atlas_state_machine.contact_transition_start import ContactTransitionStart
-from pnc.atlas_pnc.atlas_state_machine.contact_transition_end import ContactTransitionEnd
-from pnc.atlas_pnc.atlas_state_machine.single_support_swing import SingleSupportSwing
-from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
+from pnc.draco3_pnc.draco3_task_force_container import Draco3TaskForceContainer
+from pnc.draco3_pnc.draco3_controller import Draco3Controller
+from pnc.draco3_pnc.draco3_state_machine.double_support_stand import DoubleSupportStand
+from pnc.draco3_pnc.draco3_state_machine.double_support_balance import DoubleSupportBalance
+from pnc.draco3_pnc.draco3_state_machine.contact_transition_start import ContactTransitionStart
+from pnc.draco3_pnc.draco3_state_machine.contact_transition_end import ContactTransitionEnd
+from pnc.draco3_pnc.draco3_state_machine.single_support_swing import SingleSupportSwing
+from pnc.draco3_pnc.draco3_state_provider import Draco3StateProvider
 
 
-class AtlasControlArchitecture(ControlArchitecture):
+class Draco3ControlArchitecture(ControlArchitecture):
     def __init__(self, robot):
-        super(AtlasControlArchitecture, self).__init__(robot)
+        super(Draco3ControlArchitecture, self).__init__(robot)
 
         # Initialize Task Force Container
-        self._taf_container = AtlasTaskForceContainer(robot)
+        self._taf_container = Draco3TaskForceContainer(robot)
 
         # Initialize Controller
-        self._atlas_controller = AtlasController(self._taf_container, robot)
+        self._draco3_controller = Draco3Controller(self._taf_container, robot)
 
         # Initialize Planner
-        self._dcm_planner = DCMPlanner()
+        # self._dcm_planner = DCMPlanner()
 
         # Initialize Task Manager
         self._rfoot_tm = FootTrajectoryManager(
@@ -45,13 +45,14 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._upper_body_tm = UpperBodyTrajectoryManager(
             self._taf_container.upper_body_task, robot)
         self._floating_base_tm = FloatingBaseTrajectoryManager(
-            self._taf_container.com_task, self._taf_container.pelvis_ori_task,
+            self._taf_container.com_task, self._taf_container.torso_ori_task,
             robot)
 
-        self._dcm_tm = DCMTrajectoryManager(
-            self._dcm_planner, self._taf_container.com_task,
-            self._taf_container.pelvis_ori_task, self._robot, "l_sole",
-            "r_sole")
+        self._dcm_tm = DCMTrajectoryManager(self._dcm_planner,
+                                            self._taf_container.com_task,
+                                            self._taf_container.torso_ori_task,
+                                            self._robot, "l_foot_contact",
+                                            "r_foot_contact")
         self._dcm_tm.nominal_com_height = WalkingConfig.COM_HEIGHT
         self._dcm_tm.t_additional_init_transfer = WalkingConfig.T_ADDITIONAL_INI_TRANS
         self._dcm_tm.t_contact_transition = WalkingConfig.T_CONTACT_TRANS
@@ -150,7 +151,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._prev_state = WalkingState.STAND
         self._b_state_first_visit = True
 
-        self._sp = AtlasStateProvider()
+        self._sp = Draco3StateProvider()
 
     def get_command(self):
         if self._b_state_first_visit:
@@ -163,7 +164,7 @@ class AtlasControlArchitecture(ControlArchitecture):
         self._upper_body_tm.use_nominal_upper_body_joint_pos(
             self._sp.nominal_joint_pos)
         # Get Whole Body Control Commands
-        command = self._atlas_controller.get_command()
+        command = self._draco3_controller.get_command()
 
         if self._state_machine[self._state].end_of_state():
             self._state_machine[self._state].last_visit()

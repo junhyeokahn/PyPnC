@@ -7,36 +7,37 @@ import copy
 
 import pybullet as p
 
-from config.atlas_config import PnCConfig
+from config.draco3_config import PnCConfig
 from pnc.interface import Interface
-from pnc.atlas_pnc.atlas_interrupt_logic import AtlasInterruptLogic
-from pnc.atlas_pnc.atlas_state_provider import AtlasStateProvider
-from pnc.atlas_pnc.atlas_state_estimator import AtlasStateEstimator
-from pnc.atlas_pnc.atlas_control_architecture import AtlasControlArchitecture
+from pnc.draco3_pnc.draco3_interrupt_logic import Draco3InterruptLogic
+from pnc.draco3_pnc.draco3_state_provider import Draco3StateProvider
+from pnc.draco3_pnc.draco3_state_estimator import Draco3StateEstimator
+from pnc.draco3_pnc.draco3_control_architecture import Draco3ControlArchitecture
 from pnc.data_saver import DataSaver
 
 
-class AtlasInterface(Interface):
+class Draco3Interface(Interface):
     def __init__(self):
-        super(AtlasInterface, self).__init__()
+        super(Draco3Interface, self).__init__()
 
         if PnCConfig.DYN_LIB == "dart":
             from pnc.robot_system.dart_robot_system import DartRobotSystem
             self._robot = DartRobotSystem(
-                cwd + "/robot_model/atlas/atlas_rel_path.urdf", False,
+                cwd + "/robot_model/draco3/draco3_rel_path.urdf", False,
                 PnCConfig.PRINT_ROBOT_INFO)
         elif PnCConfig.DYN_LIB == "pinocchio":
             from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
             self._robot = PinocchioRobotSystem(
-                cwd + "/robot_model/atlas/atlas.urdf",
-                cwd + "/robot_model/atlas", False, PnCConfig.PRINT_ROBOT_INFO)
+                cwd + "/robot_model/draco3/draco3.urdf",
+                cwd + "/robot_model/draco3", False, PnCConfig.PRINT_ROBOT_INFO)
         else:
             raise ValueError("wrong dynamics library")
 
-        self._sp = AtlasStateProvider(self._robot)
-        self._se = AtlasStateEstimator(self._robot)
-        self._control_architecture = AtlasControlArchitecture(self._robot)
-        self._interrupt_logic = AtlasInterruptLogic(self._control_architecture)
+        self._sp = Draco3StateProvider(self._robot)
+        self._se = Draco3StateEstimator(self._robot)
+        self._control_architecture = Draco3ControlArchitecture(self._robot)
+        self._interrupt_logic = Draco3InterruptLogic(
+            self._control_architecture)
         if PnCConfig.SAVE_DATA:
             self._data_saver = DataSaver()
 
