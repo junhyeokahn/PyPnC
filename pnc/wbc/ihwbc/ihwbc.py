@@ -7,9 +7,9 @@ from qpsolvers import solve_qp
 from pnc.data_saver import DataSaver
 
 
-class WBC(object):
+class IHWBC(object):
     """
-    Whole Body Control
+    Implicit Hierarchy Whole Body Control
     ------------------
     Usage:
         update_setting --> solve

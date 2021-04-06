@@ -2,8 +2,8 @@ import numpy as np
 
 from util import util
 from config.atlas_config import PnCConfig, WBCConfig
-from pnc.wbc.wbc import WBC
-from pnc.wbc.joint_integrator import JointIntegrator
+from pnc.wbc.ihwbc.ihwbc import IHWBC
+from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
 class AtlasController(object):
@@ -13,13 +13,13 @@ class AtlasController(object):
 
         # Initialize WBC
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._wbc = WBC(act_list, PnCConfig.SAVE_DATA)
+        self._ihwbc = IHWBC(act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
-            self._wbc.trq_limit = self._robot.joint_trq_limit
+            self._ihwbc.trq_limit = self._robot.joint_trq_limit
         else:
-            self._wbc.trq_limit = None
-        self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
-        self._wbc.lambda_rf = WBCConfig.LAMBDA_RF
+            self._ihwbc.trq_limit = None
+        self._ihwbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
+        self._ihwbc.lambda_rf = WBCConfig.LAMBDA_RF
         # Initialize Joint Integrator
         self._joint_integrator = JointIntegrator(robot.n_a,
                                                  PnCConfig.CONTROLLER_DT)
@@ -41,19 +41,19 @@ class AtlasController(object):
         mass_matrix_inv = np.linalg.inv(mass_matrix)
         coriolis = self._robot.get_coriolis()
         gravity = self._robot.get_gravity()
-        self._wbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
-                                 gravity)
+        self._ihwbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
+                                   gravity)
         # Task and Contact Setup
         w_hierarchy_list = []
         for task in self._tf_container.task_list:
             task.update_jacobian()
             task.update_cmd()
             w_hierarchy_list.append(task.w_hierarchy)
-        self._wbc.w_hierarchy = np.array(w_hierarchy_list)
+        self._ihwbc.w_hierarchy = np.array(w_hierarchy_list)
         for contact in self._tf_container.contact_list:
             contact.update_contact()
         # WBC commands
-        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
+        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tf_container.task_list, self._tf_container.contact_list,
             False)
         # Double integration

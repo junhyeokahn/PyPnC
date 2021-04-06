@@ -2,8 +2,8 @@ import numpy as np
 
 from util import util
 from config.draco3_config import PnCConfig, WBCConfig
-from pnc.wbc.wbc import WBC
-from pnc.wbc.joint_integrator import JointIntegrator
+from pnc.wbc.ihwbc.ihwbc import IHWBC
+from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
 class Draco3Controller(object):
