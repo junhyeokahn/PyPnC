@@ -8,7 +8,7 @@ class SimConfig(object):
     KP = 0.
     KD = 0.
 
-    INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5]
+    INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.757]
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 
     PRINT_TIME = False

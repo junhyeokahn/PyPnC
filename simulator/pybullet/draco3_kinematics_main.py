@@ -32,8 +32,21 @@ RECORD_FREQ = 10
 
 
 def set_initial_config(robot, joint_id):
-    # p.resetJointState(robot, joint_id["l_arm_shx"], -np.pi / 4, 0.)
-    pass
+    # Upperbody
+    p.resetJointState(robot, joint_id["l_shoulder_aa"], np.pi / 6, 0.)
+    p.resetJointState(robot, joint_id["l_elbow_fe"], -np.pi / 2, 0.)
+    p.resetJointState(robot, joint_id["r_shoulder_aa"], -np.pi / 6, 0.)
+    p.resetJointState(robot, joint_id["r_elbow_fe"], -np.pi / 2, 0.)
+
+    # Lowerbody
+    p.resetJointState(robot, joint_id["l_hip_fe"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["l_knee_fe_jp"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["l_knee_fe_jd"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["l_ankle_fe"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_hip_fe"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_knee_fe_jp"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_knee_fe_jd"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_ankle_fe"], -np.pi / 4, 0.)
 
 
 def signal_handler(signal, frame):
@@ -53,12 +66,12 @@ if __name__ == "__main__":
                                  cameraYaw=120,
                                  cameraPitch=-30,
                                  cameraTargetPosition=[1, 0.5, 1.5])
-
+    # p.setGravity(0, 0, -9.8)
     p.setGravity(0, 0, 0)
     p.setPhysicsEngineParameter(fixedTimeStep=CONTROLLER_DT,
                                 numSubSteps=N_SUBSTEP)
     if VIDEO_RECORD:
-        video_dir = 'video/draco3_fixed_pnc'
+        video_dir = 'video/draco3_kinematics'
         if os.path.exists(video_dir):
             shutil.rmtree(video_dir)
         os.makedirs(video_dir)

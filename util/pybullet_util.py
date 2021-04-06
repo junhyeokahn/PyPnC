@@ -123,20 +123,42 @@ def set_joint_friction(robot, joint_id, max_force=0):
                                 forces=[max_force] * len(joint_id))
 
 
-def set_motor_trq(robot, joint_id, command):
-    assert len(joint_id) == len(command['joint_trq'])
+def set_motor_impedance(robot, joint_id, command, kp, kd):
     trq_applied = OrderedDict()
     for (joint_name, pos_des), (_, vel_des), (_, trq_des) in zip(
             command['joint_pos'].items(), command['joint_vel'].items(),
             command['joint_trq'].items()):
         joint_state = p.getJointState(robot, joint_id[joint_name])
         joint_pos, joint_vel = joint_state[0], joint_state[1]
+        trq_applied[joint_id[joint_name]] = trq_des + kp[joint_name] * (
+            pos_des - joint_pos) + kd[joint_name] * (vel_des - joint_vel)
+
+    p.setJointMotorControlArray(robot,
+                                trq_applied.keys(),
+                                controlMode=p.TORQUE_CONTROL,
+                                forces=list(trq_applied.values()))
+
+
+def set_motor_trq(robot, joint_id, trq_cmd):
+    trq_applied = OrderedDict()
+    for joint_name, trq_des in trq_cmd.items():
         trq_applied[joint_id[joint_name]] = trq_des
 
     p.setJointMotorControlArray(robot,
                                 trq_applied.keys(),
                                 controlMode=p.TORQUE_CONTROL,
                                 forces=list(trq_applied.values()))
+
+
+def set_motor_pos(robot, joint_id, pos_cmd):
+    pos_applied = OrderedDict()
+    for joint_name, pos_des in pos_cmd.items():
+        pos_applied[joint_id[joint_name]] = pos_des
+
+    p.setJointMotorControlArray(robot,
+                                pos_applied.keys(),
+                                controlMode=p.POSITION_CONTROL,
+                                targetPositions=list(pos_applied.values()))
 
 
 def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
@@ -230,7 +252,8 @@ def get_sensor_data(robot, joint_id, link_id, pos_basejoint_to_basecom,
     return sensor_data
 
 
-def get_camera_image_from_link(robot, link, pic_width, pic_height,fov, nearval, farval):
+def get_camera_image_from_link(robot, link, pic_width, pic_height, fov,
+                               nearval, farval):
     aspect = pic_width / pic_height
     projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, nearval,
                                                      farval)
@@ -247,7 +270,7 @@ def get_camera_image_from_link(robot, link, pic_width, pic_height,fov, nearval, 
     camera_target_pos = link_pos + np.dot(rot, 1.0 * global_camera_x_unit)
     camera_up_vector = np.dot(rot, global_camera_z_unit)
     view_matrix = p.computeViewMatrix(camera_eye_pos, camera_target_pos,
-                                      camera_up_vector) #SE3_camera_to_world
+                                      camera_up_vector)  #SE3_camera_to_world
     width, height, rgb_img, depth_img, seg_img = p.getCameraImage(
         pic_width,  #image width
         pic_height,  #image height
@@ -307,28 +330,40 @@ def set_config(robot, joint_id, link_id, base_pos, base_quat, joint_pos):
     for k, v in joint_pos.items():
         p.resetJointState(robot, joint_id[k], v, 0.)
 
-def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor, d_ver):
-    view_matrix = np.asarray(view_matrix).reshape([4,4], order='F')
-    projection_matrix = np.asarray(projection_matrix).reshape([4,4], order='F')
-    trans_world_to_pix = np.linalg.inv(np.matmul(projection_matrix, view_matrix))
+
+def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor,
+                         d_ver):
+    view_matrix = np.asarray(view_matrix).reshape([4, 4], order='F')
+    projection_matrix = np.asarray(projection_matrix).reshape([4, 4],
+                                                              order='F')
+    trans_world_to_pix = np.linalg.inv(
+        np.matmul(projection_matrix, view_matrix))
     trans_camera_to_pix = np.linalg.inv(projection_matrix)
     img_height = (depth_buffer.shape)[0]
     img_width = (depth_buffer.shape)[1]
 
-    wf_point_cloud_data = np.empty([np.int(img_height/d_ver), np.int(img_width/d_hor), 3])
-    cf_point_cloud_data = np.empty([np.int(img_height/d_ver), np.int(img_width/d_hor), 3])
+    wf_point_cloud_data = np.empty(
+        [np.int(img_height / d_ver),
+         np.int(img_width / d_hor), 3])
+    cf_point_cloud_data = np.empty(
+        [np.int(img_height / d_ver),
+         np.int(img_width / d_hor), 3])
 
     for h in range(0, img_height, d_ver):
         for w in range(0, img_width, d_hor):
-            x = (2*w-img_width)/img_width
-            y = -(2*h-img_height)/img_height
-            z = 2*depth_buffer[h,w]-1
-            pix_pos = np.asarray([x,y,z,1])
-            point_in_world = np.matmul(trans_world_to_pix,pix_pos)
-            point_in_camera = np.matmul(trans_camera_to_pix,pix_pos)
-            wf_point_cloud_data[np.int(h/d_ver),np.int(w/d_hor),:] = (point_in_world/point_in_world[3])[:3]#world frame
-            cf_point_cloud_data[np.int(h/d_ver),np.int(w/d_hor),:] = (point_in_world/point_in_world[3])[:3]#camera frame
+            x = (2 * w - img_width) / img_width
+            y = -(2 * h - img_height) / img_height
+            z = 2 * depth_buffer[h, w] - 1
+            pix_pos = np.asarray([x, y, z, 1])
+            point_in_world = np.matmul(trans_world_to_pix, pix_pos)
+            point_in_camera = np.matmul(trans_camera_to_pix, pix_pos)
+            wf_point_cloud_data[np.int(h / d_ver),
+                                np.int(w / d_hor), :] = (
+                                    point_in_world /
+                                    point_in_world[3])[:3]  #world frame
+            cf_point_cloud_data[np.int(h / d_ver),
+                                np.int(w / d_hor), :] = (
+                                    point_in_world /
+                                    point_in_world[3])[:3]  #camera frame
 
     return wf_point_cloud_data, cf_point_cloud_data
-
-

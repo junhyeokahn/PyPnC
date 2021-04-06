@@ -69,7 +69,7 @@ if __name__ == "__main__":
         command = interface.get_command(sensor_data)
 
         # Apply Trq
-        pybullet_util.set_motor_trq(robot, joint_id, command)
+        pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
 
         p.stepSimulation()
 
