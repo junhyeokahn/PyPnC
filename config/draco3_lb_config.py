@@ -54,8 +54,8 @@ class WBCConfig(object):
     LAMBDA_RF = 1e-7
     LAMBDA_IF = 1e-8
 
-    # B_TRQ_LIMIT = True
-    B_TRQ_LIMIT = False
+    B_TRQ_LIMIT = True
+    # B_TRQ_LIMIT = False
 
     # Integration Parameters
     VEL_CUTOFF_FREQ = 2.0  #Hz
@@ -68,7 +68,7 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.51  # m
+    COM_HEIGHT = 0.55  # m
     SWING_HEIGHT = 0.04  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec

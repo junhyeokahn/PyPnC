@@ -131,19 +131,19 @@ if __name__ == "__main__":
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
         if pybullet_util.is_key_triggered(keys, '8'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_eight = True
         elif pybullet_util.is_key_triggered(keys, '5'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_five = True
         elif pybullet_util.is_key_triggered(keys, '4'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_four = True
         elif pybullet_util.is_key_triggered(keys, '2'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_two = True
         elif pybullet_util.is_key_triggered(keys, '6'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_six = True
         elif pybullet_util.is_key_triggered(keys, '7'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_seven = True
         elif pybullet_util.is_key_triggered(keys, '9'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_nine = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:
