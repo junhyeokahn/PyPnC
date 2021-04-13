@@ -30,10 +30,6 @@ phase = []
 
 rf_cmd = []
 
-joint_trq_cmd = []
-
-joint_acc_cmd = []
-
 des, act = dict(), dict()
 for topic in tasks:
     des[topic] = []

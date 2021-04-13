@@ -98,7 +98,7 @@ if __name__ == "__main__":
     pybullet_util.set_link_damping(robot, link_id.values(), 0., 0.)
 
     # Joint Friction
-    pybullet_util.set_joint_friction(robot, joint_id, 0)
+    pybullet_util.set_joint_friction(robot, joint_id, 0.)
 
     # Construct Interface
     interface = Draco3LBInterface()

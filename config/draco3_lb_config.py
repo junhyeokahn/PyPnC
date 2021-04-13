@@ -13,7 +13,7 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
-    VIDEO_RECORD = True
+    VIDEO_RECORD = False
     RECORD_FREQ = 1
 
 
@@ -38,7 +38,7 @@ class WBCConfig(object):
     W_SWING_FOOT = 40.0
 
     # Task Gains
-    KP_COM = np.array([250., 250., 250])
+    KP_COM = np.array([200., 200., 200])
     KD_COM = np.array([20., 20., 20.])
 
     KP_TORSO = np.array([100., 100., 100])

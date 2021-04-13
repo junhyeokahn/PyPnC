@@ -74,7 +74,7 @@ class PinocchioRobotSystem(RobotSystem):
 
         self._joint_pos_limit = np.stack(
             [self._model.lowerPositionLimit, self._model.upperPositionLimit],
-            axis=1)[self._n_floating:self._n_floating + self._n_a, :]
+            axis=1)[self._n_floating + 1:self._n_floating + 1 + self._n_a, :]
         self._joint_vel_limit = np.stack(
             [-self._model.velocityLimit, self._model.velocityLimit],
             axis=1)[self._n_floating:self._n_floating + self._n_a, :]
