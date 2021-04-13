@@ -13,20 +13,14 @@ import pybullet as p
 import numpy as np
 np.set_printoptions(precision=2)
 
-from config.draco3_config import SimConfig
-from pnc.draco3_pnc.draco3_interface import Draco3Interface
+from config.draco3_lb_config import SimConfig
+from pnc.draco3_lb_pnc.draco3_lb_interface import Draco3LBInterface
 from util import pybullet_util
 from util import util
 from util import liegroup
 
 
 def set_initial_config(robot, joint_id):
-    # Upperbody
-    p.resetJointState(robot, joint_id["l_shoulder_aa"], np.pi / 6, 0.)
-    p.resetJointState(robot, joint_id["l_elbow_fe"], -np.pi / 2, 0.)
-    p.resetJointState(robot, joint_id["r_shoulder_aa"], -np.pi / 6, 0.)
-    p.resetJointState(robot, joint_id["r_elbow_fe"], -np.pi / 2, 0.)
-
     # Lowerbody
     p.resetJointState(robot, joint_id["l_hip_fe"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_knee_fe_jp"], np.pi / 4, 0.)
@@ -59,14 +53,14 @@ if __name__ == "__main__":
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
                                 numSubSteps=SimConfig.N_SUBSTEP)
     if SimConfig.VIDEO_RECORD:
-        video_dir = 'video/draco3_pnc'
+        video_dir = 'video/draco3_lb_pnc'
         if os.path.exists(video_dir):
             shutil.rmtree(video_dir)
         os.makedirs(video_dir)
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
+    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_lb.urdf",
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
@@ -107,7 +101,7 @@ if __name__ == "__main__":
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
     # Construct Interface
-    interface = Draco3Interface()
+    interface = Draco3LBInterface()
 
     # Run Sim
     t = 0

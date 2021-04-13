@@ -16,8 +16,6 @@ class AtlasController(object):
         self._ihwbc = IHWBC(act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._ihwbc.trq_limit = self._robot.joint_trq_limit
-        else:
-            self._ihwbc.trq_limit = None
         self._ihwbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
         self._ihwbc.lambda_rf = WBCConfig.LAMBDA_RF
         # Initialize Joint Integrator

@@ -1,19 +1,19 @@
 import numpy as np
 
 from util import util
-from config.draco3_config import PnCConfig, WBCConfig
-from pnc.draco3_pnc.draco3_ihwbc import Draco3IHWBC
+from config.draco3_lb_config import PnCConfig, WBCConfig
+from pnc.draco3_lb_pnc.draco3_lb_ihwbc import Draco3LBIHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
-class Draco3Controller(object):
+class Draco3LBController(object):
     def __init__(self, tf_container, robot):
         self._tf_container = tf_container
         self._robot = robot
 
         # Initialize WBC
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._wbc = Draco3IHWBC(self._robot, act_list, PnCConfig.SAVE_DATA)
+        self._wbc = Draco3LBIHWBC(self._robot, act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
         self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
