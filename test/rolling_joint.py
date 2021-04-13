@@ -51,7 +51,7 @@ if __name__ == "__main__":
                            jointAxis=[0, 0, 1],
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
-    p.changeConstraint(c, gearRatio=1, maxForce=10000, erp=2)
+    p.changeConstraint(c, gearRatio=-1, maxForce=10000, erp=10)
 
     # Run Sim
     t = 0
@@ -65,9 +65,9 @@ if __name__ == "__main__":
                                                     rot_basejoint_to_basecom)
 
         # Apply Trq
-        p.setJointMotorControlArray(robot, [1],
+        p.setJointMotorControlArray(robot, [0, 1],
                                     controlMode=p.TORQUE_CONTROL,
-                                    forces=[0.3])
+                                    forces=[-0.1, 0.2])
 
         p.stepSimulation()
 

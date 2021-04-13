@@ -78,10 +78,10 @@ def exp_to_quat(exp):
     theta = np.square(exp[0] * exp[0] + exp[1] * exp[1] + exp[2] * exp[2])
     ret = np.zeros(4)
     if theta > 1e-4:
-        ret[0] = sin(theta / 2.0) * exp[0] / theta
-        ret[1] = sin(theta / 2.0) * exp[1] / theta
-        ret[2] = sin(theta / 2.0) * exp[2] / theta
-        ret[3] = cos(theta / 2.0)
+        ret[0] = np.sin(theta / 2.0) * exp[0] / theta
+        ret[1] = np.sin(theta / 2.0) * exp[1] / theta
+        ret[2] = np.sin(theta / 2.0) * exp[2] / theta
+        ret[3] = np.cos(theta / 2.0)
     else:
         ret[0] = 0.5 * exp[0]
         ret[1] = 0.5 * exp[1]

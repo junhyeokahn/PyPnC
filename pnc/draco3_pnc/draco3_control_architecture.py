@@ -31,7 +31,7 @@ class Draco3ControlArchitecture(ControlArchitecture):
         self._draco3_controller = Draco3Controller(self._taf_container, robot)
 
         # Initialize Planner
-        # self._dcm_planner = DCMPlanner()
+        self._dcm_planner = DCMPlanner()
 
         # Initialize Task Manager
         self._rfoot_tm = FootTrajectoryManager(

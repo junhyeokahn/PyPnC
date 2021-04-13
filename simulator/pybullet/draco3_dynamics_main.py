@@ -14,7 +14,7 @@ import numpy as np
 np.set_printoptions(precision=2)
 
 from config.draco3_config import SimConfig
-# from pnc.draco3_pnc.draco3_interface import Draco3Interface
+from pnc.draco3_pnc.draco3_interface import Draco3Interface
 from util import pybullet_util
 from util import util
 from util import liegroup
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                            jointAxis=[0, 1, 0],
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
-    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=2)
+    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
 
     c = p.createConstraint(robot,
                            link_id['r_knee_fe_lp'],
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                            jointAxis=[0, 1, 0],
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
-    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=2)
+    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     pybullet_util.set_joint_friction(robot, joint_id, 0)
 
     # Construct Interface
-    # interface = Draco3Interface()
+    interface = Draco3Interface()
 
     # Run Sim
     t = 0
@@ -117,11 +117,6 @@ if __name__ == "__main__":
     nominal_sensor_data = pybullet_util.get_sensor_data(
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
-    ## TEST
-    nominal_pos_cmd = copy.deepcopy(nominal_sensor_data['joint_pos'])
-    del nominal_pos_cmd['l_knee_fe_jd']
-    del nominal_pos_cmd['r_knee_fe_jd']
-    ## TEST
 
     while (1):
 
@@ -159,29 +154,31 @@ if __name__ == "__main__":
         # Compute Command
         if SimConfig.PRINT_TIME:
             start_time = time.time()
-        # command = interface.get_command(copy.deepcopy(sensor_data))
+        command = interface.get_command(copy.deepcopy(sensor_data))
+
+        print("count :", count)
+        print(command['joint_trq'])
+        if count == 3:
+            exit()
 
         if SimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
 
         # Exclude Knee Distal Joints Command
-        # del command['joit_pos']['l_knee_fe_jd']
-        # del command['joit_pos']['r_knee_fe_jd']
-        # del command['joit_vel']['l_knee_fe_jd']
-        # del command['joit_vel']['r_knee_fe_jd']
-        # del command['joit_trq']['l_knee_fe_jd']
-        # del command['joit_trq']['r_knee_fe_jd']
+        del command['joint_pos']['l_knee_fe_jd']
+        del command['joint_pos']['r_knee_fe_jd']
+        del command['joint_vel']['l_knee_fe_jd']
+        del command['joint_vel']['r_knee_fe_jd']
+        del command['joint_trq']['l_knee_fe_jd']
+        del command['joint_trq']['r_knee_fe_jd']
 
         # Apply Command
-        # pybullet_util.set_motor_trq(robot, joint_id, command)
-        ## TEST
-        pybullet_util.set_motor_pos(robot, joint_id, nominal_pos_cmd)
-        ## TEST
+        pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):
-            frame = pybullet_util.get_camera_image([1.2, 0.5, 1.], 2.0, 120,
+            frame = pybullet_util.get_camera_image([1., 0.5, 1.], 1.0, 120,
                                                    -15, 0, 60., 1920, 1080,
                                                    0.1, 100.)
             frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR

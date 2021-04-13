@@ -36,6 +36,11 @@ class FloatingBaseTrajectoryManager(object):
                     self._ini_base_quat).as_matrix().transpose())).as_quat()
         self._exp_error = util.quat_to_exp(self._quat_error)
 
+        # print("ini com: ", self._ini_com_pos)
+        # print("end com: ", self._target_com_pos)
+        # print("ini quat: ", self._ini_base_quat)
+        # print("end quat: ", self._target_base_quat)
+
     def update_floating_base_desired(self, current_time):
         com_pos_des, com_vel_des, com_acc_des = np.zeros(3), np.zeros(
             3), np.zeros(3)

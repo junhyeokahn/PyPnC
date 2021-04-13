@@ -1,7 +1,7 @@
 import numpy as np
 
 from pnc.interrupt_logic import InterruptLogic
-from config.drac3_config import WalkingState
+from config.draco3_config import WalkingState
 
 
 class Draco3InterruptLogic(InterruptLogic):

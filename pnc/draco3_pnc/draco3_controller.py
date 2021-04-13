@@ -2,7 +2,7 @@ import numpy as np
 
 from util import util
 from config.draco3_config import PnCConfig, WBCConfig
-from pnc.wbc.ihwbc.ihwbc import IHWBC
+from pnc.draco3_pnc.draco3_ihwbc import Draco3IHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
@@ -13,13 +13,14 @@ class Draco3Controller(object):
 
         # Initialize WBC
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._wbc = WBC(act_list, PnCConfig.SAVE_DATA)
+        self._wbc = Draco3IHWBC(self._robot, act_list, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
         else:
             self._wbc.trq_limit = None
         self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
         self._wbc.lambda_rf = WBCConfig.LAMBDA_RF
+        self._wbc.lambda_if = WBCConfig.LAMBDA_IF
         # Initialize Joint Integrator
         self._joint_integrator = JointIntegrator(robot.n_a,
                                                  PnCConfig.CONTROLLER_DT)
@@ -53,9 +54,10 @@ class Draco3Controller(object):
         for contact in self._tf_container.contact_list:
             contact.update_contact()
         # WBC commands
-        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
+        joint_trq_cmd, joint_acc_cmd, rf_cmd, if_cmd = self._wbc.solve(
             self._tf_container.task_list, self._tf_container.contact_list,
             False)
+        # exit()
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,

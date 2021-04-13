@@ -132,12 +132,14 @@ class PinocchioRobotSystem(RobotSystem):
 
         assert len(joint_pos.keys()) == self._n_a
 
+        self._q = np.zeros(self._n_q)
+        self._q_dot = np.zeros(self._n_q_dot)
+        self._joint_positions = np.zeros(self._n_a)
+        self._joint_velocities = np.zeros(self._n_a)
         if not self._b_fixed_base:
             # Floating Based Robot
-            self._q = np.zeros(self._n_q)
             self._q[0:3] = np.copy(base_joint_pos)
             self._q[3:7] = np.copy(base_joint_quat)
-            self._q[7:7 + self._n_a] = np.copy(list(joint_pos.values()))
 
             rot_w_basejoint = util.quat_to_rot(base_joint_quat)
             twist_basejoint_in_world = np.zeros(6)
@@ -148,17 +150,20 @@ class PinocchioRobotSystem(RobotSystem):
             augrot_joint_world[3:6, 3:6] = rot_w_basejoint.transpose()
             twist_basejoint_in_joint = np.dot(augrot_joint_world,
                                               twist_basejoint_in_world)
-            self._q_dot = np.zeros(self._n_q_dot)
             self._q_dot[0:3] = twist_basejoint_in_joint[3:6]
             self._q_dot[3:6] = twist_basejoint_in_joint[0:3]
-            self._q_dot[6:6 + self._n_a] = np.copy(list(joint_vel.values()))
         else:
             # Fixed Based Robot
-            self._q = np.copy(list(joint_pos.values()))
-            self._q_dot = np.copy(list(joint_vel.values()))
+            pass
 
-        self._joint_positions = np.array(list(joint_pos.values()))
-        self._joint_velocities = np.array(list(joint_vel.values()))
+        self._q[self.get_q_idx(list(joint_pos.keys()))] = np.copy(
+            list(joint_pos.values()))
+        self._q_dot[self.get_q_dot_idx(list(joint_vel.keys()))] = np.copy(
+            list(joint_vel.values()))
+        self._joint_positions[self.get_joint_idx(list(
+            joint_pos.keys()))] = np.copy(list(joint_pos.values()))
+        self._joint_velocities[self.get_joint_idx(list(
+            joint_vel.keys()))] = np.copy(list(joint_vel.values()))
 
         pin.forwardKinematics(self._model, self._data, self._q, self._q_dot)
 

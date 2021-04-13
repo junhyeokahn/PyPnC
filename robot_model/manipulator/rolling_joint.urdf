@@ -30,11 +30,18 @@
         </visual>
     </link>
 
-    <joint name="j0" type="fixed">
+    <!--<joint name="j0" type="fixed">-->
+        <!--<axis rpy="0 0 0" xyz="0 0 1"/>-->
+        <!--<parent link="world"/>-->
+        <!--<child link="l1"/>-->
+    <!--</joint>-->
+
+    <joint name="j0" type="revolute">
         <axis rpy="0 0 0" xyz="0 0 1"/>
         <parent link="world"/>
         <child link="l1"/>
-        <!--<limit effort="150.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.15"/>-->
+        <origin rpy="0 0 0" xyz="1 0 0"/>
+        <limit effort="150.0" lower="-6.28318530718" upper="6.28318530718" velocity="3.15"/>
     </joint>
 
     <link name="l2">

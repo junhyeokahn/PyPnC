@@ -13,8 +13,8 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
-    VIDEO_RECORD = False
-    RECORD_FREQ = 10
+    VIDEO_RECORD = True
+    RECORD_FREQ = 1
 
 
 class PnCConfig(object):
@@ -28,7 +28,7 @@ class PnCConfig(object):
 
 class WBCConfig(object):
     # Max normal force per contact
-    RF_Z_MAX = 2000.0
+    RF_Z_MAX = 1000.0
 
     # Task Hierarchy Weights
     W_COM = 10.0
@@ -55,6 +55,7 @@ class WBCConfig(object):
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
     LAMBDA_RF = 1e-7
+    LAMBDA_IF = 1e-6
 
     B_TRQ_LIMIT = True
 
@@ -69,8 +70,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 1.02  # m
-    SWING_HEIGHT = 0.05  # m
+    COM_HEIGHT = 0.65  # m
+    SWING_HEIGHT = 0.04  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
