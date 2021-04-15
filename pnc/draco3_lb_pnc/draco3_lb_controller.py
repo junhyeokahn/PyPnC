@@ -31,7 +31,8 @@ class Draco3LBController(object):
         self._full_to_active = self._wbc._sa[:, 6:]  # TODO
 
         if WBCConfig.B_TRQ_LIMIT:
-            self._wbc.trq_limit = self._robot.joint_trq_limit
+            self._wbc.trq_limit = np.dot(self._full_to_active,
+                                         self._robot.joint_trq_limit)
         self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
         self._wbc.lambda_rf = WBCConfig.LAMBDA_RF
         self._wbc.lambda_if = WBCConfig.LAMBDA_IF
@@ -72,7 +73,7 @@ class Draco3LBController(object):
             contact.update_contact()
 
         # WBC commands
-        joint_trq_cmd, joint_acc_cmd, rf_cmd, if_cmd = self._wbc.solve(
+        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._wbc.solve(
             self._tf_container.task_list, self._tf_container.contact_list,
             False)
 

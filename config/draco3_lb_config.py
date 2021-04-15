@@ -54,10 +54,10 @@ class WBCConfig(object):
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-7
     LAMBDA_RF = 1e-7
-    LAMBDA_IF = 1e-18
+    LAMBDA_IF = 1e-7
 
-    # B_TRQ_LIMIT = True
-    B_TRQ_LIMIT = False
+    B_TRQ_LIMIT = True
+    # B_TRQ_LIMIT = False
 
     # Integration Parameters
     VEL_CUTOFF_FREQ = 2.0  #Hz
@@ -70,13 +70,12 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.6  # m
+    COM_HEIGHT = 0.5  # m
     SWING_HEIGHT = 0.03  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
-    # T_SWING = 0.75
-    T_SWING = 0.45
+    T_SWING = 0.75
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
