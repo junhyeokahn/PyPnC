@@ -4,7 +4,6 @@ from util import util
 from pnc.data_saver import DataSaver
 from config.draco3_lb_config import PnCConfig, WBCConfig
 from pnc.wbc.ihwbc.ihwbc import IHWBC
-from pnc.draco3_lb_pnc.draco3_lb_ihwbc import Draco3LBIHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
@@ -39,7 +38,6 @@ class Draco3LBController(object):
         self._sf[0:6, 0:6] = np.eye(6)
 
         self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
-        self._full_to_active = self._ihwbc._sa[:, 6:]  # TODO
         if WBCConfig.B_TRQ_LIMIT:
             self._ihwbc.trq_limit = np.dot(self._sa[:, 6:],
                                            self._robot.joint_trq_limit)

@@ -31,30 +31,29 @@ class WBCConfig(object):
     RF_Z_MAX = 500.0
 
     # Task Hierarchy Weights
-    W_COM = 40.0
+    W_COM = 10.0
     W_TORSO = 20.0
     W_UPPER_BODY = 40.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
     # Task Gains
-    KP_COM = np.array([200., 200., 200])
-    KD_COM = np.array([20., 20., 20.])
+    KP_COM = np.array([400., 400., 300])
+    KD_COM = np.array([30., 30., 30.])
     # KP_COM = np.array([100., 100., 100])
     # KD_COM = np.array([10., 10., 10.])
 
     KP_TORSO = np.array([100., 100., 100])
     KD_TORSO = np.array([10., 10., 10.])
 
-    KP_FOOT_POS = np.array([100., 100., 100.])
-    KD_FOOT_POS = np.array([10., 10., 10.])
-    KP_FOOT_ORI = np.array([100., 100., 100.])
-    KD_FOOT_ORI = np.array([10., 10., 10.])
+    KP_FOOT_POS = np.array([300., 300., 300.])
+    KD_FOOT_POS = np.array([30., 30., 30.])
+    KP_FOOT_ORI = np.array([300., 300., 300.])
+    KD_FOOT_ORI = np.array([30., 30., 30.])
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-7
     LAMBDA_RF = 1e-7
-    LAMBDA_IF = 1e-7
 
     B_TRQ_LIMIT = True
 
@@ -69,8 +68,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.5  # m
-    SWING_HEIGHT = 0.03  # m
+    COM_HEIGHT = 0.52  # m
+    SWING_HEIGHT = 0.05  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
