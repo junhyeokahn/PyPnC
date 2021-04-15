@@ -3,6 +3,7 @@ import numpy as np
 from util import util
 from config.draco3_config import PnCConfig, WBCConfig
 from pnc.draco3_pnc.draco3_ihwbc import Draco3IHWBC
+from pnc.wbc.ihwbc.ihwbc import IHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 

@@ -6,8 +6,6 @@ import json
 import multiprocessing as mp
 from tqdm import tqdm
 
-from util import liegroup
-
 
 def pretty_print(ob):
     print(json.dumps(ob, indent=4))
@@ -90,18 +88,11 @@ def exp_to_quat(exp):
     return np.copy(ret)
 
 
-def iso_interpolate(T1, T2, alpha):
-    p1 = T1[0:3, 3]
-    R1 = T1[0:3, 0:3]
-    p2 = T2[0:3, 3]
-    R2 = T2[0:3, 0:3]
-
-    slerp = Slerp([0, 1], R.from_matrix([R1, R2]))
-
-    p_ret = alpha * (p1 + p2)
-    R_ret = slerp(alpha).as_matrix()
-
-    return liegroup.RpToTrans(R_ret, p_ret)
+def weighted_pinv(A, W, rcond=1e-15):
+    return np.dot(
+        W,
+        np.dot(A.transpose(),
+               np.linalg.pinv(np.dot(np.dot(A, W), A.transpose()), rcond)))
 
 
 def normalize_data(data):

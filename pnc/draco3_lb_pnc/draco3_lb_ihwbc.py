@@ -201,7 +201,9 @@ class Draco3LBIHWBC(object):
             eq_floating_mat = np.dot(self._sf, self._mass_matrix)
             eq_int_mat = np.copy(self._j_int)
         eq_floating_vec = -np.dot(
-            self._sf, np.dot(self._null_int, (self._coriolis + self._gravity)))
+            self._sf,
+            np.dot(self._null_int.transpose(),
+                   (self._coriolis + self._gravity)))
         eq_int_vec = np.zeros(2)
 
         eq_mat = np.concatenate((eq_floating_mat, eq_int_mat), axis=0)
@@ -222,7 +224,6 @@ class Draco3LBIHWBC(object):
                 ineq_vec = None
 
         else:
-            ## TODO
             if contact_list is not None:
                 ineq_mat = np.concatenate(
                     (np.concatenate(
@@ -243,15 +244,16 @@ class Draco3LBIHWBC(object):
                                                 self._null_int).transpose())),
                          axis=0)),
                     axis=1)
+                # __import__('ipdb').set_trace()
                 ineq_vec = np.concatenate(
                     (-uf_vec,
                      np.dot(
                          self._sa_times_null_int_transpose_inv,
-                         np.dot(self._null_int,
+                         np.dot(self._null_int.transpose(),
                                 (self._coriolis + self._gravity))) -
                      self._trq_limit[:, 0], -np.dot(
                          self._sa_times_null_int_transpose_inv,
-                         np.dot(self._null_int,
+                         np.dot(self._null_int.transpose(),
                                 (self._coriolis + self._gravity))) +
                      self._trq_limit[:, 1]))
             else:
@@ -264,11 +266,11 @@ class Draco3LBIHWBC(object):
                 ineq_vec = np.concatenate(
                     (np.dot(
                         self._sa_times_null_int_transpose_inv,
-                        np.dot(self._null_int,
+                        np.dot(self._null_int.transpose(),
                                (self._coriolis + self._gravity))) -
                      self._trq_limit[:, 0], -np.dot(
                          self._sa_times_null_int_transpose_inv,
-                         np.dot(self._null_int,
+                         np.dot(self._null_int.transpose(),
                                 (self._coriolis + self._gravity))) +
                      self._trq_limit[:, 1]))
 
@@ -301,7 +303,7 @@ class Draco3LBIHWBC(object):
             joint_trq_cmd = np.dot(
                 self._sa_times_null_int_transpose_inv,
                 np.dot(self._mass_matrix, sol_q_ddot) +
-                np.dot(self._null_int,
+                np.dot(self._null_int.transpose(),
                        (self._coriolis + self._gravity)) - np.dot(
                            np.dot(contact_jacobian,
                                   self._null_int).transpose(), sol_rf))

@@ -128,7 +128,8 @@ def sample_swing_config(nominal_lf_iso, nominal_rf_iso, side):
         lfoot_fin_ea = np.random.uniform(FOOT_EA_LB, FOOT_EA_UB)
         lfoot_fin_rot = util.euler_to_rot(lfoot_fin_ea)
         lfoot_fin_iso = liegroup.RpToTrans(lfoot_fin_rot, lfoot_fin_pos)
-        lfoot_mid_iso = util.iso_interpolate(lfoot_ini_iso, lfoot_fin_iso, 0.5)
+        lfoot_mid_iso = interpolation.iso_interpolate(lfoot_ini_iso,
+                                                      lfoot_fin_iso, 0.5)
         lfoot_mid_iso[2, 3] = (lfoot_ini_pos[2] +
                                lfoot_fin_pos[2]) / 2.0 + np.random.uniform(
                                    SWING_HEIGHT_LB, SWING_HEIGHT_UB)
@@ -169,7 +170,8 @@ def sample_swing_config(nominal_lf_iso, nominal_rf_iso, side):
         rfoot_fin_ea = np.random.uniform(FOOT_EA_LB, FOOT_EA_UB)
         rfoot_fin_rot = util.euler_to_rot(rfoot_fin_ea)
         rfoot_fin_iso = liegroup.RpToTrans(rfoot_fin_rot, rfoot_fin_pos)
-        rfoot_mid_iso = util.iso_interpolate(rfoot_ini_iso, rfoot_fin_iso, 0.5)
+        rfoot_mid_iso = interpolation.iso_interpolate(rfoot_ini_iso,
+                                                      rfoot_fin_iso, 0.5)
         rfoot_mid_iso[2, 3] = (rfoot_ini_pos[2] +
                                rfoot_fin_pos[2]) / 2.0 + np.random.uniform(
                                    SWING_HEIGHT_LB, SWING_HEIGHT_UB)

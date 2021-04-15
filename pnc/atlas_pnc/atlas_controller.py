@@ -7,15 +7,34 @@ from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
 class AtlasController(object):
-    def __init__(self, tf_container, robot):
-        self._tf_container = tf_container
+    def __init__(self, tci_container, robot):
+        self._tci_container = tci_container
         self._robot = robot
 
         # Initialize WBC
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._ihwbc = IHWBC(act_list, PnCConfig.SAVE_DATA)
+        n_q_dot = len(act_list)
+        n_active = np.count_nonzero(np.array(act_list))
+        n_passive = n_q_dot - n_active - 6
+
+        self._sa = np.zeros((n_active, n_q_dot))
+        self._sv = np.zeros((n_passive, n_q_dot))
+        j, k = 0, 0
+        for i in range(n_q_dot):
+            if i >= 6:
+                if act_list[i]:
+                    self._sa[j, i] = 1.
+                    j += 1
+                else:
+                    self._sv[k, i] = 1.
+                    k += 1
+        self._sf = np.zeros((6, n_q_dot))
+        self._sf[0:6, 0:6] = np.eye(6)
+
+        self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
-            self._ihwbc.trq_limit = self._robot.joint_trq_limit
+            self._ihwbc.trq_limit = np.dot(self._sa[:, 6:],
+                                           self._robot.joint_trq_limit)
         self._ihwbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
         self._ihwbc.lambda_rf = WBCConfig.LAMBDA_RF
         # Initialize Joint Integrator
@@ -43,17 +62,19 @@ class AtlasController(object):
                                    gravity)
         # Task and Contact Setup
         w_hierarchy_list = []
-        for task in self._tf_container.task_list:
+        for task in self._tci_container.task_list:
             task.update_jacobian()
             task.update_cmd()
             w_hierarchy_list.append(task.w_hierarchy)
         self._ihwbc.w_hierarchy = np.array(w_hierarchy_list)
-        for contact in self._tf_container.contact_list:
+        for contact in self._tci_container.contact_list:
             contact.update_contact()
+        for internal_constraint in self._tci_container.internal_constraint_list:
+            internal_constraint.update_internal_constraint()
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
-            self._tf_container.task_list, self._tf_container.contact_list,
-            False)
+            self._tci_container.task_list, self._tci_container.contact_list,
+            self._tci_container.internal_constraint_list, False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,

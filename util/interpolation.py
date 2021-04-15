@@ -1,6 +1,8 @@
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
+from util import liegroup
+
 
 def smooth_changing(ini, end, dur, curr_time):
     ret = ini + (end - ini) * 0.5 * (1 - np.cos(curr_time / dur * np.pi))
@@ -25,6 +27,20 @@ def smooth_changing_acc(ini, end, dur, curr_time):
         ret = 0.
 
     return ret
+
+
+def iso_interpolate(T1, T2, alpha):
+    p1 = T1[0:3, 3]
+    R1 = T1[0:3, 0:3]
+    p2 = T2[0:3, 3]
+    R2 = T2[0:3, 0:3]
+
+    slerp = Slerp([0, 1], R.from_matrix([R1, R2]))
+
+    p_ret = alpha * (p1 + p2)
+    R_ret = slerp(alpha).as_matrix()
+
+    return liegroup.RpToTrans(R_ret, p_ret)
 
 
 class HermiteCurve(object):
