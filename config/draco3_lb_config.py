@@ -68,7 +68,7 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.52  # m
+    COM_HEIGHT = 0.5  # m
     SWING_HEIGHT = 0.05  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec

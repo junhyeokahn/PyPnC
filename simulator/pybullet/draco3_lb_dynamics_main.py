@@ -22,13 +22,18 @@ from util import liegroup
 
 def set_initial_config(robot, joint_id):
     # Lowerbody
+    p.resetJointState(robot, joint_id["l_hip_aa"], np.radians(5), 0.)
     p.resetJointState(robot, joint_id["l_hip_fe"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_knee_fe_jp"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_knee_fe_jd"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["l_ankle_ie"], np.radians(-5), 0.)
     p.resetJointState(robot, joint_id["l_ankle_fe"], -np.pi / 4, 0.)
+
+    p.resetJointState(robot, joint_id["r_hip_aa"], np.radians(-5), 0.)
     p.resetJointState(robot, joint_id["r_hip_fe"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_knee_fe_jp"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_knee_fe_jd"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_ankle_ie"], np.radians(5), 0.)
     p.resetJointState(robot, joint_id["r_ankle_fe"], -np.pi / 4, 0.)
 
 
@@ -79,8 +84,8 @@ if __name__ == "__main__":
                            jointAxis=[0, 1, 0],
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
-    # p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    p.changeConstraint(c, gearRatio=-1, maxForce=50000)
+    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
+    # p.changeConstraint(c, gearRatio=-1, maxForce=50000)
 
     c = p.createConstraint(robot,
                            link_id['r_knee_fe_lp'],
@@ -90,8 +95,8 @@ if __name__ == "__main__":
                            jointAxis=[0, 1, 0],
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
-    # p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    p.changeConstraint(c, gearRatio=-1, maxForce=50000)
+    p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
+    # p.changeConstraint(c, gearRatio=-1, maxForce=50000)
 
     # Initial Config
     set_initial_config(robot, joint_id)
