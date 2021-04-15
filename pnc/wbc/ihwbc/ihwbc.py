@@ -32,6 +32,7 @@ class IHWBC(object):
         self._trq_limit = None
         self._lambda_q_ddot = 0.
         self._lambda_rf = 0.
+        self._w_rf = 0.
         self._w_hierarchy = 0.
 
         self._b_data_save = data_save
@@ -54,6 +55,10 @@ class IHWBC(object):
     def w_hierarchy(self):
         return self._w_hierarchy
 
+    @property
+    def w_rf(self):
+        return self._w_rf
+
     @trq_limit.setter
     def trq_limit(self, val):
         assert val.shape[0] == self._n_active
@@ -71,6 +76,10 @@ class IHWBC(object):
     def w_hierarchy(self, val):
         self._w_hierarchy = val
 
+    @w_hierarchy.setter
+    def w_rf(self, val):
+        self._w_rf = val
+
     def update_setting(self, mass_matrix, mass_matrix_inv, coriolis, gravity):
         self._mass_matrix = np.copy(mass_matrix)
         self._mass_matrix_inv = np.copy(mass_matrix_inv)
@@ -81,6 +90,7 @@ class IHWBC(object):
               task_list,
               contact_list,
               internal_constraint_list,
+              rf_des=None,
               verbose=False):
         """
         Parameters
@@ -91,6 +101,8 @@ class IHWBC(object):
             Contact list
         internal_constraint_list (list of InternalConstraint):
             Internal constraint list
+        rf_des (np.ndarray):
+            Reaction force desired
         verbose (bool):
             Printing option
 
@@ -167,8 +179,10 @@ class IHWBC(object):
             assert uf_mat.shape[1] == contact_jacobian.shape[0]
             dim_cone_constraint, dim_contacts = uf_mat.shape
 
-            cost_rf_mat = self._lambda_rf * np.eye(dim_contacts)
-            cost_rf_vec = np.zeros(dim_contacts)
+            cost_rf_mat = (self._lambda_rf + self._w_rf) * np.eye(dim_contacts)
+            if rf_des is None:
+                rf_des = np.zeros(dim_contacts)
+            cost_rf_vec = -np.copy(rf_des)
 
             cost_mat = np.array(block_diag(
                 cost_t_mat, cost_rf_mat))  # (nqdot+nc, nqdot+nc)
