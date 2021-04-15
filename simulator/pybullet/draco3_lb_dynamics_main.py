@@ -151,6 +151,8 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_seven = True
         elif pybullet_util.is_key_triggered(keys, '9'):
             interface.interrupt_logic.b_interrupt_button_nine = True
+        elif pybullet_util.is_key_triggered(keys, '0'):
+            interface.interrupt_logic.b_interrupt_button_zero = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:

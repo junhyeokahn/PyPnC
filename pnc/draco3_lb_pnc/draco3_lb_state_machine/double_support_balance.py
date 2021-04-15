@@ -14,15 +14,24 @@ class DoubleSupportBalance(StateMachine):
         self._force_managers = fm
         self._sp = Draco3LBStateProvider()
         self._start_time = 0.
-        self._b_state_switch_trigger = False
+        self._walking_trigger = False
+        self._swaying_trigger = False
 
     @property
-    def b_state_switch_trigger(self):
-        return self._b_state_switch_trigger
+    def walking_trigger(self):
+        return self._walking_trigger
 
-    @b_state_switch_trigger.setter
-    def b_state_switch_trigger(self, val):
-        self._b_state_switch_trigger = val
+    @walking_trigger.setter
+    def walking_trigger(self, val):
+        self._walking_trigger = val
+
+    @property
+    def swaying_trigger(self):
+        return self._swaying_trigger
+
+    @swaying_trigger.setter
+    def swaying_trigger(self, value):
+        self._swaying_trigger = value
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -33,26 +42,32 @@ class DoubleSupportBalance(StateMachine):
 
     def first_visit(self):
         print("[WalkingState] BALANCE")
-        self._b_state_switch_trigger = False
+        self._walking_trigger = False
         self._start_time = self._sp.curr_time
 
     def last_visit(self):
         pass
 
     def end_of_state(self):
-        if (self._b_state_switch_trigger) and (
+        if (self._walking_trigger) and (
                 len(self._trajectory_managers["dcm"].footstep_list) > 0
         ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
+            return True
+        if self._swaying_trigger:
             return True
         return False
 
     def get_next_state(self):
-        b_valid_step, robot_side = self._trajectory_managers[
-            "dcm"].next_step_side()
-        if b_valid_step:
-            if robot_side == Footstep.LEFT_SIDE:
-                return WalkingState.LF_CONTACT_TRANS_START
-            elif robot_side == Footstep.RIGHT_SIDE:
-                return WalkingState.RF_CONTACT_TRANS_START
-            else:
-                raise ValueError("Wrong Footstep Side")
+        if self._walking_trigger:
+            b_valid_step, robot_side = self._trajectory_managers[
+                "dcm"].next_step_side()
+            if b_valid_step:
+                if robot_side == Footstep.LEFT_SIDE:
+                    return WalkingState.LF_CONTACT_TRANS_START
+                elif robot_side == Footstep.RIGHT_SIDE:
+                    return WalkingState.RF_CONTACT_TRANS_START
+                else:
+                    raise ValueError("Wrong Footstep Side")
+
+        if self._swaying_trigger:
+            return WalkingState.SWAYING

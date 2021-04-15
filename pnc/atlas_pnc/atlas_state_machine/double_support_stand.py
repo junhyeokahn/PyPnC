@@ -56,7 +56,7 @@ class DoubleSupportStand(StateMachine):
             [0, 1], R.from_matrix([lfoot_iso[0:3, 0:3], rfoot_iso[0:3, 0:3]]))
         base_quat_des = base_quat_slerp(0.5).as_quat()
         self._trajectory_managers[
-            "floating_base"].initialize_floating_base_trajectory(
+            "floating_base"].initialize_floating_base_interpolation_trajectory(
                 self._sp.curr_time, self._end_time, com_pos_des, base_quat_des)
 
         # Initialize Reaction Force Ramp to Max

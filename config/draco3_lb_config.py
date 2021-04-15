@@ -38,10 +38,8 @@ class WBCConfig(object):
     W_SWING_FOOT = 40.0
 
     # Task Gains
-    KP_COM = np.array([400., 400., 300])
-    KD_COM = np.array([30., 30., 30.])
-    # KP_COM = np.array([100., 100., 100])
-    # KD_COM = np.array([10., 10., 10.])
+    KP_COM = np.array([100., 100., 100])
+    KD_COM = np.array([10., 10., 10.])
 
     KP_TORSO = np.array([100., 100., 100])
     KD_TORSO = np.array([10., 10., 10.])
@@ -71,6 +69,9 @@ class WalkingConfig(object):
     COM_HEIGHT = 0.5  # m
     SWING_HEIGHT = 0.05  # m
 
+    SWAYING_AMP = np.array([0., 0.08, 0.])
+    SWAYING_FREQ = np.array([0., 0.3, 0.])
+
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
     T_SWING = 0.75
@@ -93,3 +94,4 @@ class WalkingState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
+    SWAYING = 10

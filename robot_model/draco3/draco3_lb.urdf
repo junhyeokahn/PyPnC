@@ -233,13 +233,13 @@
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 -0.005 -0.046"/>-->
       <!--<geometry>-->
-        <!--<box size="0.2 0.08 0.0591"/>-->
+        <!--<box size="0.2 0.1 0.0591"/>-->
       <!--</geometry>-->
     <!--</visual>-->
     <collision>
       <origin rpy="0 -0 0" xyz="0 -0.005 -0.046"/>
       <geometry>
-        <box size="0.2 0.08 0.0591"/>
+        <box size="0.2 0.1 0.0591"/>
       </geometry>
     </collision>
     <inertial>
@@ -464,13 +464,13 @@
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 0.005 -0.046"/>-->
       <!--<geometry>-->
-        <!--<box size="0.2 0.08 0.0591"/>-->
+        <!--<box size="0.2 0.1 0.0591"/>-->
       <!--</geometry>-->
     <!--</visual>-->
     <collision>
       <origin rpy="0 -0 0" xyz="0 0.005 -0.046"/>
       <geometry>
-        <box size="0.2 0.08 0.0591"/>
+        <box size="0.2 0.1 0.0591"/>
       </geometry>
     </collision>
     <inertial>

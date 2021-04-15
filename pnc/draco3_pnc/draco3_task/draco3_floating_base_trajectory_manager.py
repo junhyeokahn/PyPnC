@@ -18,8 +18,8 @@ class Draco3FloatingBaseTrajectoryManager(object):
         self._ini_base_pos, self._target_base_pos = np.zeros(3), np.zeros(3)
         self._ini_base_quat, self._target_base_quat = np.zeros(4), np.zeros(4)
 
-    def initialize_floating_base_trajectory(self, start_time, duration,
-                                            target_com_pos, target_base_quat):
+    def initialize_floating_base_interpolation_trajectory(
+            self, start_time, duration, target_com_pos, target_base_quat):
         self._start_time = start_time
         self._duration = duration
 

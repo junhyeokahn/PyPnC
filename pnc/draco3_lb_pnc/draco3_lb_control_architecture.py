@@ -16,6 +16,7 @@ from pnc.draco3_lb_pnc.draco3_lb_state_machine.double_support_balance import Dou
 from pnc.draco3_lb_pnc.draco3_lb_state_machine.contact_transition_start import ContactTransitionStart
 from pnc.draco3_lb_pnc.draco3_lb_state_machine.contact_transition_end import ContactTransitionEnd
 from pnc.draco3_lb_pnc.draco3_lb_state_machine.single_support_swing import SingleSupportSwing
+from pnc.draco3_lb_pnc.draco3_lb_state_machine.double_support_swaying import DoubleSupportSwaying
 from pnc.draco3_lb_pnc.draco3_lb_state_provider import Draco3LBStateProvider
 
 
@@ -23,29 +24,43 @@ class Draco3LBControlArchitecture(ControlArchitecture):
     def __init__(self, robot):
         super(Draco3LBControlArchitecture, self).__init__(robot)
 
-        # Initialize Task Force Container
+        # ======================================================================
+        # Initialize TCIContainer
+        # ======================================================================
         self._tic_container = Draco3LBTCIContainer(robot)
 
+        # ======================================================================
         # Initialize Controller
+        # ======================================================================
         self._draco3_lb_controller = Draco3LBController(
             self._tic_container, robot)
 
+        # ======================================================================
         # Initialize Planner
+        # ======================================================================
         self._dcm_planner = DCMPlanner()
 
+        # ======================================================================
         # Initialize Task Manager
+        # ======================================================================
+        # RF TM
         self._rfoot_tm = FootTrajectoryManager(
             self._tic_container.rfoot_pos_task,
             self._tic_container.rfoot_ori_task, robot)
         self._rfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
+
+        # LF TM
         self._lfoot_tm = FootTrajectoryManager(
             self._tic_container.lfoot_pos_task,
             self._tic_container.lfoot_ori_task, robot)
         self._lfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
+
+        # Floating TM
         self._floating_base_tm = FloatingBaseTrajectoryManager(
             self._tic_container.com_task, self._tic_container.torso_ori_task,
             robot)
 
+        # DCM TM
         self._dcm_tm = DCMTrajectoryManager(self._dcm_planner,
                                             self._tic_container.com_task,
                                             self._tic_container.torso_ori_task,
@@ -70,19 +85,25 @@ class Draco3LBControlArchitecture(ControlArchitecture):
             "dcm": self._dcm_tm
         }
 
+        # ======================================================================
         # Initialize Hierarchy Manager
+        # ======================================================================
         self._rfoot_pos_hm = TaskHierarchyManager(
             self._tic_container.rfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
+
         self._lfoot_pos_hm = TaskHierarchyManager(
             self._tic_container.lfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
+
         self._rfoot_ori_hm = TaskHierarchyManager(
             self._tic_container.rfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
+
         self._lfoot_ori_hm = TaskHierarchyManager(
             self._tic_container.lfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
+
         self._hierarchy_managers = {
             "rfoot_pos": self._rfoot_pos_hm,
             "lfoot_pos": self._lfoot_pos_hm,
@@ -90,7 +111,9 @@ class Draco3LBControlArchitecture(ControlArchitecture):
             "lfoot_ori": self._lfoot_ori_hm
         }
 
+        # ======================================================================
         # Initialize Reaction Force Manager
+        # ======================================================================
         self._rfoot_fm = ReactionForceManager(
             self._tic_container.rfoot_contact, WBCConfig.RF_Z_MAX, robot)
         self._lfoot_fm = ReactionForceManager(
@@ -100,7 +123,10 @@ class Draco3LBControlArchitecture(ControlArchitecture):
             "lfoot": self._lfoot_fm
         }
 
+        # ======================================================================
         # Initialize State Machines
+        # ======================================================================
+        # Stand state
         self._state_machine[WalkingState.STAND] = DoubleSupportStand(
             WalkingState.STAND, self._trajectory_managers,
             self._hierarchy_managers, self._reaction_force_managers, robot)
@@ -111,37 +137,58 @@ class Draco3LBControlArchitecture(ControlArchitecture):
         self._state_machine[
             WalkingState.STAND].com_height_des = WalkingConfig.COM_HEIGHT
 
+        # Balance state
         self._state_machine[WalkingState.BALANCE] = DoubleSupportBalance(
             WalkingState.BALANCE, self._trajectory_managers,
             self._hierarchy_managers, self._reaction_force_managers, robot)
 
+        # LF contact transition start state
         self._state_machine[
             WalkingState.LF_CONTACT_TRANS_START] = ContactTransitionStart(
                 WalkingState.LF_CONTACT_TRANS_START, self._trajectory_managers,
                 self._hierarchy_managers, self._reaction_force_managers,
                 Footstep.LEFT_SIDE, self._robot)
+
+        # LF contact transition end state
         self._state_machine[
             WalkingState.LF_CONTACT_TRANS_END] = ContactTransitionEnd(
                 WalkingState.LF_CONTACT_TRANS_END, self._trajectory_managers,
                 self._hierarchy_managers, self._reaction_force_managers,
                 Footstep.LEFT_SIDE, self._robot)
+
+        # LF swing state
         self._state_machine[WalkingState.LF_SWING] = SingleSupportSwing(
             WalkingState.LF_SWING, self._trajectory_managers,
             Footstep.LEFT_SIDE, self._robot)
 
+        # RF contact transition start state
         self._state_machine[
             WalkingState.RF_CONTACT_TRANS_START] = ContactTransitionStart(
                 WalkingState.RF_CONTACT_TRANS_START, self._trajectory_managers,
                 self._hierarchy_managers, self._reaction_force_managers,
                 Footstep.RIGHT_SIDE, self._robot)
+
+        # RF contact transition end state
         self._state_machine[
             WalkingState.RF_CONTACT_TRANS_END] = ContactTransitionEnd(
                 WalkingState.RF_CONTACT_TRANS_END, self._trajectory_managers,
                 self._hierarchy_managers, self._reaction_force_managers,
                 Footstep.RIGHT_SIDE, self._robot)
+
+        # RF swing state
         self._state_machine[WalkingState.RF_SWING] = SingleSupportSwing(
             WalkingState.RF_SWING, self._trajectory_managers,
             Footstep.RIGHT_SIDE, self._robot)
+
+        # Swaying state
+        self._state_machine[WalkingState.SWAYING] = DoubleSupportSwaying(
+            WalkingState.SWAYING, self._trajectory_managers,
+            self._hierarchy_managers, self._reaction_force_managers,
+            self._robot)
+        self._state_machine[
+            WalkingState.SWAYING].amp = WalkingConfig.SWAYING_AMP
+        self._state_machine[
+            WalkingState.SWAYING].freq = WalkingConfig.SWAYING_FREQ
 
         # Set Starting State
         self._state = WalkingState.STAND

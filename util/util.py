@@ -95,6 +95,18 @@ def weighted_pinv(A, W, rcond=1e-15):
                np.linalg.pinv(np.dot(np.dot(A, W), A.transpose()), rcond)))
 
 
+def get_sinusoid_trajectory(start_time, mid_point, amp, freq, eval_time):
+    dim = amp.shape[0]
+    p, v, a = np.zeros(dim), np.zeros(dim), np.zeros(dim)
+    p = amp * np.sin(2 * np.pi * freq * (eval_time - start_time)) + mid_point
+    v = amp * 2 * np.pi * freq * np.cos(2 * np.pi * freq *
+                                        (eval_time - start_time))
+    a = -amp * (2 * np.pi * freq)**2 * np.sin(2 * np.pi * freq *
+                                              (eval_time - start_time))
+
+    return p, v, a
+
+
 def normalize_data(data):
     mean = np.mean(np.stack(data, axis=0), axis=0)
     std = np.std(np.stack(data, axis=0), axis=0)

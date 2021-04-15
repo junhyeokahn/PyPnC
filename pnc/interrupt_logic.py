@@ -7,6 +7,7 @@ class InterruptLogic(object):
         self._b_interrupt_button_six = False
         self._b_interrupt_button_seven = False
         self._b_interrupt_button_nine = False
+        self._b_interrupt_button_zero = False
 
     def process_interrupts(self):
         self._reset_flags()
@@ -19,6 +20,7 @@ class InterruptLogic(object):
         self._b_interrupt_button_six = False
         self._b_interrupt_button_seven = False
         self._b_interrupt_button_nine = False
+        self._b_interrupt_button_zero = False
 
     @property
     def b_interrupt_button_eight(self):
@@ -75,3 +77,11 @@ class InterruptLogic(object):
     @b_interrupt_button_nine.setter
     def b_interrupt_button_nine(self, value):
         self._b_interrupt_button_nine = value
+
+    @property
+    def b_interrupt_button_zero(self):
+        return self._b_interrupt_button_zero
+
+    @b_interrupt_button_zero.setter
+    def b_interrupt_button_zero(self, value):
+        self._b_interrupt_button_zero = value

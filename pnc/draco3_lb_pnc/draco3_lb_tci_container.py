@@ -65,11 +65,11 @@ class Draco3LBTCIContainer(TCIContainer):
         # ======================================================================
         # Rfoot Contact
         self._rfoot_contact = SurfaceContact(robot, "r_foot_contact", 0.1,
-                                             0.04, 0.3, PnCConfig.SAVE_DATA)
+                                             0.03, 0.3, PnCConfig.SAVE_DATA)
         self._rfoot_contact.rf_z_max = 1e-3  # Initial rf_z_max
         # Lfoot Contact
         self._lfoot_contact = SurfaceContact(robot, "l_foot_contact", 0.1,
-                                             0.04, 0.3, PnCConfig.SAVE_DATA)
+                                             0.03, 0.3, PnCConfig.SAVE_DATA)
         self._lfoot_contact.rf_z_max = 1e-3  # Initial rf_z_max
 
         self._contact_list = [self._rfoot_contact, self._lfoot_contact]
