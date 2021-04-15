@@ -1,18 +1,24 @@
 import numpy as np
 
 from util import util
+from pnc.data_saver import DataSaver
 from config.draco3_config import PnCConfig, WBCConfig
 from pnc.wbc.ihwbc.ihwbc import IHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
 class Draco3Controller(object):
-    def __init__(self, tf_container, robot):
-        self._tf_container = tf_container
+    def __init__(self, tci_container, robot):
+        self._tci_container = tci_container
         self._robot = robot
 
         # Initialize WBC
+        l_jp_idx, l_jd_idx, r_jp_idx, r_jd_idx = self._robot.get_q_dot_idx(
+            ['l_knee_fe_jp', 'l_knee_fe_jd', 'r_knee_fe_jp', 'r_knee_fe_jd'])
         act_list = [False] * robot.n_floating + [True] * robot.n_a
+        act_list[l_jd_idx] = False
+        act_list[r_jd_idx] = False
+
         n_q_dot = len(act_list)
         n_active = np.count_nonzero(np.array(act_list))
         n_passive = n_q_dot - n_active - 6
@@ -49,6 +55,9 @@ class Draco3Controller(object):
 
         self._b_first_visit = True
 
+        if PnCConfig.SAVE_DATA:
+            self._data_saver = DataSaver()
+
     def get_command(self):
         if self._b_first_visit:
             self.first_visit()
@@ -58,27 +67,32 @@ class Draco3Controller(object):
         mass_matrix_inv = np.linalg.inv(mass_matrix)
         coriolis = self._robot.get_coriolis()
         gravity = self._robot.get_gravity()
-        self._wbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
-                                 gravity)
+        self._ihwbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
+                                   gravity)
         # Task, Contact, and Internal Constraint Setup
         w_hierarchy_list = []
-        for task in self._tf_container.task_list:
+        for task in self._tci_container.task_list:
             task.update_jacobian()
             task.update_cmd()
             w_hierarchy_list.append(task.w_hierarchy)
-        self._wbc.w_hierarchy = np.array(w_hierarchy_list)
-        for contact in self._tf_container.contact_list:
+        self._ihwbc.w_hierarchy = np.array(w_hierarchy_list)
+        for contact in self._tci_container.contact_list:
             contact.update_contact()
         for internal_constraint in self._tci_container.internal_constraint_list:
             internal_constraint.update_internal_constraint()
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list, False)
+            self._tci_container.internal_constraint_list)
+        joint_trq_cmd = np.dot(self._sa[:, 6:].transpose(), joint_trq_cmd)
+        joint_acc_cmd = np.dot(self._sa[:, 6:].transpose(), joint_acc_cmd)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,
             self._robot.joint_positions)
+
+        if PnCConfig.SAVE_DATA:
+            self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
 
         command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
                                                       joint_vel_cmd,

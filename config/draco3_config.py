@@ -13,7 +13,7 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
-    VIDEO_RECORD = True
+    VIDEO_RECORD = False
     RECORD_FREQ = 1
 
 
@@ -28,18 +28,18 @@ class PnCConfig(object):
 
 class WBCConfig(object):
     # Max normal force per contact
-    RF_Z_MAX = 500.0
+    RF_Z_MAX = 1000.0
 
     # Task Hierarchy Weights
-    W_COM = 10.0
+    W_COM = 20.0
     W_TORSO = 20.0
     W_UPPER_BODY = 40.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
     # Task Gains
-    KP_COM = np.array([100., 100., 100])
-    KD_COM = np.array([10., 10., 10.])
+    KP_COM = np.array([400., 400., 400])
+    KD_COM = np.array([20., 20., 20.])
 
     KP_TORSO = np.array([100., 100., 100])
     KD_TORSO = np.array([10., 10., 10.])
@@ -49,23 +49,23 @@ class WBCConfig(object):
     # 'r_shoulder_aa', 'r_shoulder_ie', 'r_elbow_fe', 'r_wrist_ps',
     # 'r_wrist_pitch'
     # ]
-    KP_UPPER_BODY = np.array(
-        [20., 80., 80., 80., 30., 20., 20., 80., 80., 80., 30., 20., 20.])
+    KP_UPPER_BODY = np.array([
+        40., 100., 100., 100., 50., 40., 40., 100., 100., 100., 50., 40., 40.
+    ])
     KD_UPPER_BODY = np.array(
         [2., 8., 8., 8., 3., 2., 2., 8., 8., 8., 3., 2., 2.])
 
-    KP_FOOT_POS = np.array([100., 100., 100.])
-    KD_FOOT_POS = np.array([10., 10., 10.])
-    KP_FOOT_ORI = np.array([100., 100., 100.])
-    KD_FOOT_ORI = np.array([10., 10., 10.])
+    KP_FOOT_POS = np.array([300., 300., 300.])
+    KD_FOOT_POS = np.array([30., 30., 30.])
+    KP_FOOT_ORI = np.array([300., 300., 300.])
+    KD_FOOT_ORI = np.array([30., 30., 30.])
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
     LAMBDA_RF = 1e-7
-    LAMBDA_IF = 1e-6
 
-    B_TRQ_LIMIT = True
-    # B_TRQ_LIMIT = False
+    # B_TRQ_LIMIT = True
+    B_TRQ_LIMIT = False
 
     # Integration Parameters
     VEL_CUTOFF_FREQ = 2.0  #Hz
@@ -78,19 +78,24 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.65  # m
+    COM_HEIGHT = 0.73  # m
     SWING_HEIGHT = 0.04  # m
+
+    SWAYING_AMP = np.array([0., 0.08, 0.])
+    SWAYING_FREQ = np.array([0., 0.3, 0.])
+    # SWAYING_AMP = np.array([0., 0., 0.05])
+    # SWAYING_FREQ = np.array([0., 0., 0.3])
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
-    T_SWING = 0.75
+    T_SWING = 0.55
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.25
-    NOMINAL_FORWARD_STEP = 0.15
-    NOMINAL_BACKWARD_STEP = -0.15
-    NOMINAL_TURN_RADIANS = np.pi / 6
+    NOMINAL_FOOTWIDTH = 0.28
+    NOMINAL_FORWARD_STEP = 0.1
+    NOMINAL_BACKWARD_STEP = -0.1
+    NOMINAL_TURN_RADIANS = np.pi / 10
     NOMINAL_STRAFE_DISTANCE = 0.05
 
 
@@ -103,3 +108,4 @@ class WalkingState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
+    SWAYING = 10

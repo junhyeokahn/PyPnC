@@ -41,11 +41,13 @@ class BasicTask(Task):
             vel_act = self._robot.joint_velocities[self._robot.get_joint_idx(
                 self._target_id)]
             if self._b_data_save:
-                self._data_saver.add('joint_pos_des', self._pos_des.copy())
-                self._data_saver.add('joint_vel_des', self._vel_des.copy())
-                self._data_saver.add('joint_pos', pos.copy())
-                self._data_saver.add('joint_vel', vel_act.copy())
-                self._data_saver.add('w_joint', self._w_hierarchy)
+                self._data_saver.add('selected_joint_pos_des',
+                                     self._pos_des.copy())
+                self._data_saver.add('selected_joint_vel_des',
+                                     self._vel_des.copy())
+                self._data_saver.add('selected_joint_pos', pos.copy())
+                self._data_saver.add('selected_joint_vel', vel_act.copy())
+                self._data_saver.add('w_selected_joint', self._w_hierarchy)
         elif self._task_type == "LINK_XYZ":
             pos = self._robot.get_link_iso(self._target_id)[0:3, 3]
             pos_err = self._pos_des - pos

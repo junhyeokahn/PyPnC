@@ -1,7 +1,6 @@
 import numpy as np
 
 from util import util
-from pnc.data_saver import DataSaver
 from config.draco3_lb_config import PnCConfig, WBCConfig
 from pnc.wbc.ihwbc.ihwbc import IHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
@@ -55,9 +54,6 @@ class Draco3LBController(object):
 
         self._b_first_visit = True
 
-        if PnCConfig.SAVE_DATA:
-            self._data_saver = DataSaver()
-
     def get_command(self):
         if self._b_first_visit:
             self.first_visit()
@@ -90,9 +86,6 @@ class Draco3LBController(object):
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,
             self._robot.joint_positions)
-
-        if PnCConfig.SAVE_DATA:
-            self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
 
         command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
                                                       joint_vel_cmd,

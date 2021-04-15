@@ -343,6 +343,20 @@ class IHWBC(object):
             print("sol_q_ddot: ", sol_q_ddot)
             print("sol_rf: ", sol_rf)
 
+        # print("*" * 80)
+        # print("joint_trq_cmd: ", joint_trq_cmd)
+        # print("sol_q_ddot: ", sol_q_ddot)
+        # print("sol_rf: ", sol_rf)
+        # for i, task in enumerate(task_list):
+        # j = task.jacobian
+        # j_dot_q_dot = task.jacobian_dot_q_dot
+        # x_ddot = task.op_cmd
+        # print(i, " th task")
+        # print("des x ddot: ", x_ddot)
+        # print("j*qddot_sol + Jdot*qdot: ",
+        # np.dot(j, sol_q_ddot) + j_dot_q_dot)
+        # __import__('ipdb').set_trace()
+
         if self._b_data_save:
             self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
             self._data_saver.add('joint_acc_cmd', joint_acc_cmd)

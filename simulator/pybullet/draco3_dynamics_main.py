@@ -28,14 +28,24 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["r_elbow_fe"], -np.pi / 2, 0.)
 
     # Lowerbody
+    hip_yaw_angle = 5
+    p.resetJointState(robot, joint_id["l_hip_aa"], np.radians(hip_yaw_angle),
+                      0.)
     p.resetJointState(robot, joint_id["l_hip_fe"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_knee_fe_jp"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_knee_fe_jd"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["l_ankle_fe"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["l_ankle_ie"],
+                      np.radians(-hip_yaw_angle), 0.)
+
+    p.resetJointState(robot, joint_id["r_hip_aa"], np.radians(-hip_yaw_angle),
+                      0.)
     p.resetJointState(robot, joint_id["r_hip_fe"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_knee_fe_jp"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_knee_fe_jd"], np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_ankle_fe"], -np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["r_ankle_ie"], np.radians(hip_yaw_angle),
+                      0.)
 
 
 def signal_handler(signal, frame):
@@ -137,19 +147,21 @@ if __name__ == "__main__":
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
         if pybullet_util.is_key_triggered(keys, '8'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_eight = True
         elif pybullet_util.is_key_triggered(keys, '5'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_five = True
         elif pybullet_util.is_key_triggered(keys, '4'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_four = True
         elif pybullet_util.is_key_triggered(keys, '2'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_two = True
         elif pybullet_util.is_key_triggered(keys, '6'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_six = True
         elif pybullet_util.is_key_triggered(keys, '7'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_seven = True
         elif pybullet_util.is_key_triggered(keys, '9'):
-            pass
+            interface.interrupt_logic.b_interrupt_button_nine = True
+        elif pybullet_util.is_key_triggered(keys, '0'):
+            interface.interrupt_logic.b_interrupt_button_zero = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:

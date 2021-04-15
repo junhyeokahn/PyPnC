@@ -50,24 +50,24 @@ with open('data/pnc.pkl', 'rb') as file:
     for i in range(n_joint):
         axes[i, 0].plot(time, joint_pos[:, i], color='k', linewidth=3)
         axes[i, 1].plot(time, joint_vel[:, i], color='k', linewidth=3)
-        plot_phase(axes[i, 0], time, phase)
-        plot_phase(axes[i, 1], time, phase)
         axes[i, 0].axhline(joint_pos_limit[i, 0], color='r', linewidth=3)
         axes[i, 0].axhline(joint_pos_limit[i, 1], color='r', linewidth=3)
         axes[i, 1].axhline(joint_vel_limit[i, 0], color='r', linewidth=3)
         axes[i, 1].axhline(joint_vel_limit[i, 1], color='r', linewidth=3)
         axes[i, 0].grid(True)
         axes[i, 1].grid(True)
+        plot_phase(axes[i, 0], time, phase)
+        plot_phase(axes[i, 1], time, phase)
     axes[0, 0].set_title('joint positions')
     axes[0, 1].set_title('joint velocities')
 
     fig, axes = plt.subplots(n_joint, 1)
     for i in range(n_joint):
         axes[i].plot(time, joint_trq_cmd[:, i], color='k', linewidth=3)
-        plot_phase(axes[i], time, phase)
         axes[i].grid(True)
         axes[i].axhline(joint_trq_limit[i, 0], color='r', linewidth=3)
         axes[i].axhline(joint_trq_limit[i, 1], color='r', linewidth=3)
+        plot_phase(axes[i], time, phase)
     fig.suptitle('joint trq command')
 
     plt.show()

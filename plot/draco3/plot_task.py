@@ -13,13 +13,14 @@ from plot.helper import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_ve
 
 tasks = [
     'com_pos', 'com_vel', 'torso_com_link_quat', 'torso_com_link_ang_vel',
-    'joint_pos', 'joint_vel', 'l_foot_contact_pos', 'l_foot_contact_vel',
-    'l_foot_contact_quat', 'l_foot_contact_ang_vel', 'r_foot_contact_pos',
-    'r_foot_contact_vel', 'r_foot_contact_quat', 'r_foot_contact_ang_vel'
+    'selected_joint_pos', 'selected_joint_vel', 'l_foot_contact_pos',
+    'l_foot_contact_vel', 'l_foot_contact_quat', 'l_foot_contact_ang_vel',
+    'r_foot_contact_pos', 'r_foot_contact_vel', 'r_foot_contact_quat',
+    'r_foot_contact_ang_vel'
 ]
 
 weights = [
-    'w_com', 'w_torso_com_link_ori', 'w_joint', 'w_l_foot_contact',
+    'w_com', 'w_torso_com_link_ori', 'w_selected_joint', 'w_l_foot_contact',
     'w_l_foot_contact_ori', 'w_r_foot_contact', 'w_r_foot_contact_ori'
 ]
 
@@ -30,10 +31,6 @@ time = []
 phase = []
 
 rf_cmd = []
-
-joint_trq_cmd = []
-
-joint_acc_cmd = []
 
 des, act = dict(), dict()
 for topic in tasks:
@@ -81,8 +78,9 @@ plot_task(time, des['torso_com_link_quat'], act['torso_com_link_quat'],
           des['torso_com_link_ang_vel'], act['torso_com_link_ang_vel'], phase,
           'torso ori')
 
-plot_task(time, des['joint_pos'], act['joint_pos'], des['joint_vel'],
-          act['joint_vel'], phase, 'upperbody joint')
+plot_task(time, des['selected_joint_pos'], act['selected_joint_pos'],
+          des['selected_joint_vel'], act['selected_joint_vel'], phase,
+          'upperbody joint')
 
 plot_task(time, des['l_foot_contact_pos'], act['l_foot_contact_pos'],
           des['l_foot_contact_vel'], act['l_foot_contact_vel'], phase,

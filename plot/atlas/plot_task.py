@@ -12,14 +12,15 @@ import matplotlib.pyplot as plt
 from plot.helper import plot_task, plot_weights, plot_rf_z_max, plot_rf, plot_vector_traj
 
 tasks = [
-    'com_pos', 'com_vel', 'pelvis_com_quat', 'pelvis_com_ang_vel', 'joint_pos',
-    'joint_vel', 'l_sole_pos', 'l_sole_vel', 'l_sole_quat', 'l_sole_ang_vel',
-    'r_sole_pos', 'r_sole_vel', 'r_sole_quat', 'r_sole_ang_vel'
+    'com_pos', 'com_vel', 'pelvis_com_quat', 'pelvis_com_ang_vel',
+    'selected_joint_pos', 'selected_joint_vel', 'l_sole_pos', 'l_sole_vel',
+    'l_sole_quat', 'l_sole_ang_vel', 'r_sole_pos', 'r_sole_vel', 'r_sole_quat',
+    'r_sole_ang_vel'
 ]
 
 weights = [
-    'w_com', 'w_pelvis_com_ori', 'w_joint', 'w_l_sole', 'w_l_sole_ori',
-    'w_r_sole', 'w_r_sole_ori'
+    'w_com', 'w_pelvis_com_ori', 'w_selected_joint', 'w_l_sole',
+    'w_l_sole_ori', 'w_r_sole', 'w_r_sole_ori'
 ]
 
 rf_z = ['rf_z_max_r_sole', 'rf_z_max_l_sole']
@@ -76,8 +77,9 @@ plot_task(time, des['pelvis_com_quat'], act['pelvis_com_quat'],
           des['pelvis_com_ang_vel'], act['pelvis_com_ang_vel'], phase,
           'pelvis ori')
 
-plot_task(time, des['joint_pos'], act['joint_pos'], des['joint_vel'],
-          act['joint_vel'], phase, 'upperbody joint')
+plot_task(time, des['selected_joint_pos'], act['selected_joint_pos'],
+          des['selected_joint_vel'], act['selected_joint_vel'], phase,
+          'upperbody joint')
 
 plot_task(time, des['l_sole_pos'], act['l_sole_pos'], des['l_sole_vel'],
           act['l_sole_vel'], phase, 'left foot lin')

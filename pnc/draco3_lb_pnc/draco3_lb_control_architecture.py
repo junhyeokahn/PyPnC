@@ -27,13 +27,13 @@ class Draco3LBControlArchitecture(ControlArchitecture):
         # ======================================================================
         # Initialize TCIContainer
         # ======================================================================
-        self._tic_container = Draco3LBTCIContainer(robot)
+        self._tci_container = Draco3LBTCIContainer(robot)
 
         # ======================================================================
         # Initialize Controller
         # ======================================================================
         self._draco3_lb_controller = Draco3LBController(
-            self._tic_container, robot)
+            self._tci_container, robot)
 
         # ======================================================================
         # Initialize Planner
@@ -45,25 +45,25 @@ class Draco3LBControlArchitecture(ControlArchitecture):
         # ======================================================================
         # RF TM
         self._rfoot_tm = FootTrajectoryManager(
-            self._tic_container.rfoot_pos_task,
-            self._tic_container.rfoot_ori_task, robot)
+            self._tci_container.rfoot_pos_task,
+            self._tci_container.rfoot_ori_task, robot)
         self._rfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
 
         # LF TM
         self._lfoot_tm = FootTrajectoryManager(
-            self._tic_container.lfoot_pos_task,
-            self._tic_container.lfoot_ori_task, robot)
+            self._tci_container.lfoot_pos_task,
+            self._tci_container.lfoot_ori_task, robot)
         self._lfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
 
         # Floating TM
         self._floating_base_tm = FloatingBaseTrajectoryManager(
-            self._tic_container.com_task, self._tic_container.torso_ori_task,
+            self._tci_container.com_task, self._tci_container.torso_ori_task,
             robot)
 
         # DCM TM
         self._dcm_tm = DCMTrajectoryManager(self._dcm_planner,
-                                            self._tic_container.com_task,
-                                            self._tic_container.torso_ori_task,
+                                            self._tci_container.com_task,
+                                            self._tci_container.torso_ori_task,
                                             self._robot, "l_foot_contact",
                                             "r_foot_contact")
         self._dcm_tm.nominal_com_height = WalkingConfig.COM_HEIGHT
@@ -89,19 +89,19 @@ class Draco3LBControlArchitecture(ControlArchitecture):
         # Initialize Hierarchy Manager
         # ======================================================================
         self._rfoot_pos_hm = TaskHierarchyManager(
-            self._tic_container.rfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
+            self._tci_container.rfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
 
         self._lfoot_pos_hm = TaskHierarchyManager(
-            self._tic_container.lfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
+            self._tci_container.lfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
 
         self._rfoot_ori_hm = TaskHierarchyManager(
-            self._tic_container.rfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
+            self._tci_container.rfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
 
         self._lfoot_ori_hm = TaskHierarchyManager(
-            self._tic_container.lfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
+            self._tci_container.lfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT, robot)
 
         self._hierarchy_managers = {
@@ -115,9 +115,11 @@ class Draco3LBControlArchitecture(ControlArchitecture):
         # Initialize Reaction Force Manager
         # ======================================================================
         self._rfoot_fm = ReactionForceManager(
-            self._tic_container.rfoot_contact, WBCConfig.RF_Z_MAX, robot)
+            self._tci_container.rfoot_contact, WBCConfig.RF_Z_MAX, robot)
+
         self._lfoot_fm = ReactionForceManager(
-            self._tic_container.lfoot_contact, WBCConfig.RF_Z_MAX, robot)
+            self._tci_container.lfoot_contact, WBCConfig.RF_Z_MAX, robot)
+
         self._reaction_force_managers = {
             "rfoot": self._rfoot_fm,
             "lfoot": self._lfoot_fm

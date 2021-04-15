@@ -90,7 +90,6 @@ if __name__ == "__main__":
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    # p.changeConstraint(c, gearRatio=-1, maxForce=50000)
 
     c = p.createConstraint(robot,
                            link_id['r_knee_fe_lp'],
@@ -101,7 +100,6 @@ if __name__ == "__main__":
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    # p.changeConstraint(c, gearRatio=-1, maxForce=50000)
 
     # Initial Config
     set_initial_config(robot, joint_id)

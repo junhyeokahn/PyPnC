@@ -40,6 +40,12 @@ class Draco3Interface(Interface):
             self._control_architecture)
         if PnCConfig.SAVE_DATA:
             self._data_saver = DataSaver()
+            self._data_saver.add('joint_pos_limit',
+                                 self._robot.joint_pos_limit)
+            self._data_saver.add('joint_vel_limit',
+                                 self._robot.joint_vel_limit)
+            self._data_saver.add('joint_trq_limit',
+                                 self._robot.joint_trq_limit)
 
     def get_command(self, sensor_data):
         if PnCConfig.SAVE_DATA:
@@ -61,6 +67,8 @@ class Draco3Interface(Interface):
         command = self._control_architecture.get_command()
 
         if PnCConfig.SAVE_DATA and (self._count % PnCConfig.SAVE_FREQ == 0):
+            self._data_saver.add('joint_pos', self._robot.joint_positions)
+            self._data_saver.add('joint_vel', self._robot.joint_velocities)
             self._data_saver.advance()
 
         # Increase time variables

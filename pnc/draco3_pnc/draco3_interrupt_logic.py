@@ -18,7 +18,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.walk_forward()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_five:
             print("=" * 80)
@@ -28,7 +28,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_place()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_four:
             print("=" * 80)
@@ -37,7 +37,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.strafe_left()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_six:
             print("=" * 80)
@@ -46,7 +46,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.strafe_right()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_two:
             print("=" * 80)
@@ -56,7 +56,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.walk_backward()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_seven:
             print("=" * 80)
@@ -65,7 +65,7 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.turn_left()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_nine:
             print("=" * 80)
@@ -74,6 +74,14 @@ class Draco3InterruptLogic(InterruptLogic):
             if self._control_architecture.state == WalkingState.BALANCE:
                 self._control_architecture.dcm_tm.turn_right()
                 self._control_architecture.state_machine[
-                    WalkingState.BALANCE].b_state_switch_trigger = True
+                    WalkingState.BALANCE].walking_trigger = True
+
+        if self._b_interrupt_button_zero:
+            print("=" * 80)
+            print("[Interrupt Logic] button {} pressed: Swaying".format(0))
+            print("=" * 80)
+            if self._control_architecture.state == WalkingState.BALANCE:
+                self._control_architecture.state_machine[
+                    WalkingState.BALANCE].swaying_trigger = True
 
         self._reset_flags()
