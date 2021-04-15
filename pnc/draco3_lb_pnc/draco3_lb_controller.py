@@ -13,8 +13,23 @@ class Draco3LBController(object):
         self._robot = robot
 
         # Initialize WBC
+        l_jp_idx, l_jd_idx, r_jp_idx, r_jd_idx = self._robot.get_q_dot_idx(
+            ['l_knee_fe_jp', 'l_knee_fe_jd', 'r_knee_fe_jp', 'r_knee_fe_jd'])
+
+        jac_int = np.zeros((2, self._robot.n_q_dot))
+        jac_int[0, l_jp_idx] = 1.
+        jac_int[0, l_jd_idx] = -1.
+        jac_int[1, r_jp_idx] = 1.
+        jac_int[1, r_jd_idx] = -1.
+
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._wbc = Draco3LBIHWBC(self._robot, act_list, PnCConfig.SAVE_DATA)
+        act_list[l_jd_idx] = False
+        act_list[r_jd_idx] = False
+
+        self._wbc = Draco3LBIHWBC(act_list, jac_int, PnCConfig.SAVE_DATA)
+
+        self._full_to_active = self._wbc._sa[:, 6:]  # TODO
+
         if WBCConfig.B_TRQ_LIMIT:
             self._wbc.trq_limit = self._robot.joint_trq_limit
         self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
@@ -55,10 +70,15 @@ class Draco3LBController(object):
         self._wbc.w_hierarchy = np.array(w_hierarchy_list)
         for contact in self._tf_container.contact_list:
             contact.update_contact()
+
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd, if_cmd = self._wbc.solve(
             self._tf_container.task_list, self._tf_container.contact_list,
             False)
+
+        joint_trq_cmd = np.dot(self._full_to_active.transpose(), joint_trq_cmd)
+        joint_acc_cmd = np.dot(self._full_to_active.transpose(), joint_acc_cmd)
+
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,

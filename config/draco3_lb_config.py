@@ -14,7 +14,7 @@ class SimConfig(object):
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
-    RECORD_FREQ = 1
+    RECORD_FREQ = 5
 
 
 class PnCConfig(object):
@@ -31,7 +31,7 @@ class WBCConfig(object):
     RF_Z_MAX = 500.0
 
     # Task Hierarchy Weights
-    W_COM = 20.0
+    W_COM = 40.0
     W_TORSO = 20.0
     W_UPPER_BODY = 40.0
     W_CONTACT_FOOT = 60.0
@@ -40,6 +40,8 @@ class WBCConfig(object):
     # Task Gains
     KP_COM = np.array([200., 200., 200])
     KD_COM = np.array([20., 20., 20.])
+    # KP_COM = np.array([100., 100., 100])
+    # KD_COM = np.array([10., 10., 10.])
 
     KP_TORSO = np.array([100., 100., 100])
     KD_TORSO = np.array([10., 10., 10.])
@@ -50,12 +52,12 @@ class WBCConfig(object):
     KD_FOOT_ORI = np.array([10., 10., 10.])
 
     # Regularization terms
-    LAMBDA_Q_DDOT = 1e-8
+    LAMBDA_Q_DDOT = 1e-7
     LAMBDA_RF = 1e-7
-    LAMBDA_IF = 1e-8
+    LAMBDA_IF = 1e-18
 
-    B_TRQ_LIMIT = True
-    # B_TRQ_LIMIT = False
+    # B_TRQ_LIMIT = True
+    B_TRQ_LIMIT = False
 
     # Integration Parameters
     VEL_CUTOFF_FREQ = 2.0  #Hz
@@ -68,16 +70,17 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.55  # m
-    SWING_HEIGHT = 0.04  # m
+    COM_HEIGHT = 0.6  # m
+    SWING_HEIGHT = 0.03  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
-    T_SWING = 0.75
+    # T_SWING = 0.75
+    T_SWING = 0.45
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.25
+    NOMINAL_FOOTWIDTH = 0.2
     NOMINAL_FORWARD_STEP = 0.15
     NOMINAL_BACKWARD_STEP = -0.15
     NOMINAL_TURN_RADIANS = np.pi / 6

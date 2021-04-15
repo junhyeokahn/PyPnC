@@ -17,19 +17,20 @@ class IHWBC(object):
     def __init__(self, act_list, data_save=False):
         self._n_q_dot = len(act_list)
         self._n_active = np.count_nonzero(np.array(act_list))
-        self._n_passive = self._n_q_dot - self._n_active
+        self._n_passive = self._n_q_dot - self._n_active - 6
 
         # Selection matrix
         self._sa = np.zeros((self._n_active, self._n_q_dot))
         self._sv = np.zeros((self._n_passive, self._n_q_dot))
         j, k = 0, 0
         for i in range(self._n_q_dot):
-            if act_list[i]:
-                self._sa[j, i] = 1.
-                j += 1
-            else:
-                self._sv[k, i] = 1.
-                k += 1
+            if i >= 6:
+                if act_list[i]:
+                    self._sa[j, i] = 1.
+                    j += 1
+                else:
+                    self._sv[k, i] = 1.
+                    k += 1
 
         # Assume first six is floating
         self._sf = np.zeros((6, self._n_q_dot))

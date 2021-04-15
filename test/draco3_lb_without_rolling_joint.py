@@ -70,29 +70,6 @@ if __name__ == "__main__":
         robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
-    # Add Gear constraint
-    c = p.createConstraint(robot,
-                           link_id['l_knee_fe_lp'],
-                           robot,
-                           link_id['l_knee_fe_ld'],
-                           jointType=p.JOINT_GEAR,
-                           jointAxis=[0, 1, 0],
-                           parentFramePosition=[0, 0, 0],
-                           childFramePosition=[0, 0, 0])
-    # p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    p.changeConstraint(c, gearRatio=-1, maxForce=50000)
-
-    c = p.createConstraint(robot,
-                           link_id['r_knee_fe_lp'],
-                           robot,
-                           link_id['r_knee_fe_ld'],
-                           jointType=p.JOINT_GEAR,
-                           jointAxis=[0, 1, 0],
-                           parentFramePosition=[0, 0, 0],
-                           childFramePosition=[0, 0, 0])
-    # p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
-    p.changeConstraint(c, gearRatio=-1, maxForce=50000)
-
     # Initial Config
     set_initial_config(robot, joint_id)
 
@@ -155,14 +132,6 @@ if __name__ == "__main__":
         if SimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
-
-        # Exclude Knee Distal Joints Command
-        del command['joint_pos']['l_knee_fe_jd']
-        del command['joint_pos']['r_knee_fe_jd']
-        del command['joint_vel']['l_knee_fe_jd']
-        del command['joint_vel']['r_knee_fe_jd']
-        del command['joint_trq']['l_knee_fe_jd']
-        del command['joint_trq']['r_knee_fe_jd']
 
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
