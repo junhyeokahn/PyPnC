@@ -2,7 +2,6 @@ import numpy as np
 
 from util import util
 from config.draco3_config import PnCConfig, WBCConfig
-from pnc.draco3_pnc.draco3_ihwbc import Draco3IHWBC
 from pnc.wbc.ihwbc.ihwbc import IHWBC
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
@@ -14,12 +13,31 @@ class Draco3Controller(object):
 
         # Initialize WBC
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        self._wbc = Draco3IHWBC(self._robot, act_list, PnCConfig.SAVE_DATA)
+        n_q_dot = len(act_list)
+        n_active = np.count_nonzero(np.array(act_list))
+        n_passive = n_q_dot - n_active - 6
+
+        self._sa = np.zeros((n_active, n_q_dot))
+        self._sv = np.zeros((n_passive, n_q_dot))
+        j, k = 0, 0
+        for i in range(n_q_dot):
+            if i >= 6:
+                if act_list[i]:
+                    self._sa[j, i] = 1.
+                    j += 1
+                else:
+                    self._sv[k, i] = 1.
+                    k += 1
+        self._sf = np.zeros((6, n_q_dot))
+        self._sf[0:6, 0:6] = np.eye(6)
+
+        self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
         if WBCConfig.B_TRQ_LIMIT:
-            self._wbc.trq_limit = self._robot.joint_trq_limit
-        self._wbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
-        self._wbc.lambda_rf = WBCConfig.LAMBDA_RF
-        self._wbc.lambda_if = WBCConfig.LAMBDA_IF
+            self._ihwbc.trq_limit = np.dot(self._sa[:, 6:],
+                                           self._robot.joint_trq_limit)
+        self._ihwbc.lambda_q_ddot = WBCConfig.LAMBDA_Q_DDOT
+        self._ihwbc.lambda_rf = WBCConfig.LAMBDA_RF
+
         # Initialize Joint Integrator
         self._joint_integrator = JointIntegrator(robot.n_a,
                                                  PnCConfig.CONTROLLER_DT)
@@ -42,7 +60,7 @@ class Draco3Controller(object):
         gravity = self._robot.get_gravity()
         self._wbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
                                  gravity)
-        # Task and Contact Setup
+        # Task, Contact, and Internal Constraint Setup
         w_hierarchy_list = []
         for task in self._tf_container.task_list:
             task.update_jacobian()
@@ -51,10 +69,12 @@ class Draco3Controller(object):
         self._wbc.w_hierarchy = np.array(w_hierarchy_list)
         for contact in self._tf_container.contact_list:
             contact.update_contact()
+        for internal_constraint in self._tci_container.internal_constraint_list:
+            internal_constraint.update_internal_constraint()
         # WBC commands
-        joint_trq_cmd, joint_acc_cmd, rf_cmd, if_cmd = self._wbc.solve(
-            self._tf_container.task_list, self._tf_container.contact_list,
-            False)
+        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
+            self._tci_container.task_list, self._tci_container.contact_list,
+            self._tci_container.internal_constraint_list, False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,

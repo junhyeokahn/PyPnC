@@ -16,13 +16,18 @@ class IHWBC(object):
         update_setting --> solve
     """
     def __init__(self, sf, sa, sv, data_save=False):
-        self._sf = sf
-        self._sa = sa
-        self._sv = sv
 
         self._n_q_dot = sa.shape[1]
         self._n_active = sa.shape[0]
         self._n_passive = sv.shape[0]
+
+        self._sf = sf
+        self._snf = np.concatenate((np.zeros(
+            (self._n_active + self._n_passive, 6)),
+                                    np.eye(self._n_active + self._n_passive)),
+                                   axis=1)
+        self._sa = sa
+        self._sv = sv
 
         self._trq_limit = None
         self._lambda_q_ddot = 0.
@@ -101,7 +106,7 @@ class IHWBC(object):
 
         # ======================================================================
         # Internal Constraint
-        #   Set ni, jit_lmd_jidot_qdot term, sa_ni_trc_bar_tr, and b_internal_constraint
+        #   Set ni, jit_lmd_jidot_qdot, sa_ni_trc_bar_tr, and b_internal_constraint
         # ======================================================================
         if len(internal_constraint_list) > 0:
             ji = np.concatenate(
@@ -111,13 +116,13 @@ class IHWBC(object):
                 axis=0)
             lmd = np.linalg.pinv(
                 np.dot(np.dot(ji, self._mass_matrix_inv), ji.transpose()))
-            ji_bar = np.dot(np.dot(self._mass_matrix_inv, ji.transpose()), lmb)
+            ji_bar = np.dot(np.dot(self._mass_matrix_inv, ji.transpose()), lmd)
             ni = np.eye(self._n_q_dot) - np.dot(ji_bar, ji)
             jit_lmd_jidot_qdot = np.squeeze(
                 np.dot(np.dot(ji.transpose(), lmd), jidot_qdot))
             sa_ni_trc = np.dot(self._sa, ni)[:, 6:]
             sa_ni_trc_bar = util.weighted_pinv(sa_ni_trc,
-                                               self._mass_matrix_inv)
+                                               self._mass_matrix_inv[6:, 6:])
             sa_ni_trc_bar_tr = sa_ni_trc_bar.transpose()
             b_internal_constraint = True
         else:
@@ -201,7 +206,7 @@ class IHWBC(object):
         else:
             eq_floating_mat = np.dot(self._sf, self._mass_matrix)
             if b_internal_constraint:
-                eq_int_mat = np.copy(self._j_int)
+                eq_int_mat = np.copy(ji)
         eq_floating_vec = -np.dot(
             self._sf, np.dot(ni.transpose(), (self._coriolis + self._gravity)))
         if b_internal_constraint:
@@ -228,58 +233,56 @@ class IHWBC(object):
 
         else:
             if contact_list is not None:
-
                 ineq_mat = np.concatenate(
                     (np.concatenate(
                         (np.zeros((dim_cone_constraint, self._n_q_dot)),
                          -np.dot(sa_ni_trc_bar_tr,
-                                 np.dot(self._sa, self._mass_matrix)),
+                                 np.dot(self._snf, self._mass_matrix)),
                          np.dot(sa_ni_trc_bar_tr,
-                                np.dot(self._sa, self._mass_matrix))),
+                                np.dot(self._snf, self._mass_matrix))),
                         axis=0),
                      np.concatenate(
                          (-uf_mat,
-                          np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                          np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                                  np.dot(contact_jacobian, ni).transpose()),
-                          -np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                          -np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                                   np.dot(contact_jacobian, ni).transpose())),
                          axis=0)),
                     axis=1)
                 ineq_vec = np.concatenate(
                     (-uf_vec,
                      np.dot(
-                         np.dot(sa_ni_trc_bar_tr, self._sa),
+                         np.dot(sa_ni_trc_bar_tr, self._snf),
                          np.dot(ni.transpose(),
                                 (self._coriolis + self._gravity))) +
-                     np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                     np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             jit_lmd_jidot_qdot) - self._trq_limit[:, 0],
                      -np.dot(
-                         np.dot(sa_ni_trc_bar_tr, self._sa),
+                         np.dot(sa_ni_trc_bar_tr, self._snf),
                          np.dot(ni.transpose(),
                                 (self._coriolis + self._gravity))) -
-                     np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                     np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             jit_lmd_jidot_qdot) + self._trq_limit[:, 1]))
 
             else:
-
                 ineq_mat = np.concatenate(
-                    (-np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                    (-np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                              self._mass_matrix),
-                     np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                     np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             self._mass_matrix)),
                     axis=0)
                 ineq_vec = np.concatenate(
                     (np.dot(
-                        np.dot(sa_ni_trc_bar_tr, self._sa),
+                        np.dot(sa_ni_trc_bar_tr, self._snf),
                         np.dot(ni.transpose(),
                                (self._coriolis + self._gravity))) +
-                     np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                     np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             jit_lmd_jidot_qdot) - self._trq_limit[:, 0],
                      -np.dot(
-                         np.dot(sa_ni_trc_bar_tr, self._sa),
+                         np.dot(sa_ni_trc_bar_tr, self._snf),
                          np.dot(ni.transpose(),
                                 (self._coriolis + self._gravity))) -
-                     np.dot(np.dot(sa_ni_trc_bar_tr, self._sa),
+                     np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             jit_lmd_jidot_qdot) + self._trq_limit[:, 1]))
 
         if verbose:
@@ -309,13 +312,13 @@ class IHWBC(object):
 
         if contact_list is not None:
             joint_trq_cmd = np.dot(
-                np.dot(sa_ni_trc_bar_tr, self._sa),
+                np.dot(sa_ni_trc_bar_tr, self._snf),
                 np.dot(self._mass_matrix, sol_q_ddot) +
                 np.dot(ni.transpose(), (self._coriolis + self._gravity)) -
                 np.dot(np.dot(contact_jacobian, ni).transpose(), sol_rf))
         else:
             joint_trq_cmd = np.dot(
-                np.dot(sa_ni_trc_bar_tr, self._sa),
+                np.dot(sa_ni_trc_bar_tr, self._snf),
                 np.dot(self._mass_matrix, sol_q_ddot) +
                 np.dot(ni, (self._coriolis + self._gravity)))
 

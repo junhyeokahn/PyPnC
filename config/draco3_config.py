@@ -64,8 +64,8 @@ class WBCConfig(object):
     LAMBDA_RF = 1e-7
     LAMBDA_IF = 1e-6
 
-    # B_TRQ_LIMIT = True
-    B_TRQ_LIMIT = False
+    B_TRQ_LIMIT = True
+    # B_TRQ_LIMIT = False
 
     # Integration Parameters
     VEL_CUTOFF_FREQ = 2.0  #Hz

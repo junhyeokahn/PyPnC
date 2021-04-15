@@ -60,7 +60,7 @@ class AtlasController(object):
         gravity = self._robot.get_gravity()
         self._ihwbc.update_setting(mass_matrix, mass_matrix_inv, coriolis,
                                    gravity)
-        # Task and Contact Setup
+        # Task, Contact, and Internal Constraint Setup
         w_hierarchy_list = []
         for task in self._tci_container.task_list:
             task.update_jacobian()
