@@ -213,7 +213,7 @@ class DCMTrajectoryManager(object):
 
     def walk_in_place(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_step_in_place(1, self._robot_side)
+        self._populate_step_in_place(3, self._robot_side)
         self._alternate_leg()
 
     def walk_forward(self):

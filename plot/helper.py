@@ -168,3 +168,8 @@ def plot_phase(ax, t, data_phse):
                         facecolor=facecolors[data_phse[j]],
                         alpha=shading)
         prev_j = j
+    ax.fill_between(t[prev_j:],
+                    ll,
+                    ul,
+                    facecolor=facecolors[data_phse[prev_j]],
+                    alpha=shading)

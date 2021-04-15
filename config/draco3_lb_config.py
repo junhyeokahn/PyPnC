@@ -28,18 +28,18 @@ class PnCConfig(object):
 
 class WBCConfig(object):
     # Max normal force per contact
-    RF_Z_MAX = 500.0
+    RF_Z_MAX = 1000.0
 
     # Task Hierarchy Weights
-    W_COM = 10.0
+    W_COM = 20.0
     W_TORSO = 20.0
     W_UPPER_BODY = 40.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
     # Task Gains
-    KP_COM = np.array([100., 100., 100])
-    KD_COM = np.array([10., 10., 10.])
+    KP_COM = np.array([400., 400., 400])
+    KD_COM = np.array([40., 40., 40.])
 
     KP_TORSO = np.array([100., 100., 100])
     KD_TORSO = np.array([10., 10., 10.])
@@ -50,7 +50,7 @@ class WBCConfig(object):
     KD_FOOT_ORI = np.array([30., 30., 30.])
 
     # Regularization terms
-    LAMBDA_Q_DDOT = 1e-7
+    LAMBDA_Q_DDOT = 1e-8
     LAMBDA_RF = 1e-7
 
     B_TRQ_LIMIT = True
@@ -66,23 +66,25 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.5  # m
-    SWING_HEIGHT = 0.05  # m
+    COM_HEIGHT = 0.60  # m
+    SWING_HEIGHT = 0.03  # m
 
-    SWAYING_AMP = np.array([0., 0.08, 0.])
-    SWAYING_FREQ = np.array([0., 0.3, 0.])
+    # SWAYING_AMP = np.array([0., 0.08, 0.])
+    # SWAYING_FREQ = np.array([0., 0.3, 0.])
+    SWAYING_AMP = np.array([0., 0., 0.05])
+    SWAYING_FREQ = np.array([0., 0., 0.3])
 
-    T_ADDITIONAL_INI_TRANS = 0.  # sec
-    T_CONTACT_TRANS = 0.45
-    T_SWING = 0.75
+    T_ADDITIONAL_INI_TRANS = 0.
+    T_CONTACT_TRANS = 0.15
+    T_SWING = 0.25
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.2
-    NOMINAL_FORWARD_STEP = 0.15
-    NOMINAL_BACKWARD_STEP = -0.15
-    NOMINAL_TURN_RADIANS = np.pi / 6
-    NOMINAL_STRAFE_DISTANCE = 0.05
+    NOMINAL_FOOTWIDTH = 0.25
+    NOMINAL_FORWARD_STEP = 0.08
+    NOMINAL_BACKWARD_STEP = -0.08
+    NOMINAL_TURN_RADIANS = np.pi / 10
+    NOMINAL_STRAFE_DISTANCE = 0.03
 
 
 class WalkingState(object):
