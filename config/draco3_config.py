@@ -13,8 +13,8 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
-    VIDEO_RECORD = False
-    RECORD_FREQ = 10
+    VIDEO_RECORD = True
+    RECORD_FREQ = 5
 
 
 class PnCConfig(object):
@@ -95,7 +95,7 @@ class WalkingConfig(object):
     NOMINAL_FOOTWIDTH = 0.28
     NOMINAL_FORWARD_STEP = 0.1
     NOMINAL_BACKWARD_STEP = -0.1
-    NOMINAL_TURN_RADIANS = np.pi / 8
+    NOMINAL_TURN_RADIANS = np.pi / 10
     NOMINAL_STRAFE_DISTANCE = 0.02
 
 

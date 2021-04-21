@@ -50,7 +50,7 @@ def set_initial_config(robot, joint_id):
 
 def signal_handler(signal, frame):
     if SimConfig.VIDEO_RECORD:
-        pybullet_util.make_video(video_dir)
+        pybullet_util.make_video(video_dir, False)
     p.disconnect()
     sys.exit(0)
 
@@ -123,6 +123,7 @@ if __name__ == "__main__":
     t = 0
     dt = SimConfig.CONTROLLER_DT
     count = 0
+    jpg_count = 0
 
     nominal_sensor_data = pybullet_util.get_sensor_data(
         robot, joint_id, link_id, pos_basejoint_to_basecom,
@@ -189,8 +190,9 @@ if __name__ == "__main__":
                                                    -15, 0, 60., 1920, 1080,
                                                    0.1, 100.)
             frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
-            filename = video_dir + '/step%06d.jpg' % count
+            filename = video_dir + '/step%06d.jpg' % jpg_count
             cv2.imwrite(filename, frame)
+            jpg_count += 1
 
         p.stepSimulation()
 
