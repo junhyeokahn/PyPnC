@@ -54,10 +54,11 @@ class ContactTransitionStart(StateMachine):
                         "dcm"].compute_rf_z_ramp_down_time()
 
                 # TODO: Replanning
-                pelvis_quat = R.from_matrix(
-                    self._robot.get_link_iso("pelvis")[0:3, 0:3]).as_quat()
+                torso_quat = R.from_matrix(
+                    self._robot.get_link_iso("torso_link")[0:3,
+                                                           0:3]).as_quat()
                 self._trajectory_managers["dcm"].initialize(
-                    self._sp.curr_time, transfer_type, pelvis_quat,
+                    self._sp.curr_time, transfer_type, torso_quat,
                     self._sp.dcm, self._sp.dcm_vel)
                 self._trajectory_managers["dcm"].save_trajectory(
                     self._planning_id)
