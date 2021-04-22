@@ -13,8 +13,10 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = True
-    VIDEO_RECORD = True
+    VIDEO_RECORD = False
     RECORD_FREQ = 5
+    SIMULATE_CAMERA = True
+    SAVE_CAMERA_DATA = True
 
 
 class PnCConfig(object):

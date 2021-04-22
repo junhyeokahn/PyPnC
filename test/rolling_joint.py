@@ -53,6 +53,11 @@ if __name__ == "__main__":
                            childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=10000, erp=10)
 
+    pybullet_util.draw_link_frame(robot, link_id['l1'], text="l1")
+    pybullet_util.draw_link_frame(robot, link_id['l2'], text="l2")
+    pybullet_util.draw_link_frame(robot, link_id['l3'], text="l3")
+    pybullet_util.draw_link_frame(robot, link_id['ee'], text="ee")
+
     # Run Sim
     t = 0
     dt = 0.01
