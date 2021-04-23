@@ -27,7 +27,7 @@ DT = 0.01
 
 PRINT_ROBOT_INFO = False
 VIDEO_RECORD = True
-RECORD_FREQ = 10
+RECORD_FREQ = 1
 
 INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.761]
 INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
@@ -171,12 +171,17 @@ if __name__ == "__main__":
         gap = p.loadURDF(cwd + "/robot_model/ground/slope.urdf",
                          [0.325, 0, -0.125],
                          useFixedBase=True)
-    elif file == 'data/atlas_lr_chimney.yaml':
+    elif file == 'data/atlas_chimney.yaml':
+        lr_chimney = p.loadURDF(cwd + "/robot_model/ground/chimney.urdf",
+                                [0, 0, 0],
+                                useFixedBase=True)
+    elif file == 'data/atlas_lr_chimney_jump.yaml':
         lr_chimney = p.loadURDF(cwd + "/robot_model/ground/lr_chimney.urdf",
                                 [0, 0, 0],
                                 useFixedBase=True)
 
-    if file != 'data/atlas_lr_chimney.yaml':
+    if (file != 'data/atlas_lr_chimney_jump.yaml') and (
+            file != 'data/atlas_chimney.yaml'):
         p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 

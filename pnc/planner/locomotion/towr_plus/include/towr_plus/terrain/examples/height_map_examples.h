@@ -162,7 +162,8 @@ public:
   double GetHeightDerivWrtY(double x, double y) const override;
 
 private:
-  const double x_start_ = 0.2;
+  // const double x_start_ = 0.2;
+  const double x_start_ = 0.3;
   const double length_ = 0.3;
   const double y_start_ = -0.2; // distance to start of slope from center at z=0
   const double slope_ = 0.4;
