@@ -171,8 +171,13 @@ if __name__ == "__main__":
         gap = p.loadURDF(cwd + "/robot_model/ground/slope.urdf",
                          [0.325, 0, -0.125],
                          useFixedBase=True)
+    elif file == 'data/atlas_lr_chimney.yaml':
+        lr_chimney = p.loadURDF(cwd + "/robot_model/ground/lr_chimney.urdf",
+                                [0, 0, 0],
+                                useFixedBase=True)
 
-    p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
+    if file != 'data/atlas_lr_chimney.yaml':
+        p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 
     # Robot Configuration : 0 << Left Foot, 1 << Right Foot
