@@ -20,6 +20,7 @@ from util import pybullet_util
 from util import util
 from util import liegroup
 from vision.height_map import HeightMap
+from util.pybullet_camera_util import Camera
 
 
 def set_initial_config(robot, joint_id):
@@ -46,7 +47,7 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["l_leg_aky"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
     # head
-    p.resetJointState(robot, joint_id["neck_ry"], np.pi / 3, 0.)
+    p.resetJointState(robot, joint_id["neck_ry"], np.pi / 4, 0.)
 
 
 def signal_handler(signal, frame):
@@ -82,7 +83,7 @@ if __name__ == "__main__":
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
-    p.loadURDF(cwd + "/robot_model/ground/stair.urdf", [0.4, 0, 0],
+    p.loadURDF(cwd + "/robot_model/ground/stair.urdf", [0.5, 0, 0],
                useFixedBase=True)
     # p.loadURDF(cwd + "/robot_model/ground/stair.urdf",[1,0,0],useFixedBase=True)
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -125,71 +126,29 @@ if __name__ == "__main__":
 
         # Get cameradata
         if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
-            camera_img_count += 1
-            print("camera img count:%d", camera_img_count)
-            fov = 45
-            nearval = 0.1
-            farval = 1000
-            camera_img = pybullet_util.get_camera_image_from_link(
-                robot, link_id['head'], 128, 128, fov, nearval, farval)
-            depth_buffer = camera_img[3]
-            view_matrix = camera_img[5]
-            projection_matrix = camera_img[6]
-            camera_pos = camera_img[7]
+            # fov = 60
+            # nearval = 0.01
+            # farval = 1000
+            # camera_img = pybullet_util.get_camera_image_from_link(
+                # robot, link_id['head'], 128, 128, fov, nearval, farval)
+            # depth_buffer = camera_img[3]
+            # view_matrix = camera_img[5]
+            # projection_matrix = camera_img[6]
+            # camera_pos = camera_img[7]
+            
+            cam = Camera(128,128)
+            cam.set_view_matrix_from_robot_link(robot, link_id['head'])
+            cam.set_projection_matrix(fovy=60, aspect=1, near=0.01, far=10)
 
-            stepX = 1
-            stepY = 1
-            point_cloud_data = pybullet_util.get_point_cloud_data(
-                depth_buffer, view_matrix, projection_matrix, stepX, stepY)
-            wf_point_cloud_data = point_cloud_data[0]
-            cf_point_cloud_data = point_cloud_data[1]
+            rgb_img, depth_img, seg_img = cam.get_pybullet_image()
+            pcl_points, pcl_colors = cam.unproject_canvas_to_pointcloud(rgb_img,
+                    depth_img)
 
-            # print(depth_buffer)
-            # depth_buffer_opengl = np.reshape(depth_buffer,[camera_img[0],camera_img[1]])
-            # print(depth_buffer_opengl)
-            # depth_opengl = farval * nearval / (farval -(farval-nearval)*depth_buffer_opengl)
-            # plt.subplot(1,2,1)
-            # plt.imshow(depth_opengl)
-            wf_heightmap = heightmap.point_cloud_to_height_map(
-                wf_point_cloud_data)
-            lf_heightmap = heightmap.extract_local_from_wf_heightmap(
-                sensor_data['base_joint_pos'], wf_heightmap)
+            #show the depth image
+            cam.show_image(depth_img, RGB=False, title="Image 1")
 
-            plt.subplot(1, 2, 1)
-            c = plt.imshow(wf_heightmap,
-                           cmap='gray',
-                           vmin=np.min(wf_heightmap),
-                           vmax=np.max(wf_heightmap),
-                           origin='lower')
-            plt.colorbar(c)
-            plt.title('World Heightmap')
-
-            plt.subplot(1, 2, 2)
-            d = plt.imshow(lf_heightmap,
-                           cmap='gray',
-                           vmin=np.min(lf_heightmap),
-                           vmax=np.max(lf_heightmap),
-                           origin='lower')
-            plt.colorbar(d)
-            plt.title('local Heightmap')
-
-            plt.show()
+            print("pcl data",pcl_points)
             __import__('ipdb').set_trace()
-
-            #For point cloud debugging
-            # print("WorldFramePointCloudData:",wf_point_cloud_data)
-            # h = wf_point_cloud_data.shape[0]
-            # w = wf_point_cloud_data.shape[1]
-            # for i in range(0,h):
-            # for j in range(0,w):
-            # p.addUserDebugLine(camera_pos,wf_point_cloud_data[i,j,:],[0,1,0])
-
-            # print("CameraFramePointCloudData:",cf_point_cloud_data)
-            # h = cf_point_cloud_data.shape[0]
-            # w = cf_point_cloud_data.shape[1]
-            # for i in range(0,h):
-            # for j in range(0,w):
-            # p.addUserDebugLine(camera_pos,cf_point_cloud_data[i,j,:],[1,0,0])
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()

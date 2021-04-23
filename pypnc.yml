@@ -22,4 +22,4 @@ dependencies:
       - tensorflow==2.3.0
       - tqdm==4.56.0
       - yapf==0.30.0
-prefix: /home/junhyeok/anaconda3/envs/pypnc
+prefix: /home/seunghyeonbang/anaconda3/envs/pypnc

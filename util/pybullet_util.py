@@ -13,8 +13,7 @@ from util import liegroup
 
 
 def get_robot_config(robot,
-                     initial_pos=None,
-                     initial_quat=None,
+                     initial_pos=None, initial_quat=None,
                      b_print_info=False):
     nq, nv, na, joint_id, link_id = 0, 0, 0, OrderedDict(), OrderedDict()
     link_id[(p.getBodyInfo(robot)[0]).decode("utf-8")] = -1
@@ -377,7 +376,7 @@ def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor,
     for h in range(0, img_height, d_ver):
         for w in range(0, img_width, d_hor):
             x = (2 * w - img_width) / img_width
-            y = -(2 * h - img_height) / img_height
+            y = (2 * h - img_height) / img_height
             z = 2 * depth_buffer[h, w] - 1
             pix_pos = np.asarray([x, y, z, 1])
             point_in_world = np.matmul(trans_world_to_pix, pix_pos)
@@ -386,6 +385,8 @@ def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor,
                                 np.int(w / d_hor), :] = (
                                     point_in_world /
                                     point_in_world[3])[:3]  #world frame
+
+
             cf_point_cloud_data[np.int(h / d_ver),
                                 np.int(w / d_hor), :] = (
                                     point_in_world /
