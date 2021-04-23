@@ -4,6 +4,7 @@ import numpy as np
 import math
 import time
 from pathlib import Path
+import open3d
 
 
 class Camera:
@@ -474,3 +475,70 @@ class Camera:
     @property
     def camera_target_position(self):
         return np.array(self._camera_target_pos)
+
+class PointCloud:
+    """Point cloud
+    Wrapper around Open3D PointCloud for easier use.
+    """
+
+    def __init__(self):
+        self._pcd = open3d.geometry.PointCloud()
+
+    def set_points(self, points, colors=None, estimate_normals=False, camera_location=(0, 0, 0), **kwargs):
+        """
+        Sets the points and colors of the point cloud.
+        Args:
+            points (np.array)       : 3D Position of the points in the format [3, N_points] where columns are [X; Y; Z].
+            colors (np.array)       : Colors of the points in the format [3, N_ponts] where columns are [R; G; B].
+            camera_location (list or np.array)      : Location of the camera of orientation of the surface normals.
+            estimate_normals (bool) : If true, estimates point normals.
+            **kwargs                : Arguments for estimate_normal method.
+        """
+        self._pcd.points = open3d.utility.Vector3dVector(points.transpose())
+        if colors is not None:
+            self._pcd.colors = open3d.utility.Vector3dVector(colors[:3, :].transpose() / 255.)
+        if estimate_normals:
+            self.estimate_normals(camera_location=camera_location, **kwargs)
+
+    def estimate_normals(self, camera_location, **kwargs):
+        """
+        Computes the surface normal of the point cloud. It also
+        orients the surface normals towards the camera location.
+        Args:
+            camera_location (list or np.array)      : Location of the camera of orientation of the surface normals.
+            **kwargs                                : Arguments for estimate normal method.
+        """
+        if len(self.points) > 0:
+            self._pcd.estimate_normals(**kwargs)
+            self._pcd.orient_normals_towards_camera_location(camera_location=camera_location)
+            self._pcd.normalize_normals()
+
+    def show(self):
+        """
+        Shows the pointcloud. Note that this method blocks
+        the process. So avoid using it in a loop. If we really
+        need the non-blocking visualization, there is a trick to
+        make it work:
+        http://www.open3d.org/docs/release/tutorial/Advanced/non_blocking_visualization.html
+        """
+        if len(self.points) > 0:
+            open3d.visualization.draw_geometries([self._pcd])
+
+    @property
+    def points(self):
+        # transpose it to be consistent with Camera class
+        return np.asarray(self._pcd.points).transpose()
+
+    @property
+    def colors(self):
+        # transpose it to be consistent with Camera class
+        return np.asarray(self._pcd.colors).transpose()
+
+    @property
+    def normals(self):
+        # transpose it to be consistent with Camera class
+        return np.asarray(self._pcd.normals).transpose()
+
+    @property
+    def pcd(self):
+        return self._pcd

@@ -26,8 +26,8 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["l_elbow_fe"], -np.pi / 2, 0.)
     p.resetJointState(robot, joint_id["r_shoulder_aa"], -np.pi / 6, 0.)
     p.resetJointState(robot, joint_id["r_elbow_fe"], -np.pi / 2, 0.)
-    # p.resetJointState(robot, joint_id["l_wrist_pitch"], -np.pi / 10, 0.)
-    # p.resetJointState(robot, joint_id["r_wrist_pitch"], -np.pi / 10, 0.)
+    p.resetJointState(robot, joint_id["l_wrist_pitch"], -np.pi / 10, 0.)
+    p.resetJointState(robot, joint_id["r_wrist_pitch"], -np.pi / 10, 0.)
     # p.resetJointState(robot, joint_id["l_wrist_ps"], np.pi / 6, 0.)
     # p.resetJointState(robot, joint_id["r_wrist_ps"], -np.pi / 6, 0.)
     p.resetJointState(robot, joint_id["l_wrist_ps"], np.pi / 4, 0.)
@@ -160,8 +160,8 @@ if __name__ == "__main__":
                 SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             l_camera_img = pybullet_util.get_camera_image_from_link(
                 robot, link_id['l_camera'], 50, 10, 60., 0.1, 10)
-            r_camera_img = pybullet_util.get_camera_image_from_link(
-                robot, link_id['r_camera'], 50, 10, 60., 0.1, 10)
+            # r_camera_img = pybullet_util.get_camera_image_from_link(
+                # robot, link_id['r_camera'], 50, 10, 60., 0.1, 10)
 
             if SimConfig.SAVE_CAMERA_DATA:
                 l_camera_img = l_camera_img[2][:, :, [2, 1,

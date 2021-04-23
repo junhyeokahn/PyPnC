@@ -20,8 +20,7 @@ from util import pybullet_util
 from util import util
 from util import liegroup
 from vision.height_map import HeightMap
-from util.pybullet_camera_util import Camera
-
+from util.pybullet_camera_util import Camera, PointCloud 
 
 def set_initial_config(robot, joint_id):
     # shoulder_x
@@ -47,7 +46,7 @@ def set_initial_config(robot, joint_id):
     p.resetJointState(robot, joint_id["l_leg_aky"], -np.pi / 4, 0.)
     p.resetJointState(robot, joint_id["r_leg_aky"], -np.pi / 4, 0.)
     # head
-    p.resetJointState(robot, joint_id["neck_ry"], np.pi / 4, 0.)
+    p.resetJointState(robot, joint_id["neck_ry"], np.pi / 3, 0.)
 
 
 def signal_handler(signal, frame):
@@ -135,19 +134,38 @@ if __name__ == "__main__":
             # view_matrix = camera_img[5]
             # projection_matrix = camera_img[6]
             # camera_pos = camera_img[7]
-            
-            cam = Camera(128,128)
+            link_info = p.getLinkState(robot, link_id['head'], 1, 1)
+            cam_pos = link_info[0]
+            width = 128
+            height = 128
+            cam = Camera(width,height)
             cam.set_view_matrix_from_robot_link(robot, link_id['head'])
             cam.set_projection_matrix(fovy=60, aspect=1, near=0.01, far=10)
 
             rgb_img, depth_img, seg_img = cam.get_pybullet_image()
             pcl_points, pcl_colors = cam.unproject_canvas_to_pointcloud(rgb_img,
                     depth_img)
+            pcd = PointCloud()
+            pcd.set_points(pcl_points, pcl_colors, estimate_normals=True, 
+                            camera_location=cam_pos)
 
-            #show the depth image
-            cam.show_image(depth_img, RGB=False, title="Image 1")
+            # p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+            # p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+            # p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, 0)
+            # visualShapeId = p.createVisualShape(shapeType=p.GEOM_SPHERE, rgbaColor=[1, 1, 1, 1], radius=0.03)
+            # collisionShapeId = -1
+            # for i in range(width*height):
+                # mb = p.createMultiBody(baseMass=0,
+                           # baseCollisionShapeIndex=collisionShapeId,
+                           # baseVisualShapeIndex=visualShapeId,
+                           # basePosition=pcl_points[:,i],
+                           # useMaximalCoordinates=True)
+            pcd.show()
+            # print(pcl_points[2,:])
 
-            print("pcl data",pcl_points)
+
+
+
             __import__('ipdb').set_trace()
 
         # Get Keyboard Event

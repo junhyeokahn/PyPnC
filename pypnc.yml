@@ -6,10 +6,10 @@ dependencies:
   - libcblas=3.9.0
   - liblapack=3.9.0
   - pinocchio=2.5.5
-  - python=3.7.9
+  - python=3.8
   - pip:
       - casadi==3.5.5
-      - conda-env-export==0.2.2
+      - conda-env-export
       - flatbuffers==1.12
       - imageio==2.9.0
       - ipdb==0.13.4
@@ -22,4 +22,5 @@ dependencies:
       - tensorflow==2.3.0
       - tqdm==4.56.0
       - yapf==0.30.0
+      - open3d
 prefix: /home/seunghyeonbang/anaconda3/envs/pypnc
