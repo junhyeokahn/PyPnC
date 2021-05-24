@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -11,6 +12,7 @@ import shutil
 import cv2
 import pybullet as p
 import numpy as np
+
 np.set_printoptions(precision=2)
 
 from config.atlas_config import SimConfig
@@ -99,7 +101,8 @@ if __name__ == "__main__":
     while (1):
 
         # Get SensorData
-        if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
+        if SimConfig.SIMULATE_CAMERA and count % (
+                SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
             camera_img = pybullet_util.get_camera_image_from_link(
                 robot, link_id['head'], 50, 10, 60., 0.1, 10)
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
