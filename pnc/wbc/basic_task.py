@@ -23,7 +23,6 @@ class BasicTask(Task):
         return self._target_id
 
     def update_cmd(self):
-
         if self._task_type == "JOINT":
             pos = self._robot.joint_positions
             pos_err = self._pos_des - pos

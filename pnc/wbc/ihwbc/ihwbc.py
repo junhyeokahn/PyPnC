@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+
 np.set_printoptions(precision=2, threshold=sys.maxsize)
 from scipy.linalg import block_diag
 from qpsolvers import solve_qp
@@ -140,7 +141,6 @@ class IHWBC(object):
         else:
             ni = np.eye(self._n_q_dot)
             jit_lmd_jidot_qdot = np.zeros(self._n_q_dot)
-            sa_ni_trc = np.eye(self._n_active)
             sa_ni_trc_bar = np.eye(self._n_active)
             sa_ni_trc_bar_tr = sa_ni_trc_bar.transpose()
             b_internal_constraint = False

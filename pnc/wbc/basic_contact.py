@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 
@@ -24,7 +25,7 @@ class PointContact(Contact):
         self._jacobian = self._robot.get_link_jacobian(
             self._link_id)[self._dim_contact:, :]
         self._jacobian_dot_q_dot = self._robot.get_link_jacobian_dot_times_qdot(
-            self._link_id)
+            self._link_id)[self._dim_contact:]
 
     def _update_cone_constraint(self):
         rot = self._robot.get_link_iso(self._link_id)[0:3, 0:3].transpose()

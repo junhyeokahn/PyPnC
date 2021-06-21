@@ -133,8 +133,6 @@ class RobotSystem(abc.ABC):
     def _config_robot(self, urdf_file):
         """
         Configure following properties:
-            robot_id (int):
-                Robot index
             n_floating (int):
                 Number of floating joints
             n_q (int):
@@ -182,7 +180,7 @@ class RobotSystem(abc.ABC):
     @abc.abstractmethod
     def get_q_dot_idx(self, joint_id):
         """
-        Get joint index in generalized coordinate
+        Get joint velocity index in generalized coordinate
 
         Parameters
         ----------

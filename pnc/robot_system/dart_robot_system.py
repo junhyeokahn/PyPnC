@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -45,8 +46,6 @@ class DartRobotSystem(RobotSystem):
         self._n_q = self._n_q_dot = self._skel.getNumDofs()
         self._n_a = self._n_q_dot - self._n_floating
         self._total_mass = self._skel.getMass()
-        self._skel.getPositionLowerLimits()
-        self._skel.getPositionUpperLimits()
         self._joint_pos_limit = np.stack(
             [
                 self._skel.getPositionLowerLimits(),
