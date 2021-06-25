@@ -2,12 +2,11 @@ import numpy as np
 
 
 class TaskHierarchyManager(object):
-    def __init__(self, task, w_max, w_min, robot):
+    def __init__(self, task, w_max, w_min):
         self._task = task
         self._w_max = w_max
         self._w_min = w_min
         self._w_starting = self._task.w_hierarchy
-        self._robot = robot
         self._start_time = 0.
         self._duration = 0.
 

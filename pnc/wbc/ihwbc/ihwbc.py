@@ -182,7 +182,7 @@ class IHWBC(object):
             cost_rf_mat = (self._lambda_rf + self._w_rf) * np.eye(dim_contacts)
             if rf_des is None:
                 rf_des = np.zeros(dim_contacts)
-            cost_rf_vec = -np.copy(rf_des)
+            cost_rf_vec = -self._w_rf * np.copy(rf_des)
 
             cost_mat = np.array(block_diag(
                 cost_t_mat, cost_rf_mat))  # (nqdot+nc, nqdot+nc)
@@ -194,10 +194,13 @@ class IHWBC(object):
             cost_vec = np.copy(cost_t_vec)
 
         # if verbose:
+        # np.set_printoptions(precision=4)
         # print("cost_t_mat")
         # print(cost_t_mat)
         # print("cost_t_vec")
         # print(cost_t_vec)
+        # print(cost_mat)
+        # print(cost_vec)
         # print("cost_rf_mat")
         # print(cost_rf_mat)
         # print("cost_rf_vec")
@@ -217,14 +220,16 @@ class IHWBC(object):
                 eq_int_mat = np.concatenate(
                     (ji, np.zeros(
                         (ji.shape[0], dim_contacts))), axis=1)  # (2, nqdot+nc)
+                eq_int_vec = np.zeros(ji.shape[0])
         else:
             eq_floating_mat = np.dot(self._sf, self._mass_matrix)
             if b_internal_constraint:
                 eq_int_mat = np.copy(ji)
+                eq_int_vec = np.zeros(ji.shape[0])
         eq_floating_vec = -np.dot(
             self._sf, np.dot(ni.transpose(), (self._coriolis + self._gravity)))
+
         if b_internal_constraint:
-            eq_int_vec = np.zeros(2)
             eq_mat = np.concatenate((eq_floating_mat, eq_int_mat), axis=0)
             eq_vec = np.concatenate((eq_floating_vec, eq_int_vec), axis=0)
         else:

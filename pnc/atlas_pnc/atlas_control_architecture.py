@@ -75,16 +75,16 @@ class AtlasControlArchitecture(ControlArchitecture):
         # Initialize Hierarchy Manager
         self._rfoot_pos_hm = TaskHierarchyManager(
             self._tci_container.rfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
-            WBCConfig.W_SWING_FOOT, robot)
+            WBCConfig.W_SWING_FOOT)
         self._lfoot_pos_hm = TaskHierarchyManager(
             self._tci_container.lfoot_pos_task, WBCConfig.W_CONTACT_FOOT,
-            WBCConfig.W_SWING_FOOT, robot)
+            WBCConfig.W_SWING_FOOT)
         self._rfoot_ori_hm = TaskHierarchyManager(
             self._tci_container.rfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
-            WBCConfig.W_SWING_FOOT, robot)
+            WBCConfig.W_SWING_FOOT)
         self._lfoot_ori_hm = TaskHierarchyManager(
             self._tci_container.lfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
-            WBCConfig.W_SWING_FOOT, robot)
+            WBCConfig.W_SWING_FOOT)
         self._hierarchy_managers = {
             "rfoot_pos": self._rfoot_pos_hm,
             "lfoot_pos": self._lfoot_pos_hm,
@@ -94,9 +94,9 @@ class AtlasControlArchitecture(ControlArchitecture):
 
         # Initialize Reaction Force Manager
         self._rfoot_fm = ReactionForceManager(
-            self._tci_container.rfoot_contact, WBCConfig.RF_Z_MAX, robot)
+            self._tci_container.rfoot_contact, WBCConfig.RF_Z_MAX)
         self._lfoot_fm = ReactionForceManager(
-            self._tci_container.lfoot_contact, WBCConfig.RF_Z_MAX, robot)
+            self._tci_container.lfoot_contact, WBCConfig.RF_Z_MAX)
         self._reaction_force_managers = {
             "rfoot": self._rfoot_fm,
             "lfoot": self._lfoot_fm

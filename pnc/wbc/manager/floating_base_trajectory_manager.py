@@ -42,6 +42,8 @@ class FloatingBaseTrajectoryManager(object):
         self._ini_base_quat = util.rot_to_quat(
             self._robot.get_link_iso(self._base_ori_task.target_id)[0:3, 0:3])
         self._target_base_quat = target_base_quat
+        # self._quat_error= (R.from_quat(self._target_base_quat) *
+        # R.from_quat(self._ini_base_quat).inv()).as_quat() # Sign flipped
         self._quat_error = R.from_matrix(
             np.dot(
                 R.from_quat(self._target_base_quat).as_matrix(),
@@ -49,6 +51,7 @@ class FloatingBaseTrajectoryManager(object):
                     self._ini_base_quat).as_matrix().transpose())).as_quat()
         self._exp_error = util.quat_to_exp(self._quat_error)
 
+        # np.set_printoptions(precision=5)
         # print("ini com: ", self._ini_com_pos)
         # print("end com: ", self._target_com_pos)
         # print("ini quat: ", self._ini_base_quat)
@@ -96,10 +99,15 @@ class FloatingBaseTrajectoryManager(object):
         exp_inc = self._exp_error * scaled_t
         quat_inc = util.exp_to_quat(exp_inc)
 
+        # TODO (Check this again)
+        # base_quat_des = R.from_matrix(
+        # np.dot(
+        # R.from_quat(quat_inc).as_matrix(),
+        # R.from_quat(self._ini_base_quat).as_matrix())).as_quat()
         base_quat_des = R.from_matrix(
             np.dot(
-                R.from_quat(quat_inc).as_matrix(),
-                R.from_quat(self._ini_base_quat).as_matrix())).as_quat()
+                R.from_quat(self._ini_base_quat).as_matrix(),
+                R.from_quat(quat_inc).as_matrix())).as_quat()
         base_angvel_des = self._exp_error * scaled_tdot
         base_angacc_des = self._exp_error * scaled_tddot
 

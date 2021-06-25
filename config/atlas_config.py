@@ -19,7 +19,8 @@ class SimConfig(object):
 
 
 class PnCConfig(object):
-    DYN_LIB = "pinocchio"  # "dart"
+    # DYN_LIB = "pinocchio"  # "dart"
+    DYN_LIB = "dart"
     CONTROLLER_DT = SimConfig.CONTROLLER_DT
     SAVE_DATA = True
     SAVE_FREQ = 1

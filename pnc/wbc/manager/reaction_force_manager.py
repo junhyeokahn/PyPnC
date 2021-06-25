@@ -2,9 +2,8 @@ import numpy as np
 
 
 class ReactionForceManager(object):
-    def __init__(self, contact, maximum_rf_z_max, robot):
+    def __init__(self, contact, maximum_rf_z_max):
         self._contact = contact
-        self._robot = robot
         self._maximum_rf_z_max = maximum_rf_z_max
         self._minimum_rf_z_max = 0.001
         self._starting_rf_z_max = contact.rf_z_max

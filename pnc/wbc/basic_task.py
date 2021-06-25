@@ -63,6 +63,7 @@ class BasicTask(Task):
             quat_des = R.from_quat(self._pos_des)
             quat_act = R.from_matrix(
                 self._robot.get_link_iso(self._target_id)[0:3, 0:3])
+            # quat_err = (quat_des * quat_act.inv()).as_quat() # Sign flipped
             quat_err = R.from_matrix(
                 np.dot(quat_des.as_matrix(),
                        quat_act.as_matrix().transpose())).as_quat()

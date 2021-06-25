@@ -8,14 +8,13 @@ from util import util
 class Footstep(object):
     LEFT_SIDE = 0
     RIGHT_SIDE = 1
-    MID_SIDE = 2
 
     def __init__(self):
         self._pos = np.zeros(3)
         self._quat = np.array([0., 0., 0., 1.])  # scalar-last
         self._rot = np.eye(3)
         self._iso = np.eye(4)
-        self._side = None
+        self._side = -1
 
     @property
     def pos(self):
@@ -71,5 +70,4 @@ def interpolate(footstep1, footstep2, alpha=0.5):
     mid_foot.pos = alpha * footstep1.pos + (1 - alpha) * footstep2.pos
     slerp = Slerp([0, 1], R.from_quat([footstep1.quat, footstep2.quat]))
     mid_foot.quat = slerp(alpha).as_quat()
-    mid_foot.side = Footstep.MID_SIDE
     return mid_foot
