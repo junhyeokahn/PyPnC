@@ -22,6 +22,7 @@ class Task(abc.ABC):
         self._jacobian_dot_q_dot = np.zeros(self._dim)
 
         self._op_cmd = np.zeros(self._dim)
+        self._pos_err = np.zeros(self._dim)
 
         self._pos_des = np.zeros(self._dim)
         self._vel_des = np.zeros(self._dim)
@@ -30,6 +31,10 @@ class Task(abc.ABC):
     @property
     def op_cmd(self):
         return self._op_cmd
+
+    @property
+    def pos_err(self):
+        return self._pos_err
 
     @property
     def jacobian(self):
@@ -106,6 +111,7 @@ class Task(abc.ABC):
 
     def debug(self):
         print("pos des: ", self._pos_des)
+        print("pos err: ", self._pos_err)
         print("vel des: ", self._vel_des)
         print("acc des: ", self._acc_des)
         print("xddot: ", self._op_cmd)

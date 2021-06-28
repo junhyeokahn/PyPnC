@@ -1,4 +1,3 @@
- 
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
@@ -18,7 +17,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with qpsolvers. If not, see <http://www.gnu.org/licenses/>.
-
 """
 Test the "quadprog" QP solver on a small dense problem.
 """
@@ -31,23 +29,28 @@ from time import time
 
 M = array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]])
 P = dot(M.T, M)  # quick way to build a symmetric matrix
-q = dot(array([3., 2., 3.]), M).reshape((3,))
+q = dot(array([3., 2., 3.]), M).reshape((3, ))
 G = array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]])
-h = array([3., 2., -2.]).reshape((3,))
+h = array([3., 2., -2.]).reshape((3, ))
+A = array([1., 1., 1.])
+b = array([1.])
 
 t_start = time()
 solver = "quadprog"  # see qpsolvers.available_solvers
-x_sol = solve_qp(P, q, G, h, solver=solver, verbose=True)
+x_sol = solve_qp(P, q, G, h, A, b, solver=solver, verbose=True)
 t_end = time()
 
 print("")
 print("    min. 1/2 x^T P x + q^T x")
 print("    s.t. G * x <= h")
+print("    s.t. A * x = b")
 print("")
 print("P =", P)
 print("q =", q)
 print("G =", G)
 print("h =", h)
+print("A =", A)
+print("b =", b)
 print("")
 print("Solution: x =", x_sol)
 print("Solve time:", 1000. * (t_end - t_start), "[ms]")

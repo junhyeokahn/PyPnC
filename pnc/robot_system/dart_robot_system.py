@@ -85,10 +85,8 @@ class DartRobotSystem(RobotSystem):
         if type(joint_id) is list:
             return [self.get_joint_idx(j_id) for j_id in joint_id]
         else:
-            for i, (k, v) in enumerate(self._joint_id.items()):
-                if k == joint_id:
-                    return i
-            raise ValueError("worng joint_id")
+            return self._joint_id[joint_id].getIndexInSkeleton(
+                0) - self._n_floating
 
     def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
                                 joint_trq_cmd):

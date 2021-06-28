@@ -99,10 +99,8 @@ class PinocchioRobotSystem(RobotSystem):
         if type(joint_id) is list:
             return [self.get_joint_idx(j_id) for j_id in joint_id]
         else:
-            for i, (k, v) in enumerate(self._joint_id.items()):
-                if k == joint_id:
-                    return i
-            raise ValueError("Worng joint_id")
+            return self._model.joints[self._model.getJointId(
+                joint_id)].idx_v - self._n_floating
 
     def create_cmd_ordered_dict(self, joint_pos_cmd, joint_vel_cmd,
                                 joint_trq_cmd):

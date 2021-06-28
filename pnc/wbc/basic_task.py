@@ -25,7 +25,7 @@ class BasicTask(Task):
     def update_cmd(self):
         if self._task_type == "JOINT":
             pos = self._robot.joint_positions
-            pos_err = self._pos_des - pos
+            self._pos_err = self._pos_des - pos
             vel_act = self._robot.joint_velocities
             if self._b_data_save:
                 self._data_saver.add('joint_pos_des', self._pos_des.copy())
@@ -36,7 +36,7 @@ class BasicTask(Task):
         elif self._task_type == "SELECTED_JOINT":
             pos = self._robot.joint_positions[self._robot.get_joint_idx(
                 self._target_id)]
-            pos_err = self._pos_des - pos
+            self._pos_err = self._pos_des - pos
             vel_act = self._robot.joint_velocities[self._robot.get_joint_idx(
                 self._target_id)]
             if self._b_data_save:
@@ -49,7 +49,7 @@ class BasicTask(Task):
                 self._data_saver.add('w_selected_joint', self._w_hierarchy)
         elif self._task_type == "LINK_XYZ":
             pos = self._robot.get_link_iso(self._target_id)[0:3, 3]
-            pos_err = self._pos_des - pos
+            self._pos_err = self._pos_des - pos
             vel_act = self._robot.get_link_vel(self._target_id)[3:6]
             if self._b_data_save:
                 self._data_saver.add(self._target_id + '_pos_des',
@@ -67,7 +67,7 @@ class BasicTask(Task):
             quat_err = R.from_matrix(
                 np.dot(quat_des.as_matrix(),
                        quat_act.as_matrix().transpose())).as_quat()
-            pos_err = util.quat_to_exp(quat_err)
+            self._pos_err = util.quat_to_exp(quat_err)
             vel_act = self._robot.get_link_vel(self._target_id)[0:3]
             if self._b_data_save:
                 self._data_saver.add(self._target_id + '_quat_des',
@@ -82,7 +82,7 @@ class BasicTask(Task):
                                      self._w_hierarchy)
         elif self._task_type == "COM":
             pos = self._robot.get_com_pos()
-            pos_err = self._pos_des - pos
+            self._pos_err = self._pos_des - pos
             vel_act = self._robot.get_com_lin_vel()
             if self._b_data_save:
                 self._data_saver.add(self._target_id + '_pos_des',
@@ -96,7 +96,7 @@ class BasicTask(Task):
             raise ValueError
 
         for i in range(self._dim):
-            self._op_cmd[i] = self._acc_des[i] + self._kp[i] * pos_err[
+            self._op_cmd[i] = self._acc_des[i] + self._kp[i] * self._pos_err[
                 i] + self._kd[i] * (self._vel_des[i] - vel_act[i])
 
     def update_jacobian(self):

@@ -99,7 +99,6 @@ if __name__ == "__main__":
     count = 0
 
     while (1):
-
         # Get SensorData
         if SimConfig.SIMULATE_CAMERA and count % (
                 SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
