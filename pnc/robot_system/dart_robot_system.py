@@ -139,15 +139,18 @@ class DartRobotSystem(RobotSystem):
             # Fixed Base Robot
             pass
 
+        self._joint_positions = np.zeros(self._n_a)
+        self._joint_velocities = np.zeros(self._n_a)
         for (p_k, p_v), (v_k, v_v) in zip(joint_pos.items(),
                                           joint_vel.items()):
             # Assume the joints have 1 dof
             self._joint_id[p_k].setPosition(0, p_v)
             self._joint_id[v_k].setVelocity(0, v_v)
-        self._skel.computeForwardKinematics()
 
-        self._joint_positions = np.array(list(joint_pos.values()))
-        self._joint_velocities = np.array(list(joint_vel.values()))
+            self._joint_positions[self.get_joint_idx(p_k)] = p_v
+            self._joint_velocities[self.get_joint_idx(v_k)] = v_v
+
+        self._skel.computeForwardKinematics()
 
         if b_cent:
             self._update_centroidal_quantities()

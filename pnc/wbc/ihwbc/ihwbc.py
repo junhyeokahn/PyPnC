@@ -145,6 +145,14 @@ class IHWBC(object):
             sa_ni_trc_bar_tr = sa_ni_trc_bar.transpose()
             b_internal_constraint = False
 
+        # print("ni")
+        # print(ni)
+        # print("jit_lmd_jidot_qdot")
+        # print(jit_lmd_jidot_qdot)
+        # print("sa_ni_trc_bar_tr")
+        # print(sa_ni_trc_bar_tr)
+        # exit()
+
         # ======================================================================
         # Cost
         # ======================================================================

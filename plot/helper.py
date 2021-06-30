@@ -9,8 +9,8 @@ xyz_label = ['x', 'y', 'z']
 quat_label = ['x', ' y', ' z', 'w']
 markers = ['*', '+', 'h', 'x', 'o', 'v', 'd']
 facecolors = [
-    'lightgray', 'rosybrown', 'cornflowerblue', 'darkorange', 'seagreen',
-    'gold', 'lightpink', 'slategrey'
+    'grey', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple',
+    'crimson'
 ]
 
 

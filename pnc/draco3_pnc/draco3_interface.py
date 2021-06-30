@@ -23,8 +23,8 @@ class Draco3Interface(Interface):
         if PnCConfig.DYN_LIB == "dart":
             from pnc.robot_system.dart_robot_system import DartRobotSystem
             self._robot = DartRobotSystem(
-                cwd + "/robot_model/draco3/draco3_rel_path.urdf", False,
-                PnCConfig.PRINT_ROBOT_INFO)
+                "/home/junhyeok/Repository/PnC/RobotModel/draco/draco_rel_path.urdf",
+                False, False)
         elif PnCConfig.DYN_LIB == "pinocchio":
             from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
             self._robot = PinocchioRobotSystem(
