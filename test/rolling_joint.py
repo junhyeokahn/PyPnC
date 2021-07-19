@@ -160,6 +160,10 @@ def PnCPjInvDyn(robot, q, qdot, qddot):
     tau = np.dot(np.linalg.pinv(np.dot(s_a, null_i).transpose()),
                  np.dot(mass, qddot) + np.dot(null_i.transpose(), b + g))
 
+    print("configuration : ", q[0] * 2)
+    print("ee pos : ", robot.get_link_iso('ee')[0:3, 3])
+    print("gravity comp command : ", tau / 2)
+
     return tau
 
 
@@ -183,22 +187,33 @@ if __name__ == "__main__":
     for i in range(3):
         p.changeDynamics(0, i, localInertiaDiagonal=[1., 1., 1.])
 
-    viz_model, viz_collision_model, viz_visual_model = pin.buildModelsFromUrdf(
-        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint.urdf',
-        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf')
-    viz = MeshcatVisualizer(viz_model, viz_collision_model, viz_visual_model)
-    try:
-        viz.initViewer(open=True)
-    except Exception as e:
-        print(e)
-        exit()
-    viz.loadViewerModel()
-    vis_q = pin.neutral(viz_model)
+    # viz_model, viz_collision_model, viz_visual_model = pin.buildModelsFromUrdf(
+    # '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint.urdf',
+    # '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf')
+    # viz = MeshcatVisualizer(viz_model, viz_collision_model, viz_visual_model)
+    # try:
+    # viz.initViewer(open=True)
+    # except Exception as e:
+    # print(e)
+    # exit()
+    # viz.loadViewerModel()
+    # vis_q = pin.neutral(viz_model)
 
     pin_robot = PinocchioRobotSystem(
         '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint.urdf',
         '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf',
         True, True)
+
+    #### MATCHING TEST
+    n_eval = 100
+    for i in range(n_eval):
+        print("--------------------------------------------")
+        print("i : ", i)
+        jpos = -np.pi / 2 + (np.pi / n_eval * i)
+        gravity_cmd = PnCPjInvDyn(pin_robot, np.array([jpos / 2., jpos / 2.]),
+                                  np.zeros(2), np.zeros(2))
+    exit()
+    #### MATCHING TEST
 
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
@@ -295,9 +310,9 @@ if __name__ == "__main__":
             PnCPjInvDyn(pin_robot, pnc_q_list[-1], pnc_qdot_list[-1], qddot))
 
         # Visualize PnC robot
-        for i in range(2):
-            vis_q[i] = pnc_q_list[-1][i]
-        viz.display(vis_q)
+        # for i in range(2):
+        # vis_q[i] = pnc_q_list[-1][i]
+        # viz.display(vis_q)
 
         p.stepSimulation()
 
