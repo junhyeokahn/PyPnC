@@ -31,10 +31,3 @@ system and stabilizing the system over the trajectories.
 ```$ python plot/plot_towr_plus_trajectory.py --file=data/atlas_forward_walk.yaml --crbi_model_path=data/tf_model/atlas_crbi```
 - Replay the optimized trajectory with the robot:<br/>
 ```$ python simulator/pybullet/atlas_kinematics_main.py --file=data/atlas_forward_walk.yaml```
-
-## Implemented Features
-### Planner
-- Divergent Component of Motion: [paper](https://ieeexplore.ieee.org/document/7063218) | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/planner/locomotion/dcm_planner)
-- TOWR+: paper | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/planner/locomotion/towr_plus)
-### Controller
-- Implicite Hierarchical Whole Body Controller: paper | [code](https://github.com/junhyeokahn/PyPnC/tree/master/pnc/wbc)
