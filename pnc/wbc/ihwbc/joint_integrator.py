@@ -72,10 +72,10 @@ class JointIntegrator(object):
         alpha_pos = filters.get_alpha_from_frequency(self._pos_cutoff_freq,
                                                      self._dt)
 
-        self._vel = np.clip(
-            (1.0 - alpha_vel) * self._vel + alpha_vel * vel + acc * self._dt,
-            self._joint_pos_limit[:, 0], self._joint_pos_limit[:, 1])
-        self._pos = np.clip((1.0 - alpha_pos) * self._pos + alpha_pos * pos +
-                            self._vel * self._dt, self._joint_vel_limit[:, 0],
+        self._vel = np.clip((1.0 - alpha_vel) * self._vel + acc * self._dt,
+                            self._joint_vel_limit[:, 0],
                             self._joint_vel_limit[:, 1])
+        self._pos = np.clip((1.0 - alpha_pos) * self._pos + alpha_pos * pos +
+                            self._vel * self._dt, self._joint_pos_limit[:, 0],
+                            self._joint_pos_limit[:, 1])
         return self._vel, self._pos
