@@ -33,8 +33,8 @@ class ManipulatorInterface(Interface):
             raise ValueError("wrong dynamics library")
         self._joint_integrator = JointIntegrator(self._robot.n_a,
                                                  ManipulatorConfig.DT)
-        self._joint_integrator.pos_cutoff_freq = 1.0  # hz
-        self._joint_integrator.vel_cutoff_freq = 2.0  # hz
+        self._joint_integrator.pos_cutoff_freq = 0.001  # hz
+        self._joint_integrator.vel_cutoff_freq = 0.002  # hz
         self._joint_integrator.max_pos_err = 0.2  # rad
         self._joint_integrator.joint_pos_limit = self._robot.joint_pos_limit
         self._joint_integrator.joint_vel_limit = self._robot.joint_vel_limit
@@ -54,9 +54,9 @@ class ManipulatorInterface(Interface):
 
         if self._b_first_visit:
             self._joint_integrator.initialize_states(
-                self._robot.joint_positions, self._robot.joint_velocities)
-            self._b_first_visit = False
+                self._robot.joint_velocities, self._robot.joint_positions)
             self._ini_ee_pos = self._robot.get_link_iso('ee')[0:3, 3]
+            self._b_first_visit = False
 
         # Operational Space Control
         jpos_cmd, jvel_cmd, jtrq_cmd = self._compute_osc_command()
@@ -79,22 +79,26 @@ class ManipulatorInterface(Interface):
         jac = self._robot.get_link_jacobian('ee')[3:6, :]
         pos = self._robot.get_link_iso('ee')[0:3, 3]
         vel = self._robot.get_link_vel('ee')[3:6]
+        pos_des = np.zeros(3)
+        vel_des = np.zeros(3)
+        acc_des = np.zeros(3)
 
-        pos_des = interpolation.smooth_changing(self._ini_ee_pos,
-                                                ManipulatorConfig.DES_EE_POS,
-                                                3., self._running_time)
-        vel_des = interpolation.smooth_changing_vel(
-            self._ini_ee_pos, ManipulatorConfig.DES_EE_POS, 3.,
-            self._running_time)
-        acc_des = interpolation.smooth_changing_acc(
-            self._ini_ee_pos, ManipulatorConfig.DES_EE_POS, 3.,
-            self._running_time)
+        for i in range(3):
+            pos_des[i] = interpolation.smooth_changing(
+                self._ini_ee_pos[i], ManipulatorConfig.DES_EE_POS[i], 3.,
+                self._running_time)
+            vel_des[i] = interpolation.smooth_changing_vel(
+                self._ini_ee_pos[i], ManipulatorConfig.DES_EE_POS[i], 3.,
+                self._running_time)
+            acc_des[i] = interpolation.smooth_changing_acc(
+                self._ini_ee_pos[i], ManipulatorConfig.DES_EE_POS[i], 3.,
+                self._running_time)
 
         err = pos_des - pos
         err_d = vel_des - vel
+        # xddot_des = acc_des + ManipulatorConfig.KP * err + ManipulatorConfig.KD * err_d
         xddot_des = ManipulatorConfig.KP * err + ManipulatorConfig.KD * err_d
-        qddot_des = acc_des + np.dot(np.linalg.pinv(jac, rcond=1e-3),
-                                     xddot_des)
+        qddot_des = np.dot(np.linalg.pinv(jac, rcond=1e-3), xddot_des)
         # smoothing qddot
         s = interpolation.smooth_changing(0, 1, 0.5, self._running_time)
         qddot_des *= s
@@ -113,9 +117,11 @@ class ManipulatorInterface(Interface):
         self._data_saver.add('ee_pos_act', pos)
         self._data_saver.add('ee_vel_des', vel_des)
         self._data_saver.add('ee_vel_act', vel)
+        self._data_saver.add('ee_acc_des', acc_des)
         self._data_saver.add('jpos_des', joint_pos_cmd)
         self._data_saver.add('jpos_act', self._robot.joint_positions)
         self._data_saver.add('jvel_des', joint_vel_cmd)
         self._data_saver.add('jvel_act', self._robot.joint_velocities)
+        self._data_saver.add('qddot_des', qddot_des)
 
         return joint_pos_cmd, joint_vel_cmd, jtrq
