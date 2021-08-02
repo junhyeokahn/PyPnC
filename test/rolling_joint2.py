@@ -31,12 +31,6 @@ np.set_printoptions(precision=5)
 from util import pybullet_util
 from util import util
 
-path = "/home/apptronik/Repository/PnC/experiment_data/"
-t_ = np.genfromtxt(path + "t.txt", delimiter='\n', dtype=(float))
-q_ = np.genfromtxt(path + "q.txt", delimiter='\n', dtype=(float))
-qdot_ = np.genfromtxt(path + "qdot.txt", delimiter='\n', dtype=(float))
-trq_ = np.genfromtxt(path + "trq.txt", delimiter='\n', dtype=(float))
-
 DT = 0.001
 
 CONSTANT_TORQUE = np.array([0., 5.])
@@ -56,8 +50,10 @@ pnc_id_result_list = []
 
 applied_force_list = []
 
-jac_i = np.array([[1, -1]])
-s_a = np.array([[0, 1]])
+jac_i = np.array([[0, 0, 0, 1, -1, 0, 0]])
+s_a = np.array([[1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 1]])
 
 
 def IsClose(a, b, threshold=0.0001):
@@ -89,7 +85,7 @@ def UpdateRobotSystem(robot, q, qdot):
     lambda_i = np.linalg.inv(np.dot(jac_i, np.dot(mass_inv,
                                                   jac_i.transpose())))
     jac_i_bar = np.dot(np.dot(mass_inv, jac_i.transpose()), lambda_i)
-    null_i = np.eye(2) - np.dot(jac_i_bar, jac_i)
+    null_i = np.eye(jac_i.shape[1]) - np.dot(jac_i_bar, jac_i)
 
     # lambda_i = np.linalg.inv(np.dot(jac_i, jac_i.transpose()))
     # jac_i_bar = np.dot(jac_i.transpose(), lambda_i)
@@ -152,23 +148,39 @@ def PnCPjInvDyn(robot, q, qdot, qddot):
     """
     q: np.array, qdot: np.array, qddot: np.array
     """
-    assert IsClose(qddot[0], qddot[1])
+    assert IsClose(qddot[1], qddot[2])
 
     mass, mass_inv, b, g, lambda_i, jac_i_bar, null_i = UpdateRobotSystem(
         robot, {
-            'jp': q[0],
-            'jd': q[1]
+            'jb00': q[0],
+            'jb0': q[1],
+            'jb1': q[2],
+            'jp': q[3],
+            'jd': q[4],
+            'ja1': q[5],
+            'ja2': q[6]
         }, {
-            'jp': qdot[0],
-            'jd': qdot[1]
+            'jb00': qdot[0],
+            'jb0': qdot[1],
+            'jb1': qdot[2],
+            'jp': qdot[3],
+            'jd': qdot[4],
+            'ja1': qdot[5],
+            'ja2': qdot[6]
         })
 
     tau = np.dot(np.linalg.pinv(np.dot(s_a, null_i).transpose()),
                  np.dot(mass, qddot) + np.dot(null_i.transpose(), b + g))
 
-    # print("configuration : ", q[0] * 2)
-    # print("ee pos : ", robot.get_link_iso('ee')[0:3, 3])
-    # print("gravity comp command : ", tau / 2)
+    # print(
+    # np.dot(np.linalg.pinv(np.dot(s_a, null_i).transpose()),
+    # null_i.transpose()))
+
+    print("ee pos : ", robot.get_link_iso('ee')[0:3, 3])
+    print("gravity comp command : ", tau[0], ", ", tau[1], ", ", tau[2], ", ",
+          tau[3] / 2, ", ", tau[4], ", ", tau[5])
+    print("full grav")
+    print(g)
 
     return tau
 
@@ -187,7 +199,7 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
-        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint.urdf',
+        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint2.urdf',
         useFixedBase=True)
 
     for i in range(3):
@@ -206,19 +218,21 @@ if __name__ == "__main__":
     # vis_q = pin.neutral(viz_model)
 
     pin_robot = PinocchioRobotSystem(
-        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint.urdf',
+        '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf/rolling_joint2.urdf',
         '/home/apptronik/catkin_ws/src/draco_3/models/draco_3_model/urdf',
         True, True)
 
     #### MATCHING TEST
-    # n_eval = 100
-    # for i in range(n_eval):
-    # print("--------------------------------------------")
-    # print("i : ", i)
-    # jpos = -np.pi / 2 + (np.pi / n_eval * i)
-    # gravity_cmd = PnCPjInvDyn(pin_robot, np.array([jpos / 2., jpos / 2.]),
-    # np.zeros(2), np.zeros(2))
-    # exit()
+    n_eval = 100
+    for i in range(n_eval):
+        print("--------------------------------------------")
+        print("i : ", i)
+        jpos = -np.pi / 2 + (np.pi / n_eval * i)
+        gravity_cmd = PnCPjInvDyn(
+            pin_robot,
+            np.array([-0.2, -0.1, -0.1, jpos / 2., jpos / 2., 0.2, -0.4]),
+            np.zeros(7), np.zeros(7))
+    exit()
     #### MATCHING TEST
 
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -299,7 +313,6 @@ if __name__ == "__main__":
 
         # Apply Trq to pybullet
         CONSTANT_TORQUE[1] = np.copy(5 * np.sin(2 * t))
-        CONSTANT_TORQUE[1] = 0.
         applied_force_list.append(np.copy(CONSTANT_TORQUE))
         p.setJointMotorControl2(robot,
                                 joint_id['jd'],
@@ -327,16 +340,13 @@ if __name__ == "__main__":
         t += DT
         count += 1
 
-        if count == 50000:
+        if count == 10000:
             pnc_q_list = np.stack(pnc_q_list, axis=0)
             pnc_qdot_list = np.stack(pnc_qdot_list, axis=0)
             pybullet_q_list = np.stack(pybullet_q_list, axis=0)
             pybullet_qdot_list = np.stack(pybullet_qdot_list, axis=0)
             pnc_id_result_list = np.stack(pnc_id_result_list, axis=0)
             applied_force_list = np.stack(applied_force_list, axis=0)
-
-            print(len(time_list))
-            print(q_.shape)
 
             fig, axes = plt.subplots(2, 2)
             for i in range(2):
@@ -353,8 +363,6 @@ if __name__ == "__main__":
                                 pnc_qdot_list[:, i],
                                 'b',
                                 linewidth=2)
-                axes[i, 0].plot(time_list, q_ / 2., 'g', linewidth=2)
-                axes[i, 1].plot(time_list, qdot_ / 2., 'g', linewidth=2)
                 axes[i, 0].set_xlabel('time')
                 axes[i, 1].set_xlabel('time')
             axes[0, 0].set_ylabel('jp pos')
@@ -365,12 +373,5 @@ if __name__ == "__main__":
             fig, ax = plt.subplots()
             ax.plot(time_list, applied_force_list[:, 1], 'r', linewidth=4)
             ax.plot(time_list, pnc_id_result_list, 'b', linewidth=2)
-
-            fig, ax = plt.subplots()
-            ax.plot(t_, trq_)
-
-            fig, ax = plt.subplots(1, 2)
-            ax[0].plot(t_, q_)
-            ax[1].plot(t_, qdot_)
 
             plt.show()
