@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -69,7 +70,9 @@ if __name__ == "__main__":
         command = interface.get_command(sensor_data)
 
         # Apply Trq
-        pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
+        # pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
+        pybullet_util.set_motor_pos_vel(robot, joint_id, command['joint_pos'],
+                                        command['joint_vel'])
 
         p.stepSimulation()
 

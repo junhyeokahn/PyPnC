@@ -40,10 +40,14 @@ class JointIntegrator(object):
     @pos_cutoff_freq.setter
     def pos_cutoff_freq(self, val):
         self._pos_cutoff_freq = val
+        self._alpha_pos = filters.get_alpha_from_frequency(
+            self._pos_cutoff_freq, self._dt)
 
     @vel_cutoff_freq.setter
     def vel_cutoff_freq(self, val):
         self._vel_cutoff_freq = val
+        self._alpha_vel = filters.get_alpha_from_frequency(
+            self._vel_cutoff_freq, self._dt)
 
     @max_pos_err.setter
     def max_pos_err(self, val):
@@ -67,15 +71,12 @@ class JointIntegrator(object):
         self._vel = init_vel
 
     def integrate(self, acc, vel, pos):
-        alpha_vel = filters.get_alpha_from_frequency(self._vel_cutoff_freq,
-                                                     self._dt)
-        alpha_pos = filters.get_alpha_from_frequency(self._pos_cutoff_freq,
-                                                     self._dt)
-
         self._vel = np.clip(
-            (1.0 - alpha_vel) * self._vel + alpha_vel * vel + acc * self._dt,
-            self._joint_pos_limit[:, 0], self._joint_pos_limit[:, 1])
-        self._pos = np.clip((1.0 - alpha_pos) * self._pos + alpha_pos * pos +
-                            self._vel * self._dt, self._joint_vel_limit[:, 0],
-                            self._joint_vel_limit[:, 1])
+            (1.0 - self._alpha_vel) * self._vel + acc * self._dt,
+            self._joint_vel_limit[:, 0], self._joint_vel_limit[:, 1])
+        self._pos = np.clip((1.0 - self._alpha_pos) * self._pos +
+                            self._alpha_pos * pos + self._vel * self._dt,
+                            self._joint_pos_limit[:,
+                                                  0], self._joint_pos_limit[:,
+                                                                            1])
         return self._vel, self._pos

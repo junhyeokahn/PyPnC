@@ -73,9 +73,18 @@ class PinocchioRobotSystem(RobotSystem):
         self._total_mass = sum(
             [inertia.mass for inertia in self._model.inertias])
 
-        self._joint_pos_limit = np.stack(
-            [self._model.lowerPositionLimit, self._model.upperPositionLimit],
-            axis=1)[self._n_floating + 1:self._n_floating + 1 + self._n_a, :]
+        if self._b_fixed_base:
+            self._joint_pos_limit = np.stack([
+                self._model.lowerPositionLimit, self._model.upperPositionLimit
+            ],
+                                             axis=1)
+        else:
+            self._joint_pos_limit = np.stack([
+                self._model.lowerPositionLimit, self._model.upperPositionLimit
+            ],
+                                             axis=1)[self._n_floating +
+                                                     1:self._n_floating + 1 +
+                                                     self._n_a, :]
         self._joint_vel_limit = np.stack(
             [-self._model.velocityLimit, self._model.velocityLimit],
             axis=1)[self._n_floating:self._n_floating + self._n_a, :]
