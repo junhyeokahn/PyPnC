@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <robot name="plane">
   <link name="chassis">
-  <contact>
-      <lateral_friction value="1"/>
-  </contact>
+  <!--<contact>-->
+      <!--<lateral_friction value="1"/>-->
+  <!--</contact>-->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0.03 0.043794"/>
        <mass value="13.715"/>
@@ -18,12 +18,12 @@
         <color rgba="1 1 1 1"/>
       </material>
     </visual>
-    <collision>
-      <origin rpy="-1.57 0 0" xyz="0 0 0.043794"/>
-      <geometry>
-        <mesh filename="chassis_vhacd_mod.obj" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="-1.57 0 0" xyz="0 0 0.043794"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="chassis_vhacd_mod.obj" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
   </link>
   <link name="FR_hip_motor">
     <contact>
@@ -43,12 +43,12 @@
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="hip_motor_mirror.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="hip_motor_mirror.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
     </link>
 
     <joint name="FR_hip_motor_2_chassis_joint" type="continuous">
@@ -77,12 +77,12 @@
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="upper_leg_right_vhacd.obj" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="upper_leg_right_vhacd.obj" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
@@ -112,12 +112,12 @@
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 1.57079 0" xyz="0 0.0 0"/>
-      <geometry>
-        <mesh filename="lower_leg_3.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 1.57079 0" xyz="0 0.0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="lower_leg_3.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
     </link>
     <joint name="FR_lower_leg_2_upper_leg_joint" type="continuous">
     <axis xyz="1 0 0"/>
@@ -148,12 +148,12 @@
       </material>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="hip_motor.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="hip_motor.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
       </link>
 
@@ -185,12 +185,12 @@
       </material>
     </visual>
 
-     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="upper_leg_left_vhacd.obj" scale="1 1 1"/>
-      </geometry>
-    </collision>
+     <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="upper_leg_left_vhacd.obj" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
@@ -223,12 +223,12 @@
        </material>
     </visual>
 
-     <collision>
-      <origin rpy="0 1.57079 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="lower_leg_3.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+     <!--<collision>-->
+      <!--<origin rpy="0 1.57079 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="lower_leg_3.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
