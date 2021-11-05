@@ -12,7 +12,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0.043794"/>
       <geometry>
-        <mesh filename="chassis.obj" scale="1 1 1"/>
+        <mesh filename="package://chassis.obj" scale="1 1 1"/>
       </geometry>
        <material name="white">
         <color rgba="1 1 1 1"/>
@@ -38,7 +38,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="hip_motor_mirror.obj" scale="1 1 1"/>
+        <mesh filename="package://hip_motor_mirror.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
@@ -51,7 +51,7 @@
     <!--</collision>-->
     </link>
 
-    <joint name="FR_hip_motor_2_chassis_joint" type="continuous">
+    <joint name="FR_hip_motor_2_chassis_joint" type="revolute">
     <axis xyz="0 0 -1"/>
     <parent link="chassis"/>
     <child link="FR_hip_motor"/>
@@ -72,7 +72,7 @@
        <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="upper_leg_mirror.obj" scale="1 1 1"/>
+        <mesh filename="package://upper_leg_mirror.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
@@ -86,7 +86,7 @@
 
     </link>
 
-    <joint name="FR_upper_leg_2_hip_motor_joint" type="continuous">
+    <joint name="FR_upper_leg_2_hip_motor_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="FR_hip_motor"/>
     <child link="FR_upper_leg"/>
@@ -107,7 +107,7 @@
        <visual>
       <origin rpy="0 1.57079 0" xyz="0 0.0 0"/>
       <geometry>
-        <mesh filename="lower_leg3.obj" scale="1 1 1"/>
+        <mesh filename="package://lower_leg3.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
@@ -119,7 +119,7 @@
       <!--</geometry>-->
     <!--</collision>-->
     </link>
-    <joint name="FR_lower_leg_2_upper_leg_joint" type="continuous">
+    <joint name="FR_lower_leg_2_upper_leg_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="FR_upper_leg"/>
     <child link="FR_lower_leg"/>
@@ -142,7 +142,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="hip_motor.obj" scale="1 1 1"/>
+        <mesh filename="package://hip_motor.obj" scale="1 1 1"/>
       </geometry>
        <material name="white">
       </material>
@@ -157,7 +157,7 @@
 
       </link>
 
-   <joint name="FL_hip_motor_2_chassis_joint" type="continuous">
+   <joint name="FL_hip_motor_2_chassis_joint" type="revolute">
     <axis xyz="0 0 1"/>
     <parent link="chassis"/>
     <child link="FL_hip_motor"/>
@@ -179,7 +179,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
 
-        <mesh filename="upper_leg_left.obj" scale="1 1 1"/>
+        <mesh filename="package://upper_leg_left.obj" scale="1 1 1"/>
       </geometry>
        <material name="white">
       </material>
@@ -195,7 +195,7 @@
     </link>
 
 
-  <joint name="FL_upper_leg_2_hip_motor_joint" type="continuous">
+  <joint name="FL_upper_leg_2_hip_motor_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="FL_hip_motor"/>
     <child link="FL_upper_leg"/>
@@ -217,7 +217,7 @@
    <visual>
       <origin rpy="0 1.57079 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="lower_leg3.obj" scale="1 1 1"/>
+        <mesh filename="package://lower_leg3.obj" scale="1 1 1"/>
       </geometry>
        <material name="white">
        </material>
@@ -232,7 +232,7 @@
 
     </link>
 
-  <joint name="FL_lower_leg_2_upper_leg_joint" type="continuous">
+  <joint name="FL_lower_leg_2_upper_leg_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="FL_upper_leg"/>
     <child link="FL_lower_leg"/>
@@ -259,21 +259,21 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="hip_motor_mirror.obj" scale="1 1 1"/>
+        <mesh filename="package://hip_motor_mirror.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="hip_motor_mirror.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+     <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="hip_motor_mirror.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
-    <joint name="RR_hip_motor_2_chassis_joint" type="continuous">
+    <joint name="RR_hip_motor_2_chassis_joint" type="revolute">
     <axis xyz="0 0 -1"/>
     <parent link="chassis"/>
     <child link="RR_hip_motor"/>
@@ -294,21 +294,21 @@
        <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="upper_leg_mirror2.obj" scale="1 1 1"/>
+        <mesh filename="package://upper_leg_mirror2.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="upper_leg_right_vhacd.obj" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="upper_leg_right_vhacd.obj" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
-    <joint name="RR_upper_leg_2_hip_motor_joint" type="continuous">
+    <joint name="RR_upper_leg_2_hip_motor_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="RR_hip_motor"/>
     <child link="RR_upper_leg"/>
@@ -329,21 +329,21 @@
        <visual>
       <origin rpy="0 1.57079 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="lower_leg3.obj" scale="1 1 1"/>
+        <mesh filename="package://lower_leg3.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-     <collision>
-      <origin rpy="0 1.57079 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="lower_leg_3.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+     <!--<collision>-->
+      <!--<origin rpy="0 1.57079 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="lower_leg_3.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
-    <joint name="RR_lower_leg_2_upper_leg_joint" type="continuous">
+    <joint name="RR_lower_leg_2_upper_leg_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="RR_upper_leg"/>
     <child link="RR_lower_leg"/>
@@ -365,21 +365,21 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="hip_motor.obj" scale="1 1 1"/>
+        <mesh filename="package://hip_motor.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="hip_motor.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="hip_motor.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
       </link>
 
-   <joint name="RL_hip_motor_2_chassis_joint" type="continuous">
+   <joint name="RL_hip_motor_2_chassis_joint" type="revolute">
     <axis xyz="0 0 1"/>
     <parent link="chassis"/>
     <child link="RL_hip_motor"/>
@@ -401,22 +401,22 @@
      <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="upper_leg_left2.obj" scale="1 1 1"/>
+        <mesh filename="package://upper_leg_left2.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="upper_leg_left_vhacd.obj" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="upper_leg_left_vhacd.obj" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
 
-  <joint name="RL_upper_leg_2_hip_motor_joint" type="continuous">
+  <joint name="RL_upper_leg_2_hip_motor_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="RL_hip_motor"/>
     <child link="RL_upper_leg"/>
@@ -438,21 +438,21 @@
    <visual>
       <origin rpy="0 1.57079 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="lower_leg3.obj" scale="1 1 1"/>
+        <mesh filename="package://lower_leg3.obj" scale="1 1 1"/>
       </geometry>
        <material name="white"/>
     </visual>
 
-    <collision>
-      <origin rpy="0 1.57079 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="lower_leg_3.stl" scale="1 1 1"/>
-      </geometry>
-    </collision>
+    <!--<collision>-->
+      <!--<origin rpy="0 1.57079 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<mesh filename="lower_leg_3.stl" scale="1 1 1"/>-->
+      <!--</geometry>-->
+    <!--</collision>-->
 
     </link>
 
-  <joint name="RL_lower_leg_2_upper_leg_joint" type="continuous">
+  <joint name="RL_lower_leg_2_upper_leg_joint" type="revolute">
     <axis xyz="1 0 0"/>
     <parent link="RL_upper_leg"/>
     <child link="RL_lower_leg"/>
