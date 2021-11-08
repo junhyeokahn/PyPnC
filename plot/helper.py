@@ -150,6 +150,32 @@ def plot_rf(time, rfs, phase):
     fig.suptitle('Reaction Force Command')
 
 
+def plot_rf_quad(time, rfs, phase):
+    fig, axes = plt.subplots(3, 4)
+    for i in range(3):
+        axes[i, 0].plot(time, rfs[:, i], color='k', linewidth=3)
+        axes[i, 1].plot(time, rfs[:, i + 3], color='k', linewidth=3)
+        axes[i, 2].plot(time, rfs[:, i + 6], color='k', linewidth=3)
+        axes[i, 3].plot(time, rfs[:, i + 9], color='k', linewidth=3)
+        axes[i, 0].grid(True)
+        axes[i, 1].grid(True)
+        axes[i, 2].grid(True)
+        axes[i, 3].grid(True)
+        plot_phase(axes[i, 0], time, phase)
+        plot_phase(axes[i, 1], time, phase)
+        plot_phase(axes[i, 2], time, phase)
+        plot_phase(axes[i, 3], time, phase)
+    axes[2, 0].set_xlabel('time')
+    axes[2, 1].set_xlabel('time')
+    axes[2, 2].set_xlabel('time')
+    axes[2, 3].set_xlabel('time')
+    axes[0, 0].set_title('Front Left')
+    axes[0, 1].set_title('Front Right')
+    axes[0, 2].set_title('Rear Right')
+    axes[0, 3].set_title('Rear Left')
+    fig.suptitle('Reaction Force Command')
+
+
 def plot_phase(ax, t, data_phse):
     phseChange = []
     for i in range(0, len(t) - 1):

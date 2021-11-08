@@ -52,6 +52,9 @@ count = 0
 
 while (1):
 
+    # print("=" * 80)
+    # print("time : ", t)
+    # __import__('ipdb').set_trace()
     # Get sensor data
     sensor_data = pybullet_util.get_sensor_data(quadruped, joint_id, link_id,
                                                 pos_basejoint_to_basecom,
@@ -77,9 +80,9 @@ while (1):
     command = interface.get_command(copy.deepcopy(sensor_data))
 
     # Set motor cmd
-    pybullet_util.set_motor_pos(quadruped, joint_id,
-                                nominal_sensor_data['joint_pos'])
-    # pybullet_util.set_motor_trq(quadruped, joint_id, command['joint_trq'])
+    # pybullet_util.set_motor_pos(quadruped, joint_id,
+    # nominal_sensor_data['joint_pos'])
+    pybullet_util.set_motor_trq(quadruped, joint_id, command['joint_trq'])
     # pybullet_util.set_motor_pos(quadruped, joint_id, command['joint_pos'])
 
     p.stepSimulation()

@@ -74,7 +74,7 @@ class LaikagoController(object):
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list)
+            self._tci_container.internal_constraint_list, None, False)
         # Double integration
         joint_vel_cmd, joint_pos_cmd = self._joint_integrator.integrate(
             joint_acc_cmd, self._robot.joint_velocities,

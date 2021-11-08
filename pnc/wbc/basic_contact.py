@@ -44,8 +44,6 @@ class PointContact(Contact):
 
         self._cone_constraint_mat[5, 2] = -1.
 
-        self._cone_constraint_mat = np.dot(self._cone_constraint_mat, rot)
-
         self._cone_constraint_vec = np.zeros(6)
         self._cone_constraint_vec[5] = -self._rf_z_max
 
