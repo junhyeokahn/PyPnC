@@ -48,6 +48,11 @@ class LaikagoInterface(Interface):
             self._se.initialize(sensor_data)
         self._se.update(sensor_data)
 
+        # print("total mass")
+        # print(self._robot.total_mass)
+        # print("com pos")
+        # print(self._robot.get_com_pos())
+
         # Process Interrupt Logic
         self._interrupt_logic.process_interrupts()
 

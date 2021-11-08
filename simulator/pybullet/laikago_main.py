@@ -77,9 +77,10 @@ while (1):
     command = interface.get_command(copy.deepcopy(sensor_data))
 
     # Set motor cmd
-    # pybullet_util.set_motor_pos(quadruped, joint_id,
-    # nominal_sensor_data['joint_pos'])
-    pybullet_util.set_motor_trq(quadruped, joint_id, command['joint_trq'])
+    pybullet_util.set_motor_pos(quadruped, joint_id,
+                                nominal_sensor_data['joint_pos'])
+    # pybullet_util.set_motor_trq(quadruped, joint_id, command['joint_trq'])
+    # pybullet_util.set_motor_pos(quadruped, joint_id, command['joint_pos'])
 
     p.stepSimulation()
     t += SimConfig.CONTROLLER_DT
