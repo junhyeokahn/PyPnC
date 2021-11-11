@@ -180,3 +180,16 @@ def try_multiprocess(args_list, num_cpu, f, max_timeouts=1):
         pool.join()
 
     return results
+
+def prevent_quat_jump(quat_des,quat_act):
+    # print("quat_des:",quat_des)
+    # print("quat_act:",quat_act)
+    a = quat_des - quat_act
+    b = quat_des + quat_act
+    if np.linalg.norm(a) > np.linalg.norm(b):
+        new_quat_act = -quat_act
+    else:
+        new_quat_act = quat_act
+
+    return new_quat_act
+

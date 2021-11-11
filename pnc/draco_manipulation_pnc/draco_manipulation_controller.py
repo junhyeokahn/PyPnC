@@ -83,7 +83,7 @@ class DracoManipulationController(object):
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list)
+            self._tci_container.internal_constraint_list,None,True)
         joint_trq_cmd = np.dot(self._sa[:, 6:].transpose(), joint_trq_cmd)
         joint_acc_cmd = np.dot(self._sa[:, 6:].transpose(), joint_acc_cmd)
         # Double integration

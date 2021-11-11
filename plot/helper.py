@@ -67,6 +67,21 @@ def plot_task(time, pos_des, pos, vel_des, vel, phase, suptitle):
         axes[3, 1].set_xlabel('time')
         fig.suptitle(suptitle)
 
+    elif pos_des.shape[1] == 1:
+        dim = pos_des.shape[1]
+        fig, axes = plt.subplots(dim, 2)
+        axes[0].plot(time, pos_des, color='r', linestyle='dashed', linewidth=4)
+        axes[0].plot(time, pos, color='b', linewidth=2)
+        plot_phase(axes[0], time, phase)
+        axes[0].grid(True)
+        axes[1].plot(time, vel_des, color='r', linestyle='dashed', linewidth=4)
+        axes[1].plot(time, vel, color='b', linewidth=2)
+        plot_phase(axes[1], time, phase)
+        axes[1].grid(True)
+        axes[0].set_xlabel('time')
+        axes[1].set_xlabel('time')
+        fig.suptitle(suptitle)
+
     else:
         dim = pos_des.shape[1]
         fig, axes = plt.subplots(dim, 2)

@@ -12,11 +12,11 @@ class SimConfig(object):
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 
     PRINT_TIME = False
-    PRINT_ROBOT_INFO = True
+    PRINT_ROBOT_INFO = False
     VIDEO_RECORD = False
     RECORD_FREQ = 5
-    SIMULATE_CAMERA = True
-    SAVE_CAMERA_DATA = True
+    SIMULATE_CAMERA = False
+    SAVE_CAMERA_DATA = False
 
 
 class PnCConfig(object):
@@ -34,7 +34,13 @@ class WBCConfig(object):
     # Task Hierarchy Weights
     W_COM = 20.0
     W_TORSO = 20.0
-    W_UPPER_BODY = 40.0
+    W_UPPER_BODY = 0.0
+    # W_NECK = 20.0
+    # W_HAND_POS = 50.0
+    # W_HAND_ORI = 50.0
+    W_NECK = 2.0
+    W_HAND_POS = 5.0
+    W_HAND_ORI = 5.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -56,6 +62,13 @@ class WBCConfig(object):
     KD_UPPER_BODY = np.array(
         [2., 8., 8., 8., 3., 2., 2., 8., 8., 8., 3., 2., 2.])
 
+    KP_NECK = np.array([4])
+    KD_NECK = np.array([4])
+    KP_HAND_POS = np.array([4., 4., 4.])
+    KD_HAND_POS = np.array([4., 4., 4.])
+    KP_HAND_ORI = np.array([4., 4., 4.])
+    KD_HAND_ORI = np.array([4., 4., 4.])
+
     KP_FOOT_POS = np.array([300., 300., 300.])
     KD_FOOT_POS = np.array([30., 30., 30.])
     KP_FOOT_ORI = np.array([300., 300., 300.])
@@ -63,6 +76,7 @@ class WBCConfig(object):
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
+    # LAMBDA_Q_DDOT = 1
     LAMBDA_RF = 1e-7
 
     # B_TRQ_LIMIT = True
@@ -110,3 +124,7 @@ class WalkingState(object):
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
     SWAYING = 10
+
+class HandState(object):
+    LEFT = 0
+    RIGHT = 1

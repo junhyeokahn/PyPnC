@@ -30,6 +30,7 @@ class PnCConfig(object):
 class WBCConfig(object):
     # Max normal force per contact
     RF_Z_MAX = 150.0
+    # RF_Z_MAX = 1000.0
 
     # Task Hierarchy Weights
     W_COM = 10.0

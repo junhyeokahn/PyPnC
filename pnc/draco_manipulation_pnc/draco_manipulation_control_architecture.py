@@ -1,6 +1,6 @@
 import numpy as np
 
-from config.draco_manipulation_config import WalkingConfig, WBCConfig, WalkingState
+from config.draco_manipulation_config import WalkingConfig, WBCConfig, WalkingState, HandState
 from pnc.control_architecture import ControlArchitecture
 from pnc.planner.locomotion.dcm_planner.dcm_planner import DCMPlanner
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
@@ -10,6 +10,7 @@ from pnc.wbc.manager.floating_base_trajectory_manager import FloatingBaseTraject
 from pnc.wbc.manager.foot_trajectory_manager import FootTrajectoryManager
 from pnc.wbc.manager.reaction_force_manager import ReactionForceManager
 from pnc.wbc.manager.upper_body_trajectory_manager import UpperBodyTrajectoryManager
+from pnc.wbc.manager.hand_trajectory_manager import HandTrajectoryManager
 from pnc.draco_manipulation_pnc.draco_manipulation_tci_container import DracoManipulationTCIContainer
 from pnc.draco_manipulation_pnc.draco_manipulation_controller import DracoManipulationController
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.double_support_stand import DoubleSupportStand
@@ -53,8 +54,21 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             self._tci_container.lfoot_ori_task, robot)
         self._lfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
 
+        self._neck_tm = UpperBodyTrajectoryManager(
+            self._tci_container.neck_task, robot)
+
         self._upper_body_tm = UpperBodyTrajectoryManager(
             self._tci_container.upper_body_task, robot)
+
+        self._lhand_tm = HandTrajectoryManager(
+                self._tci_container.lhand_pos_task,
+                self._tci_container.lhand_ori_task, 
+                HandState.LEFT, robot)
+
+        self._rhand_tm = HandTrajectoryManager(
+                self._tci_container.rhand_pos_task,
+                self._tci_container.rhand_ori_task, 
+                HandState.RIGHT, robot)
 
         self._floating_base_tm = FloatingBaseTrajectoryManager(
             self._tci_container.com_task, self._tci_container.torso_ori_task,
@@ -80,7 +94,10 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
             "lfoot": self._lfoot_tm,
+            "neck": self._neck_tm,
             "upper_body": self._upper_body_tm,
+            "lhand": self._lhand_tm,
+            "rhand": self._rhand_tm,
             "floating_base": self._floating_base_tm,
             "dcm": self._dcm_tm
         }
@@ -198,6 +215,8 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         # Update State Machine
         self._state_machine[self._state].one_step()
         # Update State Machine Independent Trajectories
+        self._neck_tm.use_nominal_upper_body_joint_pos(
+            self._sp.nominal_joint_pos)
         self._upper_body_tm.use_nominal_upper_body_joint_pos(
             self._sp.nominal_joint_pos)
         # Get Whole Body Control Commands

@@ -194,6 +194,7 @@ if __name__ == "__main__":
             cv2.imwrite(filename, frame)
             jpg_count += 1
 
+        # exit()
         p.stepSimulation()
 
         time.sleep(dt)

@@ -63,23 +63,35 @@ class BasicTask(Task):
             quat_des = R.from_quat(self._pos_des)
             quat_act = R.from_matrix(
                 self._robot.get_link_iso(self._target_id)[0:3, 0:3])
+            quat_des_temp = quat_des.as_quat()
+            quat_act_temp = quat_act.as_quat()
+            quat_act_temp = util.prevent_quat_jump(quat_des_temp,quat_act_temp)
+            quat_act = R.from_quat(quat_act_temp)
             # quat_err = (quat_des * quat_act.inv()).as_quat() # Sign flipped
+            # quat_err = (quat_des * quat_act.inv()) # Sign flipped
             quat_err = R.from_matrix(
                 np.dot(quat_des.as_matrix(),
                        quat_act.as_matrix().transpose())).as_quat()
             self._pos_err = util.quat_to_exp(quat_err)
+            # self._pos_err = quat_err.as_rotvec()
             vel_act = self._robot.get_link_vel(self._target_id)[0:3]
             if self._b_data_save:
                 self._data_saver.add(self._target_id + '_quat_des',
                                      quat_des.as_quat())
+                # self._data_saver.add(self._target_id + '_quat_des',
+                                     # quat_des)
                 self._data_saver.add(self._target_id + '_ang_vel_des',
                                      self._vel_des.copy())
                 self._data_saver.add(self._target_id + '_quat',
                                      quat_act.as_quat())
+                # self._data_saver.add(self._target_id + '_quat',
+                                     # quat_act)
                 self._data_saver.add(self._target_id + '_ang_vel',
                                      vel_act.copy())
                 self._data_saver.add('w_' + self._target_id + "_ori",
                                      self._w_hierarchy)
+                self._data_saver.add(self._target_id + "_quat_err",
+                                     self._pos_err)
         elif self._task_type == "COM":
             pos = self._robot.get_com_pos()
             self._pos_err = self._pos_des - pos

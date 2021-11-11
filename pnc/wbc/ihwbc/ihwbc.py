@@ -163,9 +163,12 @@ class IHWBC(object):
             j = task.jacobian
             j_dot_q_dot = task.jacobian_dot_q_dot
             x_ddot = task.op_cmd
-            if verbose:
-                print(i, " th task")
-                task.debug()
+            if verbose: 
+                    print("====================")
+                    print(task.target_id, " task")
+                    print(j)
+                    print(j_dot_q_dot)
+                    task.debug()
 
             cost_t_mat += self._w_hierarchy[i] * np.dot(j.transpose(), j)
             cost_t_vec += self._w_hierarchy[i] * np.dot(
@@ -202,17 +205,20 @@ class IHWBC(object):
             cost_vec = np.copy(cost_t_vec)
 
         # if verbose:
-        # np.set_printoptions(precision=4)
-        # print("cost_t_mat")
-        # print(cost_t_mat)
-        # print("cost_t_vec")
-        # print(cost_t_vec)
-        # print(cost_mat)
-        # print(cost_vec)
-        # print("cost_rf_mat")
-        # print(cost_rf_mat)
-        # print("cost_rf_vec")
-        # print(cost_rf_vec)
+            # print("==================================")
+            # np.set_printoptions(precision=4)
+            # print("cost_t_mat")
+            # print(cost_t_mat)
+            # print("cost_t_vec")
+            # print(cost_t_vec)
+            # print("cost_rf_mat")
+            # print(cost_rf_mat)
+            # print("cost_rf_vec")
+            # print(cost_rf_vec)
+            # print("cost_mat")
+            # print(cost_mat)
+            # print("cost_vec")
+            # print(cost_vec)
 
         # ======================================================================
         # Equality Constraint
@@ -312,16 +318,16 @@ class IHWBC(object):
                      np.dot(np.dot(sa_ni_trc_bar_tr, self._snf),
                             jit_lmd_jidot_qdot) + self._trq_limit[:, 1]))
 
-        if verbose:
-            print("eq_mat")
-            print(eq_mat)
-            print("eq_vec")
-            print(eq_vec)
+        # if verbose:
+            # print("eq_mat")
+            # print(eq_mat)
+            # print("eq_vec")
+            # print(eq_vec)
 
-            print("ineq_mat")
-            print(ineq_mat)
-            print("ineq_vec")
-            print(ineq_vec)
+            # print("ineq_mat")
+            # print(ineq_mat)
+            # print("ineq_vec")
+            # print(ineq_vec)
 
         sol = solve_qp(cost_mat,
                        cost_vec,
@@ -360,7 +366,7 @@ class IHWBC(object):
                 j = task.jacobian
                 j_dot_q_dot = task.jacobian_dot_q_dot
                 x_ddot = task.op_cmd
-                print(i, " th task")
+                print(task.target_id," task")
                 print("des x ddot: ", x_ddot)
                 print("j*qddot_sol + Jdot*qdot: ",
                       np.dot(j, sol_q_ddot) + j_dot_q_dot)

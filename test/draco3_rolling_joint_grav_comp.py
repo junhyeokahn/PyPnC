@@ -71,7 +71,7 @@ def PnCPjInvDyn(robot, q, qdot, qddot, s_jp, s_jd):
     # print(qddot[0])
     # print(qddot[1])
 
-    # assert IsClose(qddot[0], qddot[1])
+    assert IsClose(qddot[0], qddot[1])
 
     mass, mass_inv, b, g, lambda_i, jac_i_bar, null_i = UpdateRobotSystem(
         robot, {
@@ -83,7 +83,7 @@ def PnCPjInvDyn(robot, q, qdot, qddot, s_jp, s_jd):
         })
 
     #formulate qp for trq constraint
-    cost_mat = np.array([[1., 0.], [0., 1.]])
+    cost_mat = np.array([[10., 0.], [0., 1.]])
     cost_vec = np.array([0., 0.])
     ineq_mat = np.zeros((2, 2))
     ineq_vec = np.zeros(2)
@@ -114,10 +114,25 @@ def PnCPjInvDyn(robot, q, qdot, qddot, s_jp, s_jd):
     f_int = s_jp.dot((mass.dot(qddot) + b + g)) + slack_1
     tau = s_jd.dot((mass.dot(qddot) + b + g)) + slack_2 + f_int
 
-    # print("f_int")
-    # print(f_int)
-    # print("tau")
-    # print(tau)
+    print("====result======")
+    print(f_int)
+    print(tau-f_int)
+
+    print("==========")
+    print("slack_var")
+    print(slack_1)
+    print(slack_2)
+
+    print("g")
+    print(g)
+
+    print("b")
+    print(b)
+
+    print("f_int")
+    print(f_int)
+    print("tau")
+    print(tau)
 
     return tau
 
@@ -230,33 +245,23 @@ if __name__ == "__main__":
             np.array([
                 sensor_data["joint_vel"]["j0"], sensor_data["joint_vel"]["j1"]
             ]),
-            np.array([
-                5 * (np.pi / 2 - sensor_data["joint_pos"]["j0"]) + 2 *
-                (-sensor_data["joint_vel"]["j0"]),
-                5 * (np.pi / 2 - sensor_data["joint_pos"]["j1"]) + 2 *
-                (-sensor_data["joint_vel"]["j1"])
-            ]), s_jp, s_jd)
+            np.array([0,0 ]), s_jp, s_jd)
 
-        # trq2 = PnCPjInvDyn2(
-        # pin_robot,
-        # np.array([
-        # sensor_data["joint_pos"]["j0"], sensor_data["joint_pos"]["j1"]
-        # ]),
-        # np.array([
-        # sensor_data["joint_vel"]["j0"], sensor_data["joint_vel"]["j1"]
-        # ]),
-        # np.array([
-        # 5 * (np.pi / 2 - sensor_data["joint_pos"]["j0"]) + 2 *
-        # (-sensor_data["joint_vel"]["j0"]),
-        # 5 * (np.pi / 2 - sensor_data["joint_pos"]["j1"]) + 2 *
-        # (-sensor_data["joint_vel"]["j1"])
-        # ]))
+        trq2 = PnCPjInvDyn2(
+        pin_robot,
+        np.array([
+        sensor_data["joint_pos"]["j0"], sensor_data["joint_pos"]["j1"]
+        ]),
+        np.array([
+        sensor_data["joint_vel"]["j0"], sensor_data["joint_vel"]["j1"]
+        ]),
+        np.array([0,0]))
 
         print("========trq w/ constraint==========")
         print(trq)
 
-        # print("========trq w/o constraint==========")
-        # print(trq2)
+        print("========trq w/o constraint==========")
+        print(trq2)
 
         p.setJointMotorControl2(robot,
                                 joint_id['j1'],

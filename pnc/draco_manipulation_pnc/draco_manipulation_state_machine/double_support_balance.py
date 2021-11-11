@@ -40,6 +40,10 @@ class DoubleSupportBalance(StateMachine):
         self._trajectory_managers["lfoot"].use_current()
         self._trajectory_managers["rfoot"].use_current()
 
+        # Update Hand Task
+        # self._trajectory_managers["lhand"].use_current()
+        # self._trajectory_managers["rhand"].use_current()
+
     def first_visit(self):
         print("[WalkingState] BALANCE")
         self._walking_trigger = False

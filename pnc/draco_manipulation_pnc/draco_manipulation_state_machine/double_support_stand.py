@@ -18,6 +18,9 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = 0.
         self._start_time = 0.
         self._sp = DracoManipulationStateProvider()
+        self._lhand_iso = np.zeros((4,4))
+        self._rhand_iso = np.zeros((4,4))
+
 
     @property
     def end_time(self):
@@ -59,6 +62,10 @@ class DoubleSupportStand(StateMachine):
             "floating_base"].initialize_floating_base_interpolation_trajectory(
                 self._sp.curr_time, self._end_time, com_pos_des, base_quat_des)
 
+        self._lhand_iso = self._robot.get_link_iso("l_hand_contact")
+        self._rhand_iso = self._robot.get_link_iso("r_hand_contact")
+
+
         # Initialize Reaction Force Ramp to Max
         for fm in self._force_managers.values():
             fm.initialize_ramp_to_max(self._sp.curr_time, self._rf_z_max_time)
@@ -72,6 +79,10 @@ class DoubleSupportStand(StateMachine):
         # Update Foot Task
         self._trajectory_managers["lfoot"].use_current()
         self._trajectory_managers["rfoot"].use_current()
+
+        # Update Hand Task
+        self._trajectory_managers["lhand"].update_desired(self._lhand_iso)
+        self._trajectory_managers["rhand"].update_desired(self._rhand_iso)
 
         # Update Max Normal Reaction Force
         for fm in self._force_managers.values():
