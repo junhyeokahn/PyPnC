@@ -20,6 +20,8 @@ from pnc.draco_manipulation_pnc.draco_manipulation_interface import DracoManipul
 from util import pybullet_util
 from util import util
 from util import liegroup
+from pinocchio.visualize import MeshcatVisualizer
+import pinocchio as pin
 
 
 def set_initial_config(robot, joint_id):
@@ -62,11 +64,15 @@ signal.signal(signal.SIGINT, signal_handler)
 if __name__ == "__main__":
 
     # Environment Setup
-    p.connect(p.GUI)
-    p.resetDebugVisualizerCamera(cameraDistance=1.0,
-                                 cameraYaw=120,
-                                 cameraPitch=-30,
-                                 cameraTargetPosition=[1, 0.5, 1.0])
+    if SimConfig.B_USE_MESHCAT:
+        p.connect(p.DIRECT)
+    else:
+        p.connect(p.GUI)
+        p.resetDebugVisualizerCamera(cameraDistance=1.0,
+                                     cameraYaw=120,
+                                     cameraPitch=-30,
+                                     cameraTargetPosition=[1, 0.5, 1.0])
+
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
                                 numSubSteps=SimConfig.N_SUBSTEP)
@@ -108,6 +114,23 @@ if __name__ == "__main__":
                            parentFramePosition=[0, 0, 0],
                            childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
+
+    if SimConfig.B_USE_MESHCAT:
+        # Create Robot for Meshcat Visualization
+        model, collision_model, visual_model = pin.buildModelsFromUrdf(
+            cwd + "/robot_model/draco3/draco3.urdf",
+            cwd + "/robot_model/draco3", pin.JointModelFreeFlyer())
+        viz = MeshcatVisualizer(model, collision_model, visual_model)
+        try:
+            viz.initViewer(open=True)
+        except ImportError as err:
+            print(
+                "Error while initializing the viewer. It seems you should install Python meshcat"
+            )
+            print(err)
+            sys.exit(0)
+        viz.loadViewerModel()
+        vis_q = pin.neutral(model)
 
     # Initial Config
     set_initial_config(robot, joint_id)
@@ -196,12 +219,15 @@ if __name__ == "__main__":
             cv2.imwrite(filename, frame)
             jpg_count += 1
 
-        # exit()
-        p.stepSimulation()
-        # print("count : ", count)
-        # if count % 100 == 0:
-        # __import__('ipdb').set_trace()
+        if SimConfig.B_USE_MESHCAT:
+            vis_q[0:3] = sensor_data['base_joint_pos']
+            vis_q[3:7] = sensor_data['base_joint_quat']
+            for i, (k, v) in enumerate(sensor_data['joint_pos'].items()):
+                idx = interface._robot.get_q_idx(k)
+                vis_q[idx] = v
+            viz.display(vis_q)
 
-        time.sleep(dt)
+        p.stepSimulation()
+        # time.sleep(dt)
         t += dt
         count += 1

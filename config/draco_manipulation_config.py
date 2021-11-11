@@ -18,6 +18,8 @@ class SimConfig(object):
     SIMULATE_CAMERA = False
     SAVE_CAMERA_DATA = False
 
+    B_USE_MESHCAT = False
+
 
 class PnCConfig(object):
     CONTROLLER_DT = SimConfig.CONTROLLER_DT
