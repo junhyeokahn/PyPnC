@@ -2,8 +2,8 @@ import numpy as np
 
 
 class SimConfig(object):
-    CONTROLLER_DT = 0.01
-    N_SUBSTEP = 10
+    CONTROLLER_DT = 0.00125
+    N_SUBSTEP = 1
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.
@@ -35,12 +35,9 @@ class WBCConfig(object):
     W_COM = 20.0
     W_TORSO = 20.0
     W_UPPER_BODY = 0.0
-    # W_NECK = 20.0
-    # W_HAND_POS = 50.0
-    # W_HAND_ORI = 50.0
     W_NECK = 2.0
-    W_HAND_POS = 5.0
-    W_HAND_ORI = 5.0
+    W_HAND_POS = 10.0
+    W_HAND_ORI = 2.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -93,7 +90,7 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.73  # m
+    COM_HEIGHT = 0.65  # m
     SWING_HEIGHT = 0.04  # m
 
     SWAYING_AMP = np.array([0., 0.08, 0.])
@@ -124,6 +121,7 @@ class WalkingState(object):
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
     SWAYING = 10
+
 
 class HandState(object):
     LEFT = 0

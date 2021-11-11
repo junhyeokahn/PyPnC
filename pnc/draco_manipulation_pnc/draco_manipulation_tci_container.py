@@ -43,39 +43,39 @@ class DracoManipulationTCIContainer(TCIContainer):
 
         # Neck joint
         neck_joint = ['neck_pitch']
-        self._neck_task = BasicTask(robot, "SELECTED_JOINT",len(neck_joint),
-                neck_joint, PnCConfig.SAVE_DATA)
+        self._neck_task = BasicTask(robot, "SELECTED_JOINT", len(neck_joint),
+                                    neck_joint, PnCConfig.SAVE_DATA)
         self._neck_task.kp = WBCConfig.KP_NECK
         self._neck_task.kd = WBCConfig.KD_NECK
         self._neck_task.w_hierarchy = WBCConfig.W_NECK
 
         # Lhand Pos Task
         self._lhand_pos_task = BasicTask(robot, "LINK_XYZ", 3,
-                                        "l_hand_contact", PnCConfig.SAVE_DATA)
-        self._lhand_pos_task.kp = WBCConfig.KP_HAND_POS 
-        self._lhand_pos_task.kd = WBCConfig.KD_HAND_POS 
-        self._lhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS 
+                                         "l_hand_contact", PnCConfig.SAVE_DATA)
+        self._lhand_pos_task.kp = WBCConfig.KP_HAND_POS
+        self._lhand_pos_task.kd = WBCConfig.KD_HAND_POS
+        self._lhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS
 
         # Rhand Pos Task
         self._rhand_pos_task = BasicTask(robot, "LINK_XYZ", 3,
-                                        "r_hand_contact", PnCConfig.SAVE_DATA)
-        self._rhand_pos_task.kp = WBCConfig.KP_HAND_POS 
-        self._rhand_pos_task.kd = WBCConfig.KD_HAND_POS 
-        self._rhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS 
+                                         "r_hand_contact", PnCConfig.SAVE_DATA)
+        self._rhand_pos_task.kp = WBCConfig.KP_HAND_POS
+        self._rhand_pos_task.kd = WBCConfig.KD_HAND_POS
+        self._rhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS
 
         # Lhand Ori Task
         self._lhand_ori_task = BasicTask(robot, "LINK_ORI", 3,
-                                        "l_hand_contact", PnCConfig.SAVE_DATA)
-        self._lhand_ori_task.kp = WBCConfig.KP_HAND_ORI 
-        self._lhand_ori_task.kd = WBCConfig.KD_HAND_ORI 
-        self._lhand_ori_task.w_hierarchy = WBCConfig.W_HAND_ORI 
+                                         "l_hand_contact", PnCConfig.SAVE_DATA)
+        self._lhand_ori_task.kp = WBCConfig.KP_HAND_ORI
+        self._lhand_ori_task.kd = WBCConfig.KD_HAND_ORI
+        self._lhand_ori_task.w_hierarchy = WBCConfig.W_HAND_ORI
 
         # Rhand Ori Task
         self._rhand_ori_task = BasicTask(robot, "LINK_ORI", 3,
-                                        "r_hand_contact", PnCConfig.SAVE_DATA)
-        self._rhand_ori_task.kp = WBCConfig.KP_HAND_ORI 
-        self._rhand_ori_task.kd = WBCConfig.KD_HAND_ORI 
-        self._rhand_ori_task.w_hierarchy = WBCConfig.W_HAND_ORI 
+                                         "r_hand_contact", PnCConfig.SAVE_DATA)
+        self._rhand_ori_task.kp = WBCConfig.KP_HAND_ORI
+        self._rhand_ori_task.kd = WBCConfig.KD_HAND_ORI
+        self._rhand_ori_task.w_hierarchy = WBCConfig.W_HAND_ORI
 
         # Rfoot Pos Task
         self._rfoot_pos_task = BasicTask(robot, "LINK_XYZ", 3,
@@ -106,29 +106,29 @@ class DracoManipulationTCIContainer(TCIContainer):
         self._lfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
 
         # self._task_list = [
-            # self._com_task, self._torso_ori_task, self._upper_body_task,
-            # self._rfoot_pos_task, self._lfoot_pos_task, self._rfoot_ori_task,
-            # self._lfoot_ori_task
+        # self._com_task, self._torso_ori_task, self._upper_body_task,
+        # self._rfoot_pos_task, self._lfoot_pos_task, self._rfoot_ori_task,
+        # self._lfoot_ori_task
         # ]
 
         # self._task_list = [
-            # self._com_task, self._torso_ori_task, self._neck_task, 
-            # self._lhand_pos_task, self._lhand_ori_task, self._rhand_pos_task, 
-            # self._rhand_ori_task, self._rfoot_pos_task, self._lfoot_pos_task, 
-            # self._rfoot_ori_task, self._lfoot_ori_task]
-
+        # self._com_task, self._torso_ori_task, self._neck_task,
+        # self._lhand_pos_task, self._lhand_ori_task, self._rhand_pos_task,
+        # self._rhand_ori_task, self._rfoot_pos_task, self._lfoot_pos_task,
+        # self._rfoot_ori_task, self._lfoot_ori_task]
 
         self._task_list = [
-            self._com_task, self._torso_ori_task, self._upper_body_task, self._neck_task, 
-            self._lhand_pos_task, self._lhand_ori_task, self._rhand_pos_task, 
-            self._rhand_ori_task, self._rfoot_pos_task, self._lfoot_pos_task, 
-            self._rfoot_ori_task, self._lfoot_ori_task]
+            self._com_task, self._torso_ori_task, self._upper_body_task,
+            self._neck_task, self._lhand_pos_task, self._lhand_ori_task,
+            self._rhand_pos_task, self._rhand_ori_task, self._rfoot_pos_task,
+            self._lfoot_pos_task, self._rfoot_ori_task, self._lfoot_ori_task
+        ]
 
         # self._task_list = [
-            # self._com_task, self._torso_ori_task, self._neck_task, 
-            # self._lhand_pos_task, self._rhand_pos_task, 
-            # self._rfoot_pos_task, self._lfoot_pos_task, 
-            # self._rfoot_ori_task, self._lfoot_ori_task]
+        # self._com_task, self._torso_ori_task, self._neck_task,
+        # self._lhand_pos_task, self._rhand_pos_task,
+        # self._rfoot_pos_task, self._lfoot_pos_task,
+        # self._rfoot_ori_task, self._lfoot_ori_task]
 
         # ======================================================================
         # Initialize Contact
@@ -149,7 +149,8 @@ class DracoManipulationTCIContainer(TCIContainer):
         # ======================================================================
         # Initialize Internal Constraint
         # ======================================================================
-        self._rolling_joint_constraint = DracoManipulationRollingJointConstraint(robot)
+        self._rolling_joint_constraint = DracoManipulationRollingJointConstraint(
+            robot)
         self._internal_constraint_list = [self._rolling_joint_constraint]
 
     @property
@@ -199,7 +200,6 @@ class DracoManipulationTCIContainer(TCIContainer):
     @property
     def lhand_ori_task(self):
         return self._lhand_ori_task
-
 
     @property
     def rfoot_contact(self):

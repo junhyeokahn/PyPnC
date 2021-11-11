@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -11,6 +12,7 @@ import shutil
 import cv2
 import pybullet as p
 import numpy as np
+
 np.set_printoptions(precision=2)
 
 from config.draco_manipulation_config import SimConfig
@@ -196,6 +198,9 @@ if __name__ == "__main__":
 
         # exit()
         p.stepSimulation()
+        # print("count : ", count)
+        # if count % 100 == 0:
+        # __import__('ipdb').set_trace()
 
         time.sleep(dt)
         t += dt

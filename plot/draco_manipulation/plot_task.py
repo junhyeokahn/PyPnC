@@ -28,8 +28,7 @@ weights = [
     'w_r_hand_contact_ori'
 ]
 
-quat_err = [
-        'l_hand_contact_quat_err', 'r_hand_contact_quat_err']
+quat_err = ['l_hand_contact_quat_err', 'r_hand_contact_quat_err']
 
 rf_z = ['rf_z_max_r_foot_contact', 'rf_z_max_l_foot_contact']
 
@@ -92,25 +91,25 @@ plot_task(time, des['torso_com_link_quat'], act['torso_com_link_quat'],
           des['torso_com_link_ang_vel'], act['torso_com_link_ang_vel'], phase,
           'torso ori')
 
-plot_task(time, des['selected_joint_pos'], act['selected_joint_pos'],
-          des['selected_joint_vel'], act['selected_joint_vel'], phase,
-          'neck joint')
+# plot_task(time, des['selected_joint_pos'], act['selected_joint_pos'],
+# des['selected_joint_vel'], act['selected_joint_vel'], phase,
+# 'neck joint')
 
-plot_task(time, des['l_foot_contact_pos'], act['l_foot_contact_pos'],
-          des['l_foot_contact_vel'], act['l_foot_contact_vel'], phase,
-          'left foot lin')
+# plot_task(time, des['l_foot_contact_pos'], act['l_foot_contact_pos'],
+# des['l_foot_contact_vel'], act['l_foot_contact_vel'], phase,
+# 'left foot lin')
 
-plot_task(time, des['l_foot_contact_quat'], act['l_foot_contact_quat'],
-          des['l_foot_contact_ang_vel'], act['l_foot_contact_ang_vel'], phase,
-          'left foot ori')
+# plot_task(time, des['l_foot_contact_quat'], act['l_foot_contact_quat'],
+# des['l_foot_contact_ang_vel'], act['l_foot_contact_ang_vel'], phase,
+# 'left foot ori')
 
-plot_task(time, des['r_foot_contact_pos'], act['r_foot_contact_pos'],
-          des['r_foot_contact_vel'], act['r_foot_contact_vel'], phase,
-          'right foot lin')
+# plot_task(time, des['r_foot_contact_pos'], act['r_foot_contact_pos'],
+# des['r_foot_contact_vel'], act['r_foot_contact_vel'], phase,
+# 'right foot lin')
 
-plot_task(time, des['r_foot_contact_quat'], act['r_foot_contact_quat'],
-          des['r_foot_contact_ang_vel'], act['r_foot_contact_ang_vel'], phase,
-          'right foot ori')
+# plot_task(time, des['r_foot_contact_quat'], act['r_foot_contact_quat'],
+# des['r_foot_contact_ang_vel'], act['r_foot_contact_ang_vel'], phase,
+# 'right foot ori')
 
 plot_task(time, des['l_hand_contact_pos'], act['l_hand_contact_pos'],
           des['l_hand_contact_vel'], act['l_hand_contact_vel'], phase,
@@ -140,7 +139,9 @@ plot_rf(time, rf_cmd, phase)
 
 plot_rf_z_max(time, rf_z_max, phase)
 
-plot_vector_traj(time, quat_err_list['l_hand_contact_quat_err'], 'lhand_quat_err')
-plot_vector_traj(time, quat_err_list['r_hand_contact_quat_err'], 'rhand_quat_err')
+# plot_vector_traj(time, quat_err_list['l_hand_contact_quat_err'],
+# 'lhand_quat_err')
+# plot_vector_traj(time, quat_err_list['r_hand_contact_quat_err'],
+# 'rhand_quat_err')
 
 plt.show()
