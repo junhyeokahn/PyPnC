@@ -2,8 +2,8 @@ import numpy as np
 
 
 class SimConfig(object):
-    CONTROLLER_DT = 0.00125
-    N_SUBSTEP = 1
+    CONTROLLER_DT = 0.005
+    N_SUBSTEP = 5
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.

@@ -82,7 +82,7 @@ class FootTrajectoryManager(object):
             self._swing_init_foot.quat, np.zeros(3),
             self._swing_land_foot.quat, np.zeros(3))
 
-    def update_swing_foot_desired(self, curr_time):
+    dem update_swing_foot_desired(self, curr_time):
         s = (curr_time - self._swing_start_time) / self._swing_duration
 
         if s <= 0.5:

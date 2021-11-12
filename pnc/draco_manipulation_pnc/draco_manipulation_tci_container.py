@@ -106,16 +106,17 @@ class DracoManipulationTCIContainer(TCIContainer):
         self._lfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
 
         self._task_list = [
-        self._com_task, self._torso_ori_task, self._neck_task,
-        self._lhand_pos_task, self._lhand_ori_task, self._rhand_pos_task,
-        self._rhand_ori_task, self._rfoot_pos_task, self._lfoot_pos_task,
-        self._rfoot_ori_task, self._lfoot_ori_task]
+            self._com_task, self._torso_ori_task, self._neck_task,
+            self._lhand_pos_task, self._lhand_ori_task, self._rhand_pos_task,
+            self._rhand_ori_task, self._rfoot_pos_task, self._lfoot_pos_task,
+            self._rfoot_ori_task, self._lfoot_ori_task
+        ]
 
         # self._task_list = [
-            # self._com_task, self._torso_ori_task, self._upper_body_task,
-            # self._neck_task, self._lhand_pos_task, self._lhand_ori_task,
-            # self._rhand_pos_task, self._rhand_ori_task, self._rfoot_pos_task,
-            # self._lfoot_pos_task, self._rfoot_ori_task, self._lfoot_ori_task
+        # self._com_task, self._torso_ori_task, self._upper_body_task,
+        # self._neck_task, self._lhand_pos_task, self._lhand_ori_task,
+        # self._rhand_pos_task, self._rhand_ori_task, self._rfoot_pos_task,
+        # self._lfoot_pos_task, self._rfoot_ori_task, self._lfoot_ori_task
         # ]
 
         # ======================================================================

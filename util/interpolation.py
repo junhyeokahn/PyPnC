@@ -21,8 +21,8 @@ def smooth_changing_vel(ini, end, dur, curr_time):
 
 
 def smooth_changing_acc(ini, end, dur, curr_time):
-    ret = (end - ini) * 0.5 * (np.pi / dur) * (np.pi / dur) * np.cos(
-        curr_time / dur * np.pi)
+    ret = (end - ini) * 0.5 * (np.pi / dur) * (
+        np.pi / dur) * np.cos(curr_time / dur * np.pi)
     if curr_time > dur:
         ret = 0.
 
@@ -53,15 +53,15 @@ class HermiteCurve(object):
     def evaluate(self, s_in):
         s = np.clip(s_in, 0., 1.)
         return self._p1 * (2 * s**3 - 3 * s**2 + 1) + self._p2 * (
-            -2 * s**3 + 3 * s**2) + self._v1 * (s**3 - 2 * s**2 +
-                                                s) + self._v2 * (s**3 - s**2)
+            -2 * s**3 + 3 * s**2) + self._v1 * (
+                s**3 - 2 * s**2 + s) + self._v2 * (s**3 - s**2)
 
     def evaluate_first_derivative(self, s_in):
         s = np.clip(s_in, 0., 1.)
 
         return self._p1 * (6 * s**2 - 6 * s) + self._p2 * (
-            -6 * s**2 + 6 * s) + self._v1 * (3 * s**2 - 4 * s +
-                                             1) + self._v2 * (3 * s**2 - 2 * s)
+            -6 * s**2 + 6 * s) + self._v1 * (
+                3 * s**2 - 4 * s + 1) + self._v2 * (3 * s**2 - 2 * s)
 
     def evaluate_second_derivative(self, s_in):
         s = np.clip(s_in, 0., 1.)
