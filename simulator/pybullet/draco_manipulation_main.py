@@ -23,6 +23,7 @@ from util import liegroup
 from pinocchio.visualize import MeshcatVisualizer
 import pinocchio as pin
 
+import ipdb
 
 def set_initial_config(robot, joint_id):
     # Upperbody
@@ -198,13 +199,13 @@ if __name__ == "__main__":
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
 
-        # Exclude Knee Distal Joints Command
-        del command['joint_pos']['l_knee_fe_jd']
-        del command['joint_pos']['r_knee_fe_jd']
-        del command['joint_vel']['l_knee_fe_jd']
-        del command['joint_vel']['r_knee_fe_jd']
-        del command['joint_trq']['l_knee_fe_jd']
-        del command['joint_trq']['r_knee_fe_jd']
+        # Exclude Knee Proximal Joints Command
+        del command['joint_pos']['l_knee_fe_jp']
+        del command['joint_pos']['r_knee_fe_jp']
+        del command['joint_vel']['l_knee_fe_jp']
+        del command['joint_vel']['r_knee_fe_jp']
+        del command['joint_trq']['l_knee_fe_jp']
+        del command['joint_trq']['r_knee_fe_jp']
 
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])

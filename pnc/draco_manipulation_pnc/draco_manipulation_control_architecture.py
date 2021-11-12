@@ -217,8 +217,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         # Update State Machine Independent Trajectories
         self._neck_tm.use_nominal_upper_body_joint_pos(
             self._sp.nominal_joint_pos)
-        self._upper_body_tm.use_nominal_upper_body_joint_pos(
-            self._sp.nominal_joint_pos)
         # Get Whole Body Control Commands
         command = self._draco_manipulation_controller.get_command()
 

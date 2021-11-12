@@ -16,8 +16,8 @@ class DracoManipulationController(object):
         l_jp_idx, l_jd_idx, r_jp_idx, r_jd_idx = self._robot.get_q_dot_idx(
             ['l_knee_fe_jp', 'l_knee_fe_jd', 'r_knee_fe_jp', 'r_knee_fe_jd'])
         act_list = [False] * robot.n_floating + [True] * robot.n_a
-        act_list[l_jd_idx] = False
-        act_list[r_jd_idx] = False
+        act_list[l_jp_idx] = False
+        act_list[r_jp_idx] = False
 
         n_q_dot = len(act_list)
         n_active = np.count_nonzero(np.array(act_list))
