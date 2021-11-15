@@ -65,10 +65,10 @@ class WBCConfig(object):
 
     KP_NECK = np.array([4])
     KD_NECK = np.array([4])
-    KP_HAND_POS = np.array([4., 4., 4.])
-    KD_HAND_POS = np.array([4., 4., 4.])
-    KP_HAND_ORI = np.array([4., 4., 4.])
-    KD_HAND_ORI = np.array([4., 4., 4.])
+    KP_HAND_POS = np.array([70., 70., 70.])
+    KD_HAND_POS = np.array([5., 5., 5.])
+    KP_HAND_ORI = np.array([70., 70., 70.])
+    KD_HAND_ORI = np.array([5., 5., 5.])
 
     KP_FOOT_POS = np.array([300., 300., 300.])
     KD_FOOT_POS = np.array([30., 30., 30.])
