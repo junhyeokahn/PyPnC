@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
-from config.draco_manipulation_config import WalkingState
+from config.draco_manipulation_config import LocomanipulationState
 from pnc.state_machine import StateMachine
 from pnc.draco_manipulation_pnc.draco_manipulation_state_provider import DracoManipulationStateProvider
 
@@ -47,7 +47,7 @@ class DoubleSupportStand(StateMachine):
         self._com_height_des = val
 
     def first_visit(self):
-        print("[WalkingState] STAND")
+        print("[LocomanipulationState] STAND")
         self._start_time = self._sp.curr_time
 
         # Initialize CoM Trajectory
@@ -98,4 +98,4 @@ class DoubleSupportStand(StateMachine):
             return False
 
     def get_next_state(self):
-        return WalkingState.BALANCE
+        return LocomanipulationState.BALANCE

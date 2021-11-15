@@ -1,6 +1,6 @@
 import numpy as np
 
-from config.draco_manipulation_config import WalkingState
+from config.draco_manipulation_config import LocomanipulationState
 from pnc.state_machine import StateMachine
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.draco_manipulation_pnc.draco_manipulation_state_provider import DracoManipulationStateProvider
@@ -16,6 +16,8 @@ class DoubleSupportBalance(StateMachine):
         self._start_time = 0.
         self._walking_trigger = False
         self._swaying_trigger = False
+        self._rhand_reaching_trigger = False
+        self._lhand_reaching_trigger = False
 
     @property
     def walking_trigger(self):
@@ -33,6 +35,24 @@ class DoubleSupportBalance(StateMachine):
     def swaying_trigger(self, value):
         self._swaying_trigger = value
 
+    @property
+    def lhand_reaching_trigger(self):
+        return self._lhand_reaching_trigger
+
+    @lhand_reaching_trigger.setter
+    def lhand_reaching_trigger(self, value):
+        self._lhand_reaching_trigger = value
+
+    @property
+    def rhand_reaching_trigger(self):
+        return self._rhand_reaching_trigger
+
+    @rhand_reaching_trigger.setter
+    def rhand_reaching_trigger(self, value):
+        self._rhand_reaching_trigger = value
+
+
+
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
 
@@ -45,7 +65,7 @@ class DoubleSupportBalance(StateMachine):
         # self._trajectory_managers["rhand"].use_current()
 
     def first_visit(self):
-        print("[WalkingState] BALANCE")
+        print("[LocomanipulationState] BALANCE")
         self._walking_trigger = False
         self._start_time = self._sp.curr_time
 
@@ -57,7 +77,7 @@ class DoubleSupportBalance(StateMachine):
                 len(self._trajectory_managers["dcm"].footstep_list) > 0
         ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
             return True
-        if self._swaying_trigger:
+        if self._rhand_reaching_trigger  or self._lhand_reaching_trigger:
             return True
         return False
 
@@ -66,11 +86,14 @@ class DoubleSupportBalance(StateMachine):
             "dcm"].next_step_side()
         if b_valid_step:
             if robot_side == Footstep.LEFT_SIDE:
-                return WalkingState.LF_CONTACT_TRANS_START
+                return LocomanipulationState.LF_CONTACT_TRANS_START
             elif robot_side == Footstep.RIGHT_SIDE:
-                return WalkingState.RF_CONTACT_TRANS_START
+                return LocomanipulationState.RF_CONTACT_TRANS_START
             else:
                 raise ValueError("Wrong Footstep Side")
+        if self._rhand_reaching_trigger:
+            return LocomanipulationState.RH_HANDREACH
+        if self._lhand_reaching_trigger:
+            return LocomanipulationState.LH_HANDREACH
 
-        if self._swaying_trigger:
-            return WalkingState.SWAYING
+

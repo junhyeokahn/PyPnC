@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from config.draco_manipulation_config import WalkingConfig, WalkingState
+from config.draco_manipulation_config import WalkingConfig, LocomanipulationState
 from pnc.state_machine import StateMachine
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.draco_manipulation_pnc.draco_manipulation_state_provider import DracoManipulationStateProvider
@@ -19,9 +19,9 @@ class ContactTransitionEnd(StateMachine):
 
     def first_visit(self):
         if self._leg_side == Footstep.RIGHT_SIDE:
-            print("[WalkingState] RightLeg ContactTransitionEnd")
+            print("[LocomanipulationState] RightLeg ContactTransitionEnd")
         else:
-            print("[WalkingState] LeftLeg ContactTransitionEnd")
+            print("[LocomanipulationState] LeftLeg ContactTransitionEnd")
         self._start_time = self._sp.curr_time
         self._end_time = self._trajectory_managers[
             "dcm"].compute_rf_z_ramp_down_time()
@@ -84,6 +84,6 @@ class ContactTransitionEnd(StateMachine):
 
     def get_next_state(self):
         if self._leg_side == Footstep.LEFT_SIDE:
-            return WalkingState.LF_SWING
+            return LocomanipulationState.LF_SWING
         else:
-            return WalkingState.RF_SWING
+            return LocomanipulationState.RF_SWING

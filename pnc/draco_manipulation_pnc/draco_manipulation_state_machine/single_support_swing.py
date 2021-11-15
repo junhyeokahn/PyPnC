@@ -1,6 +1,6 @@
 import numpy as np
 
-from config.draco_manipulation_config import WalkingConfig, WalkingState
+from config.draco_manipulation_config import WalkingConfig, LocomanipulationState
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.state_machine import StateMachine
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTransferType
@@ -17,9 +17,9 @@ class SingleSupportSwing(StateMachine):
 
     def first_visit(self):
         if self._leg_side == Footstep.RIGHT_SIDE:
-            print("[WalkingState] RightLeg SingleSupportSwing")
+            print("[LocomanipulationState] RightLeg SingleSupportSwing")
         else:
-            print("[WalkingState] LeftLeg SingleSupportSwing")
+            print("[LocomanipulationState] LeftLeg SingleSupportSwing")
         self._start_time = self._sp.curr_time
         self._end_time = self._trajectory_managers["dcm"].compute_swing_time()
 
@@ -75,11 +75,11 @@ class SingleSupportSwing(StateMachine):
         b_next, next_side = self._trajectory_managers["dcm"].next_step_side()
         if b_next:
             if next_side == Footstep.LEFT_SIDE:
-                return WalkingState.LF_CONTACT_TRANS_START
+                return LocomanipulationState.LF_CONTACT_TRANS_START
             else:
-                return WalkingState.RF_CONTACT_TRANS_START
+                return LocomanipulationState.RF_CONTACT_TRANS_START
         else:
             if self._leg_side == Footstep.LEFT_SIDE:
-                return WalkingState.LF_CONTACT_TRANS_START
+                return LocomanipulationState.LF_CONTACT_TRANS_START
             else:
-                return WalkingState.RF_CONTACT_TRANS_START
+                return LocomanipulationState.RF_CONTACT_TRANS_START

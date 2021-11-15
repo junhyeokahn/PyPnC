@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
-        cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+        cwd + "/robot_model/atlas/atlas.urdf",
         SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     elif args.dyn_lib == 'pinocchio':
         from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
         robot_sys = PinocchioRobotSystem(
-            cwd + "/robot_model/atlas/atlas_v4_with_multisense.urdf",
+            cwd + "/robot_model/atlas/atlas.urdf",
             cwd + "/robot_model/atlas", False, True)
     else:
         raise ValueError
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         pnc_spat_vel = robot_sys.get_link_vel(target_link)
         pnc_qdot = robot_sys.get_q_dot()
         pnc_jac = robot_sys.get_link_jacobian(target_link)
-        pnc_jacdot = robot_sys.get_link_jacobian_dot(target_link)
+        pnc_jacdot_times_qdot = robot_sys.get_link_jacobian_dot_times_qdot(target_link)
         pnc_com = robot_sys.get_com_pos()
         pnc_com_vel = robot_sys.get_com_lin_vel()
         pnc_com_jac = robot_sys.get_com_lin_jacobian()
@@ -156,8 +156,8 @@ if __name__ == "__main__":
         print("Link Vel from J * qdot")
         print(np.dot(pnc_jac, pnc_qdot))
 
-        print("Jdot * qdot")
-        print(np.dot(pnc_jacdot, pnc_qdot))
+        # print("Jdot * qdot")
+        # print(np.dot(pnc_jacdot, pnc_qdot))
         print("com pos")
         print(pnc_com)
         print("com vel")

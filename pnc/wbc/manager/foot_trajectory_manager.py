@@ -82,7 +82,7 @@ class FootTrajectoryManager(object):
             self._swing_init_foot.quat, np.zeros(3),
             self._swing_land_foot.quat, np.zeros(3))
 
-    dem update_swing_foot_desired(self, curr_time):
+    def update_swing_foot_desired(self, curr_time):
         s = (curr_time - self._swing_start_time) / self._swing_duration
 
         if s <= 0.5:
@@ -100,7 +100,6 @@ class FootTrajectoryManager(object):
             foot_acc_des = self._pos_traj_mid_to_end.evaluate_second_derivative(
                 s)
 
-        s = (curr_time - self._swing_start_time) / self._swing_duration
         foot_quat_des = self._quat_hermite_curve.evaluate(s)
         foot_ang_vel_des = self._quat_hermite_curve.evaluate_ang_vel(s)
         foot_ang_acc_des = self._quat_hermite_curve.evaluate_ang_acc(s)

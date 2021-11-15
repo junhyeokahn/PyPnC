@@ -95,21 +95,21 @@ plot_task(time, des['torso_com_link_quat'], act['torso_com_link_quat'],
 # des['selected_joint_vel'], act['selected_joint_vel'], phase,
 # 'neck joint')
 
-# plot_task(time, des['l_foot_contact_pos'], act['l_foot_contact_pos'],
-# des['l_foot_contact_vel'], act['l_foot_contact_vel'], phase,
-# 'left foot lin')
+plot_task(time, des['l_foot_contact_pos'], act['l_foot_contact_pos'],
+          des['l_foot_contact_vel'], act['l_foot_contact_vel'], phase,
+          'left foot lin')
 
-# plot_task(time, des['l_foot_contact_quat'], act['l_foot_contact_quat'],
-# des['l_foot_contact_ang_vel'], act['l_foot_contact_ang_vel'], phase,
-# 'left foot ori')
+plot_task(time, des['l_foot_contact_quat'], act['l_foot_contact_quat'],
+          des['l_foot_contact_ang_vel'], act['l_foot_contact_ang_vel'], phase,
+          'left foot ori')
 
-# plot_task(time, des['r_foot_contact_pos'], act['r_foot_contact_pos'],
-# des['r_foot_contact_vel'], act['r_foot_contact_vel'], phase,
-# 'right foot lin')
+plot_task(time, des['r_foot_contact_pos'], act['r_foot_contact_pos'],
+          des['r_foot_contact_vel'], act['r_foot_contact_vel'], phase,
+          'right foot lin')
 
-# plot_task(time, des['r_foot_contact_quat'], act['r_foot_contact_quat'],
-# des['r_foot_contact_ang_vel'], act['r_foot_contact_ang_vel'], phase,
-# 'right foot ori')
+plot_task(time, des['r_foot_contact_quat'], act['r_foot_contact_quat'],
+          des['r_foot_contact_ang_vel'], act['r_foot_contact_ang_vel'], phase,
+          'right foot ori')
 
 plot_task(time, des['l_hand_contact_pos'], act['l_hand_contact_pos'],
           des['l_hand_contact_vel'], act['l_hand_contact_vel'], phase,

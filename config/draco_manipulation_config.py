@@ -2,6 +2,8 @@ import numpy as np
 
 
 class SimConfig(object):
+    # CONTROLLER_DT = 0.00125
+    # N_SUBSTEP = 1
     CONTROLLER_DT = 0.005
     N_SUBSTEP = 5
     CAMERA_DT = 0.05
@@ -113,7 +115,18 @@ class WalkingConfig(object):
     NOMINAL_STRAFE_DISTANCE = 0.02
 
 
-class WalkingState(object):
+class HandState(object):
+    LEFT = 0
+    RIGHT = 1
+
+
+class ManipulationConfig(object):
+    T_REACHING_DURATION = 1.
+    LOCAL_TARGET_POS = np.array([0.1, 0., 0.])
+    LOCAL_TARGET_QUAT = np.array([0., 0., 0., 1.])
+
+
+class LocomanipulationState(object):
     STAND = 0
     BALANCE = 1
     RF_CONTACT_TRANS_START = 2
@@ -122,9 +135,5 @@ class WalkingState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
-    SWAYING = 10
-
-
-class HandState(object):
-    LEFT = 0
-    RIGHT = 1
+    RH_HANDREACH = 8
+    LH_HANDREACH = 9

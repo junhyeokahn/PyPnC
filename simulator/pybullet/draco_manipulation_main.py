@@ -25,6 +25,7 @@ import pinocchio as pin
 
 import ipdb
 
+
 def set_initial_config(robot, joint_id):
     # Upperbody
     p.resetJointState(robot, joint_id["l_shoulder_aa"], np.pi / 6, 0.)
@@ -189,6 +190,10 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_nine = True
         elif pybullet_util.is_key_triggered(keys, '0'):
             interface.interrupt_logic.b_interrupt_button_zero = True
+        elif pybullet_util.is_key_triggered(keys, '1'):
+            interface.interrupt_logic.b_interrupt_button_one = True
+        elif pybullet_util.is_key_triggered(keys, '3'):
+            interface.interrupt_logic.b_interrupt_button_three = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:

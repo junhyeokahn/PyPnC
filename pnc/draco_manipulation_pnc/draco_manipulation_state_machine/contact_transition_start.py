@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from config.draco_manipulation_config import WalkingConfig, WalkingState
+from config.draco_manipulation_config import WalkingConfig, LocomanipulationState
 from pnc.planner.locomotion.dcm_planner.footstep import Footstep
 from pnc.state_machine import StateMachine
 from pnc.wbc.manager.dcm_trajectory_manager import DCMTransferType
@@ -21,9 +21,9 @@ class ContactTransitionStart(StateMachine):
 
     def first_visit(self):
         if self._leg_side == Footstep.RIGHT_SIDE:
-            print("[WalkingState] RightLeg ContactTransitionStart")
+            print("[LocomanipulationState] RightLeg ContactTransitionStart")
         else:
-            print("[WalkingState] LeftLeg ContactTransitionStart")
+            print("[LocomanipulationState] LeftLeg ContactTransitionStart")
         self._start_time = self._sp.curr_time
 
         # Initialize Reaction Force Ramp to Max
@@ -46,7 +46,7 @@ class ContactTransitionStart(StateMachine):
             self._end_time = self._trajectory_managers[
                 "dcm"].compute_rf_z_ramp_up_time()
 
-            if self._sp.prev_state == WalkingState.BALANCE:
+            if self._sp.prev_state == LocomanipulationState.BALANCE:
                 transfer_type = DCMTransferType.INI
                 self._end_time = self._trajectory_managers[
                     "dcm"].compute_ini_contact_transfer_time(
@@ -94,9 +94,9 @@ class ContactTransitionStart(StateMachine):
 
     def get_next_state(self):
         if self._trajectory_managers["dcm"].no_reaming_steps():
-            return WalkingState.BALANCE
+            return LocomanipulationState.BALANCE
         else:
             if self._leg_side == Footstep.LEFT_SIDE:
-                return WalkingState.LF_CONTACT_TRANS_END
+                return LocomanipulationState.LF_CONTACT_TRANS_END
             elif self._leg_side == Footstep.RIGHT_SIDE:
-                return WalkingState.RF_CONTACT_TRANS_END
+                return LocomanipulationState.RF_CONTACT_TRANS_END
