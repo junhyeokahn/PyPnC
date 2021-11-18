@@ -44,11 +44,11 @@ class DracoManipulationController(object):
         self._sf = np.zeros((6, n_q_dot))
         self._sf[0:6, 0:6] = np.eye(6)
 
-        self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
+        # self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
 
         ###consider transmission constraint
-        # self._ihwbc = IHWBC2(self._sf, self._sa, self._sv, self._sd,
-        # PnCConfig.SAVE_DATA)
+        self._ihwbc = IHWBC2(self._sf, self._sa, self._sv, self._sd,
+                             PnCConfig.SAVE_DATA)
 
         if WBCConfig.B_TRQ_LIMIT:
             self._ihwbc.trq_limit = np.dot(self._sa[:, 6:],
@@ -93,13 +93,13 @@ class DracoManipulationController(object):
         for internal_constraint in self._tci_container.internal_constraint_list:
             internal_constraint.update_internal_constraint()
         # WBC commands
-        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
-            self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list, None, True)
-        ###consider transmission constraint
         # joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
         # self._tci_container.task_list, self._tci_container.contact_list,
-        # self._tci_container.internal_constraint_list, None, True, True)
+        # self._tci_container.internal_constraint_list, None, True)
+        ###consider transmission constraint
+        joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
+            self._tci_container.task_list, self._tci_container.contact_list,
+            self._tci_container.internal_constraint_list, None, True, True)
         joint_trq_cmd = np.dot(self._sa[:, 6:].transpose(), joint_trq_cmd)
         joint_acc_cmd = np.dot(self._sa[:, 6:].transpose(), joint_acc_cmd)
         # Double integration
@@ -110,14 +110,13 @@ class DracoManipulationController(object):
         if PnCConfig.SAVE_DATA:
             self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
 
-        command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
-                                                      joint_vel_cmd,
-                                                      joint_trq_cmd)
+        command = self._robot.create_cmd_ordered_dict(
+            joint_pos_cmd, joint_vel_cmd, joint_trq_cmd)
         return command
 
     def first_visit(self):
         joint_pos_ini = self._robot.joint_positions
-        self._joint_integrator.initialize_states(np.zeros(self._robot.n_a),
-                                                 joint_pos_ini)
+        self._joint_integrator.initialize_states(
+            np.zeros(self._robot.n_a), joint_pos_ini)
 
         self._b_first_visit = False

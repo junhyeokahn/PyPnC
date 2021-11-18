@@ -77,14 +77,15 @@ if __name__ == "__main__":
         p.connect(p.DIRECT)
     else:
         p.connect(p.GUI)
-        p.resetDebugVisualizerCamera(cameraDistance=1.0,
-                                     cameraYaw=120,
-                                     cameraPitch=-30,
-                                     cameraTargetPosition=[1, 0.5, 1.0])
+        p.resetDebugVisualizerCamera(
+            cameraDistance=1.0,
+            cameraYaw=120,
+            cameraPitch=-30,
+            cameraTargetPosition=[1, 0.5, 1.0])
 
     p.setGravity(0, 0, -9.8)
-    p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
-                                numSubSteps=SimConfig.N_SUBSTEP)
+    p.setPhysicsEngineParameter(
+        fixedTimeStep=SimConfig.CONTROLLER_DT, numSubSteps=SimConfig.N_SUBSTEP)
     if SimConfig.VIDEO_RECORD:
         video_dir = 'video/draco3_pnc'
         if os.path.exists(video_dir):
@@ -93,7 +94,8 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    # robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
+    # robot = p.loadURDF(
+    # cwd + "/robot_model/draco3/draco3.urdf",
     robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
@@ -105,24 +107,26 @@ if __name__ == "__main__":
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
     # Add Gear constraint
-    c = p.createConstraint(robot,
-                           link_id['l_knee_fe_lp'],
-                           robot,
-                           link_id['l_knee_fe_ld'],
-                           jointType=p.JOINT_GEAR,
-                           jointAxis=[0, 1, 0],
-                           parentFramePosition=[0, 0, 0],
-                           childFramePosition=[0, 0, 0])
+    c = p.createConstraint(
+        robot,
+        link_id['l_knee_fe_lp'],
+        robot,
+        link_id['l_knee_fe_ld'],
+        jointType=p.JOINT_GEAR,
+        jointAxis=[0, 1, 0],
+        parentFramePosition=[0, 0, 0],
+        childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
 
-    c = p.createConstraint(robot,
-                           link_id['r_knee_fe_lp'],
-                           robot,
-                           link_id['r_knee_fe_ld'],
-                           jointType=p.JOINT_GEAR,
-                           jointAxis=[0, 1, 0],
-                           parentFramePosition=[0, 0, 0],
-                           childFramePosition=[0, 0, 0])
+    c = p.createConstraint(
+        robot,
+        link_id['r_knee_fe_lp'],
+        robot,
+        link_id['r_knee_fe_ld'],
+        jointType=p.JOINT_GEAR,
+        jointAxis=[0, 1, 0],
+        parentFramePosition=[0, 0, 0],
+        childFramePosition=[0, 0, 0])
     p.changeConstraint(c, gearRatio=-1, maxForce=500, erp=10)
 
     if SimConfig.B_USE_MESHCAT:
@@ -229,13 +233,12 @@ if __name__ == "__main__":
 
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
-        pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
+        # pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):
-            frame = pybullet_util.get_camera_image([1., 0.5, 1.], 1.0, 120,
-                                                   -15, 0, 60., 1920, 1080,
-                                                   0.1, 100.)
+            frame = pybullet_util.get_camera_image(
+                [1., 0.5, 1.], 1.0, 120, -15, 0, 60., 1920, 1080, 0.1, 100.)
             frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
             filename = video_dir + '/step%06d.jpg' % jpg_count
             cv2.imwrite(filename, frame)

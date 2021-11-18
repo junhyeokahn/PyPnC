@@ -4,6 +4,7 @@ from util import util
 from pnc.data_saver import DataSaver
 from config.draco3_config import PnCConfig, WBCConfig
 from pnc.wbc.ihwbc.ihwbc import IHWBC
+from pnc.wbc.ihwbc.ihwbc2 import IHWBC2
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
@@ -94,14 +95,13 @@ class Draco3Controller(object):
         if PnCConfig.SAVE_DATA:
             self._data_saver.add('joint_trq_cmd', joint_trq_cmd)
 
-        command = self._robot.create_cmd_ordered_dict(joint_pos_cmd,
-                                                      joint_vel_cmd,
-                                                      joint_trq_cmd)
+        command = self._robot.create_cmd_ordered_dict(
+            joint_pos_cmd, joint_vel_cmd, joint_trq_cmd)
         return command
 
     def first_visit(self):
         joint_pos_ini = self._robot.joint_positions
-        self._joint_integrator.initialize_states(np.zeros(self._robot.n_a),
-                                                 joint_pos_ini)
+        self._joint_integrator.initialize_states(
+            np.zeros(self._robot.n_a), joint_pos_ini)
 
         self._b_first_visit = False
