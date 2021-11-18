@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -11,6 +12,7 @@ import shutil
 import cv2
 import pybullet as p
 import numpy as np
+
 np.set_printoptions(precision=2)
 
 from config.draco3_config import SimConfig
@@ -18,6 +20,13 @@ from pnc.draco3_pnc.draco3_interface import Draco3Interface
 from util import pybullet_util
 from util import util
 from util import liegroup
+
+gripper_joints = [
+    "left_ezgripper_knuckle_palm_L1_1", "left_ezgripper_knuckle_L1_L2_1",
+    "left_ezgripper_knuckle_palm_L1_2", "left_ezgripper_knuckle_L1_L2_2",
+    "right_ezgripper_knuckle_palm_L1_1", "right_ezgripper_knuckle_L1_L2_1",
+    "right_ezgripper_knuckle_palm_L1_2", "right_ezgripper_knuckle_L1_L2_2"
+]
 
 
 def set_initial_config(robot, joint_id):
@@ -76,7 +85,8 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
+    # robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
+    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
@@ -114,7 +124,7 @@ if __name__ == "__main__":
     pybullet_util.set_link_damping(robot, link_id.values(), 0., 0.)
 
     # Joint Friction
-    pybullet_util.set_joint_friction(robot, joint_id, 0)
+    pybullet_util.set_joint_friction(robot, joint_id, 0.1)
 
     # Construct Interface
     interface = Draco3Interface()
@@ -132,11 +142,13 @@ if __name__ == "__main__":
     while (1):
 
         # Get SensorData
-        if count % (SimConfig.CAMERA_DT / SimConfig.CONTROLLER_DT) == 0:
-            pass  ## TODO(SH)
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
                                                     pos_basejoint_to_basecom,
                                                     rot_basejoint_to_basecom)
+
+        for gripper_joint in gripper_joints:
+            del sensor_data['joint_pos'][gripper_joint]
+            del sensor_data['joint_vel'][gripper_joint]
 
         rf_height = pybullet_util.get_link_iso(robot,
                                                link_id['r_foot_contact'])[2, 3]
@@ -169,6 +181,11 @@ if __name__ == "__main__":
             start_time = time.time()
         command = interface.get_command(copy.deepcopy(sensor_data))
 
+        gripper_command = dict()
+        for gripper_joint in gripper_joints:
+            gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
+                gripper_joint]
+
         if SimConfig.PRINT_TIME:
             end_time = time.time()
             print("ctrl computation time: ", end_time - start_time)
@@ -183,6 +200,7 @@ if __name__ == "__main__":
 
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
+        pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):
