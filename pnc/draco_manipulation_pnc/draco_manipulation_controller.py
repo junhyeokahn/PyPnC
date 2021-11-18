@@ -4,6 +4,7 @@ from util import util
 from pnc.data_saver import DataSaver
 from config.draco_manipulation_config import PnCConfig, WBCConfig
 from pnc.wbc.ihwbc.ihwbc import IHWBC
+from pnc.wbc.ihwbc.ihwbc2 import IHWBC2
 from pnc.wbc.ihwbc.joint_integrator import JointIntegrator
 
 
@@ -25,6 +26,8 @@ class DracoManipulationController(object):
 
         self._sa = np.zeros((n_active, n_q_dot))
         self._sv = np.zeros((n_passive, n_q_dot))
+
+        self._sd = np.zeros((n_passive, n_q_dot))
         j, k = 0, 0
         for i in range(n_q_dot):
             if i >= 6:
@@ -34,10 +37,19 @@ class DracoManipulationController(object):
                 else:
                     self._sv[k, i] = 1.
                     k += 1
+
+        self._sd[0, l_jd_idx] = 1.
+        self._sd[1, r_jd_idx] = 1.
+
         self._sf = np.zeros((6, n_q_dot))
         self._sf[0:6, 0:6] = np.eye(6)
 
         self._ihwbc = IHWBC(self._sf, self._sa, self._sv, PnCConfig.SAVE_DATA)
+
+        ###consider transmission constraint
+        # self._ihwbc = IHWBC2(self._sf, self._sa, self._sv, self._sd,
+        # PnCConfig.SAVE_DATA)
+
         if WBCConfig.B_TRQ_LIMIT:
             self._ihwbc.trq_limit = np.dot(self._sa[:, 6:],
                                            self._robot.joint_trq_limit)
@@ -83,7 +95,11 @@ class DracoManipulationController(object):
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list, None, False)
+            self._tci_container.internal_constraint_list, None, True)
+        ###consider transmission constraint
+        # joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
+        # self._tci_container.task_list, self._tci_container.contact_list,
+        # self._tci_container.internal_constraint_list, None, True, True)
         joint_trq_cmd = np.dot(self._sa[:, 6:].transpose(), joint_trq_cmd)
         joint_acc_cmd = np.dot(self._sa[:, 6:].transpose(), joint_acc_cmd)
         # Double integration
