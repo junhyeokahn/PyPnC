@@ -79,7 +79,7 @@ if __name__ == "__main__":
     p.resetDebugVisualizerCamera(cameraDistance=0.25,
                                  cameraYaw=120,
                                  cameraPitch=-30,
-                                 cameraTargetPosition=[1, 0.5, 1.5])
+                                 cameraTargetPosition=[0.3, 0.5, 1.])
     # p.setGravity(0, 0, -9.8)
     p.setGravity(0, 0, 0)
     p.setPhysicsEngineParameter(fixedTimeStep=CONTROLLER_DT,
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
+    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
                        INITIAL_POS_WORLD_TO_BASEJOINT,
                        INITIAL_QUAT_WORLD_TO_BASEJOINT,
                        useFixedBase=True)
@@ -142,10 +142,6 @@ if __name__ == "__main__":
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
 
-    # Draw Camera Link
-    pybullet_util.draw_link_frame(robot, link_id['r_camera'], text="r_camera")
-    pybullet_util.draw_link_frame(robot, link_id['l_camera'], text="l_camera")
-
     # Add debug parameters
     param_ids = []
     for k, v in joint_id.items():
@@ -155,23 +151,9 @@ if __name__ == "__main__":
 
     while (1):
 
-        # Get SensorData
-        if count % (CAMERA_DT / CONTROLLER_DT) == 0:
-            l_camera_img = pybullet_util.get_camera_image_from_link(
-                robot, link_id['l_camera'], 50, 10, 60., 0.1, 10)
-            # r_camera_img = pybullet_util.get_camera_image_from_link(
-            # robot, link_id['r_camera'], 50, 10, 60., 0.1, 10)
-
         sensor_data = pybullet_util.get_sensor_data(robot, joint_id, link_id,
                                                     pos_basejoint_to_basecom,
                                                     rot_basejoint_to_basecom)
-
-        rf_height = pybullet_util.get_link_iso(robot,
-                                               link_id['r_foot_contact'])[2, 3]
-        lf_height = pybullet_util.get_link_iso(robot,
-                                               link_id['l_foot_contact'])[2, 3]
-        sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
-        sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
 
         # Get Keyboard Event
         keys = p.getKeyboardEvents()
@@ -189,15 +171,6 @@ if __name__ == "__main__":
             pass
         elif pybullet_util.is_key_triggered(keys, '9'):
             pass
-
-        # Save Image
-        if (VIDEO_RECORD) and (count % RECORD_FREQ == 0):
-            frame = pybullet_util.get_camera_image([1.2, 0.5, 1.], 2.0, 120,
-                                                   -15, 0, 60., 1920, 1080,
-                                                   0.1, 100.)
-            frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
-            filename = video_dir + '/step%06d.jpg' % count
-            cv2.imwrite(filename, frame)
 
         for i in range(len(param_ids)):
             c = param_ids[i]
