@@ -9,7 +9,7 @@ from util import util
 from pnc.data_saver import DataSaver
 
 
-class IHWBC(object):
+class IHWBC2(object):
     """
     Implicit Hierarchy Whole Body Control
     ------------------
@@ -17,7 +17,7 @@ class IHWBC(object):
         update_setting --> solve
     """
 
-    def __init__(self, sf, sa, sv, data_save=False):
+    def __init__(self, sf, sa, sv, sd, data_save=False):
 
         self._n_q_dot = sa.shape[1]
         self._n_active = sa.shape[0]
@@ -30,6 +30,7 @@ class IHWBC(object):
             axis=1)
         self._sa = sa
         self._sv = sv
+        self._sd = sd
 
         self._trq_limit = None
         self._lambda_q_ddot = 0.
@@ -93,7 +94,8 @@ class IHWBC(object):
               contact_list,
               internal_constraint_list,
               rf_des=None,
-              verbose=False):
+              verbose=False,
+              b_transmission_constraint=False):
         """
         Parameters
         ----------
@@ -107,6 +109,9 @@ class IHWBC(object):
             Reaction force desired
         verbose (bool):
             Printing option
+        b_transmission_constraint (bool):
+            Transmission Constraint
+
 
         Returns
         -------
@@ -123,22 +128,33 @@ class IHWBC(object):
         #   Set ni, jit_lmd_jidot_qdot, sa_ni_trc_bar_tr, and b_internal_constraint
         # ======================================================================
         if len(internal_constraint_list) > 0:
-            ji = np.concatenate(
-                [ic.jacobian for ic in internal_constraint_list], axis=0)
-            jidot_qdot = np.concatenate(
-                [ic.jacobian_dot_q_dot for ic in internal_constraint_list],
-                axis=0)
-            lmd = np.linalg.pinv(
-                np.dot(np.dot(ji, self._mass_matrix_inv), ji.transpose()))
-            ji_bar = np.dot(np.dot(self._mass_matrix_inv, ji.transpose()), lmd)
-            ni = np.eye(self._n_q_dot) - np.dot(ji_bar, ji)
-            jit_lmd_jidot_qdot = np.squeeze(
-                np.dot(np.dot(ji.transpose(), lmd), jidot_qdot))
-            sa_ni_trc = np.dot(self._sa, ni)[:, 6:]
-            sa_ni_trc_bar = util.weighted_pinv(sa_ni_trc,
-                                               self._mass_matrix_inv[6:, 6:])
-            sa_ni_trc_bar_tr = sa_ni_trc_bar.transpose()
-            b_internal_constraint = True
+            if b_transmission_constraint:
+                ji = np.concatenate(
+                    [ic.jacobian for ic in internal_constraint_list], axis=0)
+                sa_trc = (self._sa)[:, 6:]
+                sa_trc_bar = util.weighted_pinv(sa_trc,
+                                                self._mass_matrix_inv[6:, 6:])
+                sa_trc_bar_tr = sa_trc_bar.transpose()
+                ni = np.eye(self._n_q_dot)
+                b_internal_constraint = True
+            else:
+                ji = np.concatenate(
+                    [ic.jacobian for ic in internal_constraint_list], axis=0)
+                jidot_qdot = np.concatenate(
+                    [ic.jacobian_dot_q_dot for ic in internal_constraint_list],
+                    axis=0)
+                lmd = np.linalg.pinv(
+                    np.dot(np.dot(ji, self._mass_matrix_inv), ji.transpose()))
+                ji_bar = np.dot(
+                    np.dot(self._mass_matrix_inv, ji.transpose()), lmd)
+                ni = np.eye(self._n_q_dot) - np.dot(ji_bar, ji)
+                jit_lmd_jidot_qdot = np.squeeze(
+                    np.dot(np.dot(ji.transpose(), lmd), jidot_qdot))
+                sa_ni_trc = np.dot(self._sa, ni)[:, 6:]
+                sa_ni_trc_bar = util.weighted_pinv(
+                    sa_ni_trc, self._mass_matrix_inv[6:, 6:])
+                sa_ni_trc_bar_tr = sa_ni_trc_bar.transpose()
+                b_internal_constraint = True
         else:
             ni = np.eye(self._n_q_dot)
             jit_lmd_jidot_qdot = np.zeros(self._n_q_dot)
@@ -230,22 +246,38 @@ class IHWBC(object):
                          np.dot(contact_jacobian, ni).transpose())),
                 axis=1)  # (6, nqdot+nc)
             if b_internal_constraint:
-                eq_int_mat = np.concatenate(
-                    (ji, np.zeros((ji.shape[0], dim_contacts))),
-                    axis=1)  # (2, nqdot+nc)
-                eq_int_vec = np.zeros(ji.shape[0])
+                if b_transmission_constraint:
+                    eq_trans_mat = np.concatenate(
+                        (np.dot((self._sd - self._sv), self._mass_matrix),
+                         np.dot((-self._sd + self._sv),
+                                contact_jacobian.transpose())),
+                        axis=1)
+                    eq_trans_vec = np.dot((-self._sd + self._sv),
+                                          (self._coriolis + self._gravity))
+                else:
+                    eq_int_mat = np.concatenate(
+                        (ji, np.zeros((ji.shape[0], dim_contacts))),
+                        axis=1)  # (2, nqdot+nc)
+                    eq_int_vec = np.zeros(ji.shape[0])
         else:
             eq_floating_mat = np.dot(self._sf, self._mass_matrix)
             if b_internal_constraint:
                 eq_int_mat = np.copy(ji)
                 eq_int_vec = np.zeros(ji.shape[0])
+
         eq_floating_vec = -np.dot(self._sf,
                                   np.dot(ni.transpose(),
                                          (self._coriolis + self._gravity)))
 
         if b_internal_constraint:
-            eq_mat = np.concatenate((eq_floating_mat, eq_int_mat), axis=0)
-            eq_vec = np.concatenate((eq_floating_vec, eq_int_vec), axis=0)
+            if b_transmission_constraint:
+                eq_mat = np.concatenate(
+                    (eq_floating_mat, eq_trans_mat), axis=0)
+                eq_vec = np.concatenate(
+                    (eq_floating_vec, eq_trans_vec), axis=0)
+            else:
+                eq_mat = np.concatenate((eq_floating_mat, eq_int_mat), axis=0)
+                eq_vec = np.concatenate((eq_floating_vec, eq_int_vec), axis=0)
         else:
             eq_mat = np.copy(eq_floating_mat)
             eq_vec = np.copy(eq_floating_vec)
@@ -351,11 +383,32 @@ class IHWBC(object):
             sol_q_ddot, sol_rf = sol, None
 
         if contact_list is not None:
-            joint_trq_cmd = np.dot(
-                np.dot(sa_ni_trc_bar_tr, self._snf),
-                np.dot(self._mass_matrix, sol_q_ddot) +
-                np.dot(ni.transpose(), (self._coriolis + self._gravity)) -
-                np.dot(np.dot(contact_jacobian, ni).transpose(), sol_rf))
+            if b_transmission_constraint:
+                f_int = np.dot(self._sv,
+                               np.dot(self._mass_matrix, sol_q_ddot) +
+                               self._coriolis + self._gravity -
+                               np.dot(contact_jacobian.transpose(), sol_rf))
+
+                trq_distal_minus_f_int = np.dot(
+                    self._sd,
+                    np.dot(self._mass_matrix, sol_q_ddot) +
+                    self._coriolis + self._gravity - np.dot(
+                        contact_jacobian.transpose(), sol_rf))
+
+                joint_trq_cmd = np.dot(
+                    np.dot(sa_trc_bar_tr, self._snf),
+                    np.dot(self._mass_matrix, sol_q_ddot) + self._coriolis +
+                    self._gravity -
+                    np.dot(contact_jacobian.transpose(), sol_rf) - np.dot(
+                        ji.transpose(), f_int))
+
+            else:
+                joint_trq_cmd = np.dot(
+                    np.dot(sa_ni_trc_bar_tr, self._snf),
+                    np.dot(self._mass_matrix, sol_q_ddot) +
+                    np.dot(ni.transpose(), (self._coriolis + self._gravity)) -
+                    np.dot(np.dot(contact_jacobian, ni).transpose(), sol_rf))
+
         else:
             joint_trq_cmd = np.dot(
                 np.dot(sa_ni_trc_bar_tr, self._snf),
@@ -368,6 +421,12 @@ class IHWBC(object):
             print("joint_trq_cmd: ", joint_trq_cmd)
             print("sol_q_ddot: ", sol_q_ddot)
             print("sol_rf: ", sol_rf)
+
+            print("===================")
+            print("sd: ", self._sd)
+            print("sv: ", self._sv)
+            print("f_int: ", f_int)
+            print("trq_distal_minus_f_int: ", trq_distal_minus_f_int)
 
             for i, task in enumerate(task_list):
                 j = task.jacobian
