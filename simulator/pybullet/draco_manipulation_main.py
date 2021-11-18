@@ -164,6 +164,11 @@ if __name__ == "__main__":
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
 
+    gripper_command = dict()
+    for gripper_joint in gripper_joints:
+        gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
+            gripper_joint]
+
     while (1):
 
         # Get SensorData
@@ -204,16 +209,17 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
             interface.interrupt_logic.b_interrupt_button_three = True
+        elif pybullet_util.is_key_triggered(keys, 'c'):
+            for k, v in gripper_command.items():
+                gripper_command[k] += 1.94 / 3.
+        elif pybullet_util.is_key_triggered(keys, 'o'):
+            for k, v in gripper_command.items():
+                gripper_command[k] -= 1.94 / 3.
 
         # Compute Command
         if SimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(copy.deepcopy(sensor_data))
-
-        gripper_command = dict()
-        for gripper_joint in gripper_joints:
-            gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
-                gripper_joint]
 
         if SimConfig.PRINT_TIME:
             end_time = time.time()
