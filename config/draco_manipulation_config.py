@@ -2,11 +2,8 @@ import numpy as np
 
 
 class SimConfig(object):
-    # CONTROLLER_DT = 0.00125
-    # N_SUBSTEP = 1
-    CONTROLLER_DT = 0.005
-    N_SUBSTEP = 5
-    # N_SUBSTEP = 10
+    CONTROLLER_DT = 0.01
+    N_SUBSTEP = 10
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.
@@ -98,14 +95,9 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    # COM_HEIGHT = 0.73  # m
-    COM_HEIGHT = 0.65  # m
+    COM_HEIGHT = 0.73  # m
+    # COM_HEIGHT = 0.65  # m
     SWING_HEIGHT = 0.04  # m
-
-    SWAYING_AMP = np.array([0., 0.08, 0.])
-    SWAYING_FREQ = np.array([0., 0.3, 0.])
-    # SWAYING_AMP = np.array([0., 0., 0.05])
-    # SWAYING_FREQ = np.array([0., 0., 0.3])
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45

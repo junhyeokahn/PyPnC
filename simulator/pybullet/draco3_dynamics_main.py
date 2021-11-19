@@ -127,7 +127,11 @@ if __name__ == "__main__":
     pybullet_util.set_link_damping(robot, link_id.values(), 0., 0.)
 
     # Joint Friction
-    pybullet_util.set_joint_friction(robot, joint_id, 0.1)
+    pybullet_util.set_joint_friction(robot, joint_id, 0.)
+    gripper_attached_joint_id = OrderedDict()
+    gripper_attached_joint_id["l_wrist_pitch"] = joint_id["l_wrist_pitch"]
+    gripper_attached_joint_id["r_wrist_pitch"] = joint_id["r_wrist_pitch"]
+    pybullet_util.set_joint_friction(robot, gripper_attached_joint_id, 0.1)
 
     # Construct Interface
     interface = Draco3Interface()
