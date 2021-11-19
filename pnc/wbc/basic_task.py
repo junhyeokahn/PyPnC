@@ -65,7 +65,8 @@ class BasicTask(Task):
                 self._robot.get_link_iso(self._target_id)[0:3, 0:3])
             quat_des_temp = quat_des.as_quat()
             quat_act_temp = quat_act.as_quat()
-            quat_act_temp = util.prevent_quat_jump(quat_des_temp,quat_act_temp)
+            quat_act_temp = util.prevent_quat_jump(quat_des_temp,
+                                                   quat_act_temp)
             quat_act = R.from_quat(quat_act_temp)
             # quat_err = (quat_des * quat_act.inv()).as_quat() # Sign flipped
             # quat_err = (quat_des * quat_act.inv()) # Sign flipped
@@ -78,14 +79,10 @@ class BasicTask(Task):
             if self._b_data_save:
                 self._data_saver.add(self._target_id + '_quat_des',
                                      quat_des.as_quat())
-                # self._data_saver.add(self._target_id + '_quat_des',
-                                     # quat_des)
                 self._data_saver.add(self._target_id + '_ang_vel_des',
                                      self._vel_des.copy())
                 self._data_saver.add(self._target_id + '_quat',
                                      quat_act.as_quat())
-                # self._data_saver.add(self._target_id + '_quat',
-                                     # quat_act)
                 self._data_saver.add(self._target_id + '_ang_vel',
                                      vel_act.copy())
                 self._data_saver.add('w_' + self._target_id + "_ori",

@@ -16,8 +16,7 @@ class DoubleSupportBalance(StateMachine):
         self._start_time = 0.
         self._walking_trigger = False
         self._swaying_trigger = False
-        self._rhand_reaching_trigger = False
-        self._lhand_reaching_trigger = False
+        self._hand_task_trans_trigger = False
 
     @property
     def walking_trigger(self):
@@ -36,22 +35,12 @@ class DoubleSupportBalance(StateMachine):
         self._swaying_trigger = value
 
     @property
-    def lhand_reaching_trigger(self):
-        return self._lhand_reaching_trigger
+    def hand_task_trans_trigger(self):
+        return self._hand_task_trans_trigger
 
-    @lhand_reaching_trigger.setter
-    def lhand_reaching_trigger(self, value):
-        self._lhand_reaching_trigger = value
-
-    @property
-    def rhand_reaching_trigger(self):
-        return self._rhand_reaching_trigger
-
-    @rhand_reaching_trigger.setter
-    def rhand_reaching_trigger(self, value):
-        self._rhand_reaching_trigger = value
-
-
+    @hand_task_trans_trigger.setter
+    def hand_task_trans_trigger(self, value):
+        self._hand_task_trans_trigger = value
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -77,8 +66,11 @@ class DoubleSupportBalance(StateMachine):
                 len(self._trajectory_managers["dcm"].footstep_list) > 0
         ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
             return True
-        if self._rhand_reaching_trigger  or self._lhand_reaching_trigger:
+
+        if self._hand_task_trans_trigger:
+            self._b_hand_task_trans = True
             return True
+
         return False
 
     def get_next_state(self):
@@ -91,9 +83,6 @@ class DoubleSupportBalance(StateMachine):
                 return LocomanipulationState.RF_CONTACT_TRANS_START
             else:
                 raise ValueError("Wrong Footstep Side")
-        if self._rhand_reaching_trigger:
-            return LocomanipulationState.RH_HANDREACH
-        if self._lhand_reaching_trigger:
-            return LocomanipulationState.LH_HANDREACH
 
-
+        if self._hand_task_trans_trigger:
+            return LocomanipulationState.HT_TRANS

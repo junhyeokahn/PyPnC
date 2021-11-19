@@ -22,3 +22,7 @@ class UpperBodyTrajectoryManager(object):
 
         self._upper_body_task.update_desired(joint_pos_des, joint_vel_des,
                                              joint_acc_des)
+
+    @property
+    def task(self):
+        return self._upper_body_task

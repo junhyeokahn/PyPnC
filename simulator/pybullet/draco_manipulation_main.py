@@ -210,6 +210,8 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
             interface.interrupt_logic.b_interrupt_button_three = True
+        elif pybullet_util.is_key_triggered(keys, 't'):
+            interface.interrupt_logic.b_interrupt_button_t = True
         elif pybullet_util.is_key_triggered(keys, 'c'):
             for k, v in gripper_command.items():
                 gripper_command[k] += 1.94 / 3.

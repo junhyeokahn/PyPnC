@@ -1,5 +1,6 @@
 import os
 import sys
+
 cwd = os.getcwd()
 sys.path.append(cwd)
 import time, math
@@ -16,17 +17,19 @@ from pnc.draco_manipulation_pnc.draco_manipulation_control_architecture import D
 from pnc.data_saver import DataSaver
 from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
 
+
 class DracoManipulationInterface(Interface):
     def __init__(self):
         super(DracoManipulationInterface, self).__init__()
 
         self._robot = PinocchioRobotSystem(
-                cwd + "/robot_model/draco3/draco3.urdf",
-                cwd + "/robot_model/draco3", False, PnCConfig.PRINT_ROBOT_INFO)
+            cwd + "/robot_model/draco3/draco3.urdf",
+            cwd + "/robot_model/draco3", False, PnCConfig.PRINT_ROBOT_INFO)
 
         self._sp = DracoManipulationStateProvider(self._robot)
         self._se = DracoManipulationStateEstimator(self._robot)
-        self._control_architecture = DracoManipulationControlArchitecture(self._robot)
+        self._control_architecture = DracoManipulationControlArchitecture(
+            self._robot)
         self._interrupt_logic = DracoManipulationInterruptLogic(
             self._control_architecture)
         if PnCConfig.SAVE_DATA:

@@ -81,19 +81,28 @@ class DracoManipulationInterruptLogic(InterruptLogic):
             print("[Interrupt Logic] button {} pressed: Left Hand Reaching".
                   format(1))
             print("=" * 80)
-            if self._control_architecture.state == LocomanipulationState.BALANCE:
+            if self._control_architecture.state == LocomanipulationState.HT_TRANS:
                 self._control_architecture.state_machine[
                     LocomanipulationState.
-                    BALANCE].lhand_reaching_trigger = True
+                    HT_TRANS].lhand_reaching_trigger = True
 
         if self._b_interrupt_button_three:
             print("=" * 80)
             print("[Interrupt Logic] button {} pressed: Right Hand Reaching".
-                    format(3))
+                  format(3))
+            print("=" * 80)
+            if self._control_architecture.state == LocomanipulationState.HT_TRANS:
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    HT_TRANS].rhand_reaching_trigger = True
+
+        if self._b_interrupt_button_t:
+            print("=" * 80)
+            print("[Interrupt Logic] button t pressed: Hand Task Transition")
             print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.state_machine[
-                        LocomanipulationState.
-                        BALANCE].rhand_reaching_trigger = True
+                    LocomanipulationState.
+                    BALANCE].hand_task_trans_trigger = True
 
         self._reset_flags()

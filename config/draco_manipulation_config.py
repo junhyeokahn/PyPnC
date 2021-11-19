@@ -6,6 +6,7 @@ class SimConfig(object):
     # N_SUBSTEP = 1
     CONTROLLER_DT = 0.005
     N_SUBSTEP = 5
+    # N_SUBSTEP = 10
     CAMERA_DT = 0.05
     KP = 0.
     KD = 0.
@@ -38,10 +39,14 @@ class WBCConfig(object):
     # Task Hierarchy Weights
     W_COM = 20.0
     W_TORSO = 20.0
-    W_UPPER_BODY = 0.0
-    W_NECK = 2.0
-    W_HAND_POS = 10.0
-    W_HAND_ORI = 2.0
+    W_UPPER_BODY_MIN = 0.
+    W_UPPER_BODY_MAX = 40.0
+    W_NECK_MIN = 0.
+    W_NECK_MAX = 2.0
+    W_HAND_POS_MIN = 0.
+    W_HAND_POS_MAX = 10.0
+    W_HAND_ORI_MIN = 0.
+    W_HAND_ORI_MAX = 2.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -77,7 +82,6 @@ class WBCConfig(object):
 
     # Regularization terms
     LAMBDA_Q_DDOT = 1e-8
-    # LAMBDA_Q_DDOT = 1
     LAMBDA_RF = 1e-7
 
     # B_TRQ_LIMIT = True
@@ -94,6 +98,7 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
+    # COM_HEIGHT = 0.73  # m
     COM_HEIGHT = 0.65  # m
     SWING_HEIGHT = 0.04  # m
 
@@ -115,12 +120,8 @@ class WalkingConfig(object):
     NOMINAL_STRAFE_DISTANCE = 0.02
 
 
-class HandState(object):
-    LEFT = 0
-    RIGHT = 1
-
-
 class ManipulationConfig(object):
+    T_TRANS_DURATION = 0.1
     T_REACHING_DURATION = 1.
     LOCAL_TARGET_POS = np.array([0.1, 0., 0.])
     LOCAL_TARGET_QUAT = np.array([0., 0., 0., 1.])
@@ -135,5 +136,6 @@ class LocomanipulationState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
-    RH_HANDREACH = 8
-    LH_HANDREACH = 9
+    HT_TRANS = 8
+    RH_HANDREACH = 9
+    LH_HANDREACH = 10

@@ -7,6 +7,8 @@ class HandTrajectoryManager(object):
     def __init__(self, pos_task, ori_task, robot):
         self._pos_task = pos_task
         self._ori_task = ori_task
+        self._ori_task.pos_des = np.array(
+            [0, 0, 0, 1])  # prevent error in quat basic task
         self._robot = robot
 
         assert self._pos_task.target_id == self._ori_task.target_id

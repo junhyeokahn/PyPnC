@@ -37,6 +37,14 @@ class Task(abc.ABC):
         return self._pos_err
 
     @property
+    def pos_des(self):
+        return self._pos_des
+
+    @pos_des.setter
+    def pos_des(self, val):
+        self._pos_des = val
+
+    @property
     def jacobian(self):
         return self._jacobian
 
