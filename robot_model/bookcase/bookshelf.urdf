@@ -1,0 +1,235 @@
+<robot name="bookcase">
+
+  <material name = "white">
+      <color rgba="1 1 1 1"/>
+  </material>
+
+  <link name="base">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1" ixy="0.0" ixz="0.0" iyy="1" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j0" type="fixed">
+      <origin rpy="0 0 0" xyz="0.5 0 -0.025"/>
+      <parent link="base"/>
+      <child link="rightSide"/>
+  </joint>
+
+  <link name="rightSide">
+    <visual>
+      <origin rpy="0 0 0" xyz="0.025 0 1"/>
+      <geometry>
+        <box size="0.05 0.3 2"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0.025 1"/>
+      <geometry>
+        <box size="0.05 0.3 2"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0.0" ixz="0.0" iyy="1" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j1" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 -0.025"/>
+    <parent link="base"/>
+    <child link="leftSide"/>
+  </joint>
+
+  <link name="leftSide">
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.025 0 1"/>
+    <geometry>
+      <box size="0.05 0.3 2"/>
+    </geometry>
+    <material name = "white"/>
+  </visual>
+  <collision>
+      <origin rpy="0 0 0" xyz="0 -0.025 1"/>
+      <geometry>
+        <box size="0.05 0.3 2"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" ixy="0.0" ixz="0.0" iyy="1" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j2" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 0.4"/>
+    <parent link="leftSide"/>
+    <child link="shelf1"/>
+  </joint>
+
+  <link name="shelf1">
+    <visual>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j3" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 0.8"/>
+    <parent link="leftSide"/>
+    <child link="shelf2"/>
+  </joint>
+
+  <link name="shelf2">
+    <visual>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j4" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 1.2"/>
+    <parent link="leftSide"/>
+    <child link="shelf3"/>
+  </joint>
+
+  <link name="shelf3">
+    <visual>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j5" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 1.6"/>
+    <parent link="leftSide"/>
+    <child link="shelf4"/>
+  </joint>
+
+  <link name="shelf4">
+    <visual>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="1 0 0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j6" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.5 0 2"/>
+    <parent link="leftSide"/>
+    <child link="top"/>
+  </joint>
+
+  <link name="top">
+    <visual>
+      <origin rpy="0 0 0" xyz="1 0 -.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="1 0 -0.025"/>
+      <geometry>
+        <box size="1.0 0.3 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <joint name="j7" type="fixed">
+    <origin rpy="0 0 0" xyz="0 -0.15 -0.025"/>
+    <parent link="base"/>
+    <child link="back"/>
+  </joint>
+
+`  <link name="back">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 .01 1"/>
+      <geometry>
+        <box size="1.1 0.02 2"/>
+      </geometry>
+      <material name = "white"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 .01 1"/>
+      <geometry>
+        <box size="1.1 0.02 02"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+</robot>

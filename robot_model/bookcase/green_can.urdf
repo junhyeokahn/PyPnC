@@ -1,0 +1,25 @@
+<robot name="green_can">
+
+` <link name="can">
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.075"/>
+      </geometry>
+      <material name = "green">
+        <color rgba="0.3 0.7 0.2 1"/>
+      </material>
+    </visual>
+    <!--<collison>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.075"/>
+      </geometry>
+    </collision>-->
+  </link>
+
+</robot>
