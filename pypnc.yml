@@ -18,7 +18,7 @@ dependencies:
       - meshcat==0.0.19
       - opencv-python==4.5.1.48
       - pybullet==3.0.8
-      - qpsolvers
+      - qpsolvers==1.7.1
       - ruamel.yaml==0.16.12
       - tensorflow==2.3.0
       - tqdm==4.56.0
