@@ -8,18 +8,18 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.2" radius="0.075"/>
+        <cylinder length="0.15" radius="0.05"/>
       </geometry>
       <material name = "green">
         <color rgba="0.3 0.7 0.2 1"/>
       </material>
     </visual>
-    <!--<collison>
+    <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.2" radius="0.075"/>
+        <cylinder length="0.15" radius="0.05"/>
       </geometry>
-    </collision>-->
+    </collision>
   </link>
 
 </robot>

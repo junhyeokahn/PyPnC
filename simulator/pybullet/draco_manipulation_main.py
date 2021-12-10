@@ -106,6 +106,13 @@ if __name__ == "__main__":
         robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
+    xOffset = 1.0; 
+
+    p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf", useFixedBase = 1, basePosition = [0 + xOffset, 0, 0.025], baseOrientation = [0, 0, 0.7068252, 0.7068252])
+    p.loadURDF(cwd + "/robot_model/bookcase/red_can.urdf", useFixedBase = 0, basePosition = [0 + xOffset, 0.75, 1.05])
+    p.loadURDF(cwd + "/robot_model/bookcase/green_can.urdf", useFixedBase = 0, basePosition = [0 + xOffset, -0.7, 1.35])
+    p.loadURDF(cwd + "/robot_model/bookcase/blue_can.urdf", useFixedBase = 0, basePosition = [0 + xOffset, 0, 0.7])
+
     # Add Gear constraint
     c = p.createConstraint(
         robot,
