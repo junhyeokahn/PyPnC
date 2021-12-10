@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<robot name="gripper" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <material name = "dark_gray">
+      <color rgba="0.3 0.3 0.3 1"/>
+  </material>
+
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+
+  <material name = "light_blue">
+      <color rgba="0.52 0.73 1 1"/>
+  </material>
+
+  <material name = "black">
+      <color rgba="0 0 0 1"/>
+  </material>
+
+  <link name="left_ezgripper_palm_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Palm_Dual_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <inertial>
+      <mass value=".3"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+
+  <link name="left_ezgripper_finger_L1_1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L1_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <inertial>
+      <mass value=".025"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="left_ezgripper_finger_L1_2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L1_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <inertial>
+      <mass value=".025"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="left_ezgripper_finger_L2_1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L2_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L2_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </collision>
+    <inertial>
+      <mass value=".025"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+  <link name="left_ezgripper_finger_L2_2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L2_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://meshes/SAKE_Finger_L2_Gen2.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </collision>
+    <inertial>
+      <mass value=".025"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+  <joint name="left_ezgripper_knuckle_palm_L1_1" type="revolute">
+    <parent link="left_ezgripper_palm_link"/>
+    <child link="left_ezgripper_finger_L1_1"/>
+    <origin rpy="-1.5708 0 1.57075" xyz="0.072569 0.03 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
+  </joint>
+  <joint name="left_ezgripper_knuckle_palm_L1_2" type="revolute">
+    <parent link="left_ezgripper_palm_link"/>
+    <child link="left_ezgripper_finger_L1_2"/>
+    <origin rpy="1.5708 0 -1.57075" xyz="0.072569 -0.03 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
+  </joint>
+  <joint name="left_ezgripper_knuckle_L1_L2_1" type="revolute">
+    <parent link="left_ezgripper_finger_L1_1"/>
+    <child link="left_ezgripper_finger_L2_1"/>
+    <origin rpy="0 0 0" xyz="0.052 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
+  </joint>
+  <joint name="left_ezgripper_knuckle_L1_L2_2" type="revolute">
+    <parent link="left_ezgripper_finger_L1_2"/>
+    <child link="left_ezgripper_finger_L2_2"/>
+    <origin rpy="0 0 0" xyz="0.052 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
+  </joint>
+
+</robot>
