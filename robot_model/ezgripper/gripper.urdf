@@ -17,6 +17,54 @@
       <color rgba="0 0 0 1"/>
   </material>
 
+  <link name="world"> <!-- "base" -->
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="basePosX">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+
+  <joint name="basePosX" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world" />
+    <child link="basePosX" />
+    <axis xyz="1 0 0" />
+    <limit effort="150.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+
+  <link name="basePosY">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.00000001" />
+      <inertia ixx="0.00000001" ixy="0.00000001" ixz="0.00000001" iyy="0.00000001" iyz="0.00000001" izz="0.00000001" />
+    </inertial>
+  </link>
+  <joint name="basePosY" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="basePosX" />
+    <child link="basePosY" />
+    <axis xyz="0 1 0" />
+    <limit effort="150.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+
+  <joint name="basePosZ" type="prismatic">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="basePosY" />
+    <child link="left_ezgripper_palm_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="150.0" velocity="100.0" lower="-200." upper="200." />
+  </joint>
+
+
   <link name="left_ezgripper_palm_link">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
