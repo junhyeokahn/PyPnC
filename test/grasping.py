@@ -70,11 +70,13 @@ for gripper_joint in gripper_joints:
     gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
         gripper_joint]
 
-GRIPPER_DELTA_ANGLE = 1.94 / 3.
+#GRIPPER_DELTA_ANGLE = 1.94 / 3
+GRIPPER_DELTA_ANGLE = 1.94 / 4
 
 while (1):
 
     p.resetBasePositionAndOrientation(gripper, gripper_pos, gripper_quat)
+
 
     keys = p.getKeyboardEvents()
     if pybullet_util.is_key_triggered(keys, 'c'):
@@ -95,6 +97,11 @@ while (1):
         gripper_pos[1] += 0.02  # y
     elif pybullet_util.is_key_triggered(keys, 'r'):
         gripper_pos[1] -= 0.02  # y
+    elif pybullet_util.is_key_triggered(keys, 's'):
+        gripper_pos[0] = 0.82  # x
+        gripper_pos[1] = 0.0  # y
+        gripper_pos[2] = 0.719  # z
     pybullet_util.set_motor_pos(gripper, joint_id, gripper_command)
+
 
     p.stepSimulation()

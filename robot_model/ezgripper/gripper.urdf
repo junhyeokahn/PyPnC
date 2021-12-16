@@ -58,6 +58,9 @@
     </inertial>
   </link>
   <link name="left_ezgripper_finger_L2_1">
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -78,6 +81,9 @@
     </inertial>
   </link>
   <link name="left_ezgripper_finger_L2_2">
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
