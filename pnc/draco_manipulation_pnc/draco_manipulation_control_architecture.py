@@ -269,15 +269,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             LocomanipulationState.
             HT_TRANS].duration = ManipulationConfig.T_TRANS_DURATION
 
-        # self._state_machine[LocomanipulationState.SWAYING] = DoubleSupportSwaying(
-        # LocomanipulationState.SWAYING, self._trajectory_managers,
-        # self._hierarchy_managers, self._reaction_force_managers,
-        # self._robot)
-        # self._state_machine[
-        # LocomanipulationState.SWAYING].amp = WalkingConfig.SWAYING_AMP
-        # self._state_machine[
-        # LocomanipulationState.SWAYING].freq = WalkingConfig.SWAYING_FREQ
-
         # Set Starting State
         self._state = LocomanipulationState.STAND
         self._prev_state = LocomanipulationState.STAND

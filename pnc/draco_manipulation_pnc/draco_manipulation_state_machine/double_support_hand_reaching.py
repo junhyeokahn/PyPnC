@@ -36,10 +36,10 @@ class DoubleSupportHandReach(StateMachine):
             raise ValueError("Wrong LocomanipulationState: HandSide")
 
     def first_visit(self):
-        print("[LocomanipulationState] HandReaching")
         self._start_time = self._sp.curr_time
 
         if self._state_id == LocomanipulationState.RH_HANDREACH:
+            print("[LocomanipulationState] Right Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = np.dot(
                 self._robot.get_link_iso('r_hand_contact')[0:3, 0:3],
@@ -51,6 +51,7 @@ class DoubleSupportHandReach(StateMachine):
             self._trajectory_managers['rhand'].initialize_hand_trajectory(
                 self._start_time, self._moving_duration, target_hand_iso)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
+            print("[LocomanipulationState] Left Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = np.dot(
                 self._robot.get_link_iso('l_hand_contact')[0:3, 0:3],

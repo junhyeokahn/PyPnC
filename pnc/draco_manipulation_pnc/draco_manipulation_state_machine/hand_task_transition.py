@@ -18,6 +18,7 @@ class HandTaskTransition(StateMachine):
         self._lhand_reaching_trigger = False
 
     def first_visit(self):
+        self._start_time = self._sp.curr_time
         print("[LocomanipulationState] HandTaskTransition")
 
         # Initialize Hierarchy Ramp to Max
@@ -65,7 +66,7 @@ class HandTaskTransition(StateMachine):
         pass
 
     def end_of_state(self):
-        if (self._rhand_reaching_trigger or self._lhand_reaching_trigger):
+        if (self._state_machine_time > self._duration):
             return True
         return False
 
