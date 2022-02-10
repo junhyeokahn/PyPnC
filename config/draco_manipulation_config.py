@@ -115,8 +115,13 @@ class WalkingConfig(object):
 class ManipulationConfig(object):
     T_TRANS_DURATION = 1
     T_REACHING_DURATION = 5.
-    LOCAL_TARGET_POS = np.array([0.1, 0., 0.])
-    LOCAL_TARGET_QUAT = np.array([0., 0., 0., 1.])
+
+    LH_TARGET_POS = np.array([0.29, 0.23, 0.96])
+    LH_TARGET_QUAT = np.array([0.2, -0.64, -0.21, 0.71])
+    # LH_TARGET_QUAT = np.array([0., 0., 0., 1.])
+    RH_TARGET_POS = np.array([0.29, -0.24, 0.96])
+    RH_TARGET_QUAT = np.array([-0.14, -0.66, 0.15, 0.72])
+    # RH_TARGET_QUAT = np.array([0., 0., 0., 1.])
 
 
 class LocomanipulationState(object):

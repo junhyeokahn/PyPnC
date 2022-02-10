@@ -240,10 +240,10 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             RH_HANDREACH].moving_duration = ManipulationConfig.T_REACHING_DURATION
         self._state_machine[
             LocomanipulationState.
-            RH_HANDREACH].local_target_pos = ManipulationConfig.LOCAL_TARGET_POS
+            RH_HANDREACH].rh_target_pos = ManipulationConfig.RH_TARGET_POS
         self._state_machine[
             LocomanipulationState.
-            RH_HANDREACH].local_target_quat = ManipulationConfig.LOCAL_TARGET_QUAT
+            RH_HANDREACH].rh_target_quat = ManipulationConfig.RH_TARGET_QUAT
 
         self._state_machine[
             LocomanipulationState.LH_HANDREACH] = DoubleSupportHandReach(
@@ -255,10 +255,10 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             LH_HANDREACH].moving_duration = ManipulationConfig.T_REACHING_DURATION
         self._state_machine[
             LocomanipulationState.
-            LH_HANDREACH].local_target_pos = ManipulationConfig.LOCAL_TARGET_POS
+            LH_HANDREACH].lh_target_pos = ManipulationConfig.LH_TARGET_POS
         self._state_machine[
             LocomanipulationState.
-            LH_HANDREACH].local_target_quat = ManipulationConfig.LOCAL_TARGET_QUAT
+            LH_HANDREACH].lh_target_quat = ManipulationConfig.LH_TARGET_QUAT
 
         self._state_machine[
             LocomanipulationState.HT_TRANS] = HandTaskTransition(

@@ -15,8 +15,10 @@ class DoubleSupportHandReach(StateMachine):
         self._sp = DracoManipulationStateProvider()
         self._start_time = 0.
         self._moving_duration = 0.
-        self._local_target_pos = np.zeros(3)
-        self._local_target_quat = np.zeros(4)
+        self._rh_target_pos = np.zeros(3)
+        self._rh_target_quat = np.zeros(4)
+        self._lh_target_pos = np.zeros(3)
+        self._lh_target_quat = np.zeros(4)
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -41,25 +43,21 @@ class DoubleSupportHandReach(StateMachine):
         if self._state_id == LocomanipulationState.RH_HANDREACH:
             print("[LocomanipulationState] Right Hand Reaching")
             target_hand_iso = np.eye(4)
-            target_hand_iso[0:3, 0:3] = np.dot(
-                self._robot.get_link_iso('r_hand_contact')[0:3, 0:3],
-                util.quat_to_rot(self._local_target_quat))
-            target_hand_iso[0:3, 3] = self._robot.get_link_iso(
-                'r_hand_contact')[0:3, 3] + np.dot(
-                    self._robot.get_link_iso('r_hand_contact')[0:3, 0:3],
-                    self._local_target_pos)
+            target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._rh_target_quat)
+            target_hand_iso[0:3, 3] = self._rh_target_pos
+            print("rh target pos: ", target_hand_iso[0:3, 3])
+            print("rh_target_quat: ",
+                  util.rot_to_quat(target_hand_iso[0:3, 0:3]))
             self._trajectory_managers['rhand'].initialize_hand_trajectory(
                 self._start_time, self._moving_duration, target_hand_iso)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
             print("[LocomanipulationState] Left Hand Reaching")
             target_hand_iso = np.eye(4)
-            target_hand_iso[0:3, 0:3] = np.dot(
-                self._robot.get_link_iso('l_hand_contact')[0:3, 0:3],
-                util.quat_to_rot(self._local_target_quat))
-            target_hand_iso[0:3, 3] = self._robot.get_link_iso(
-                'l_hand_contact')[0:3, 3] + np.dot(
-                    self._robot.get_link_iso('l_hand_contact')[0:3, 0:3],
-                    self._local_target_pos)
+            target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._lh_target_quat)
+            target_hand_iso[0:3, 3] = self._lh_target_pos
+            print("lh target pos: ", target_hand_iso[0:3, 3])
+            print("lh_target_quat: ",
+                  util.rot_to_quat(target_hand_iso[0:3, 0:3]))
             self._trajectory_managers['lhand'].initialize_hand_trajectory(
                 self._start_time, self._moving_duration, target_hand_iso)
         else:
@@ -83,17 +81,33 @@ class DoubleSupportHandReach(StateMachine):
         self._moving_duration = value
 
     @property
-    def local_target_pos(self):
-        return self._local_target_pos
+    def rh_target_pos(self):
+        return self._rh_target_pos
 
-    @local_target_pos.setter
-    def local_target_pos(self, value):
-        self._local_target_pos = value
+    @rh_target_pos.setter
+    def rh_target_pos(self, value):
+        self._rh_target_pos = value
 
     @property
-    def local_target_quat(self):
-        return self._local_target_quat
+    def rh_target_quat(self):
+        return self._rh_target_quat
 
-    @local_target_quat.setter
-    def local_target_quat(self, value):
-        self._local_target_quat = value
+    @rh_target_quat.setter
+    def rh_target_quat(self, value):
+        self._rh_target_quat = value
+
+    @property
+    def lh_target_pos(self):
+        return self._lh_target_pos
+
+    @lh_target_pos.setter
+    def lh_target_pos(self, value):
+        self._lh_target_pos = value
+
+    @property
+    def lh_target_quat(self):
+        return self._lh_target_quat
+
+    @lh_target_quat.setter
+    def lh_target_quat(self, value):
+        self._lh_target_quat = value
