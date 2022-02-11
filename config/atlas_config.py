@@ -14,7 +14,7 @@ class SimConfig(object):
 
     PRINT_TIME = False
     PRINT_ROBOT_INFO = False
-    VIDEO_RECORD = False
+    VIDEO_RECORD = True
     RECORD_FREQ = 10
     SIMULATE_CAMERA = False
 
@@ -35,7 +35,7 @@ class WBCConfig(object):
     # Task Hierarchy Weights
     W_COM = 10.0
     W_PELVIS = 20.0
-    W_UPPER_BODY = 1.0
+    W_UPPER_BODY = 0.1
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
     W_HAND_POS_MIN = 0.
@@ -89,13 +89,22 @@ class WalkingConfig(object):
     NOMINAL_FORWARD_STEP = 0.15
     NOMINAL_BACKWARD_STEP = -0.15
     NOMINAL_TURN_RADIANS = np.pi / 6
-    NOMINAL_STRAFE_DISTANCE = 0.05
+    NOMINAL_STRAFE_DISTANCE = 0.1
 
     T_TRANS_DURATION = 1
     T_REACHING_DURATION = 3.
+
+    BLUE_CAN = np.array([0.7, 0.03, 0.72])
+    RED_CAN = np.array([0.7, 0.65, 1.1])
+
     RH_TARGET_POS = np.array([0.62, -0.54,
                               0.96])  # initial: [0.42, -0.54, 0.96]
     LH_TARGET_POS = np.array([0.52, 0.54, 0.96])  # initial: [0.41, 0.53, 0.96]
+
+    # LH_TARGET_POS = np.copy(BLUE_CAN)
+    LH_TARGET_POS = np.copy(RED_CAN)
+    RH_TARGET_POS = np.copy(RED_CAN) + np.array([0., 0.1, -0.04])
+    # RH_TARGET_POS = np.copy(RED_CAN) + np.array([0., 0., -0.04])
 
 
 class WalkingState(object):

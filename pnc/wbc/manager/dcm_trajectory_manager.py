@@ -228,7 +228,7 @@ class DCMTrajectoryManager(object):
 
     def strafe_left(self):
         self._reset_idx_and_clear_footstep_list()
-        self._populate_strafe(2, self._nominal_strafe_distance)
+        self._populate_strafe(5, self._nominal_strafe_distance)
 
     def strafe_right(self):
         self._reset_idx_and_clear_footstep_list()
