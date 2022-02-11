@@ -95,8 +95,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.73  # m
-    # COM_HEIGHT = 0.65  # m
+    # COM_HEIGHT = 0.73  # m
+    COM_HEIGHT = 0.65  # m
     SWING_HEIGHT = 0.04  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
@@ -109,7 +109,7 @@ class WalkingConfig(object):
     NOMINAL_FORWARD_STEP = 0.1
     NOMINAL_BACKWARD_STEP = -0.1
     NOMINAL_TURN_RADIANS = np.pi / 10
-    NOMINAL_STRAFE_DISTANCE = 0.02
+    NOMINAL_STRAFE_DISTANCE = 0.05
 
 
 class ManipulationConfig(object):

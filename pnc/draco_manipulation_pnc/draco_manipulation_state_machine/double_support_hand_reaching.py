@@ -45,9 +45,6 @@ class DoubleSupportHandReach(StateMachine):
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._rh_target_quat)
             target_hand_iso[0:3, 3] = self._rh_target_pos
-            print("rh target pos: ", target_hand_iso[0:3, 3])
-            print("rh_target_quat: ",
-                  util.rot_to_quat(target_hand_iso[0:3, 0:3]))
             self._trajectory_managers['rhand'].initialize_hand_trajectory(
                 self._start_time, self._moving_duration, target_hand_iso)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
@@ -55,9 +52,6 @@ class DoubleSupportHandReach(StateMachine):
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._lh_target_quat)
             target_hand_iso[0:3, 3] = self._lh_target_pos
-            print("lh target pos: ", target_hand_iso[0:3, 3])
-            print("lh_target_quat: ",
-                  util.rot_to_quat(target_hand_iso[0:3, 0:3]))
             self._trajectory_managers['lhand'].initialize_hand_trajectory(
                 self._start_time, self._moving_duration, target_hand_iso)
         else:
