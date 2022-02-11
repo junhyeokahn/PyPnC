@@ -7,11 +7,11 @@ class HandTrajectoryManager(object):
     def __init__(self, pos_task, ori_task, robot):
         self._pos_task = pos_task
         self._ori_task = ori_task
-        self._ori_task.pos_des = np.array(
-            [0, 0, 0, 1])  # prevent error in quat basic task
+        if self._ori_task is not None:
+            self._ori_task.pos_des = np.array(
+                [0, 0, 0, 1])  # prevent error in quat basic task
         self._robot = robot
 
-        assert self._pos_task.target_id == self._ori_task.target_id
         self._target_id = self._pos_task.target_id
 
         self._start_moving_time = 0.
@@ -32,8 +32,9 @@ class HandTrajectoryManager(object):
         hand_ang_acc_des = np.zeros(3)
 
         self._pos_task.update_desired(hand_pos_des, hand_vel_des, hand_acc_des)
-        self._ori_task.update_desired(hand_ori_des, hand_ang_vel_des,
-                                      hand_ang_acc_des)
+        if self._ori_task is not None:
+            self._ori_task.update_desired(hand_ori_des, hand_ang_vel_des,
+                                          hand_ang_acc_des)
 
     def use_current(self):
         current_hand_iso = self._robot.get_link_iso(self._target_id)
@@ -48,8 +49,9 @@ class HandTrajectoryManager(object):
         hand_ang_acc_des = np.zeros(3)
 
         self._pos_task.update_desired(hand_pos_des, hand_vel_des, hand_acc_des)
-        self._ori_task.update_desired(hand_ori_des, hand_ang_vel_des,
-                                      hand_ang_acc_des)
+        if self._ori_task is not None:
+            self._ori_task.update_desired(hand_ori_des, hand_ang_vel_des,
+                                          hand_ang_acc_des)
 
     def initialize_hand_trajectory(self, start_time, duration,
                                    target_hand_iso):
@@ -96,5 +98,6 @@ class HandTrajectoryManager(object):
         hand_ang_acc_des = self._quat_hermite_curve.evaluate_ang_acc(s)
 
         self._pos_task.update_desired(hand_pos_des, hand_vel_des, hand_acc_des)
-        self._ori_task.update_desired(hand_quat_des, hand_ang_vel_des,
-                                      hand_ang_acc_des)
+        if self._ori_task is not None:
+            self._ori_task.update_desired(hand_quat_des, hand_ang_vel_des,
+                                          hand_ang_acc_des)

@@ -15,6 +15,8 @@ class DoubleSupportBalance(StateMachine):
         self._sp = AtlasStateProvider()
         self._start_time = 0.
         self._b_state_switch_trigger = False
+        self._lhand_task_trans_trigger = False
+        self._rhand_task_trans_trigger = False
 
     @property
     def b_state_switch_trigger(self):
@@ -23,6 +25,22 @@ class DoubleSupportBalance(StateMachine):
     @b_state_switch_trigger.setter
     def b_state_switch_trigger(self, val):
         self._b_state_switch_trigger = val
+
+    @property
+    def lhand_task_trans_trigger(self):
+        return self._lhand_task_trans_trigger
+
+    @lhand_task_trans_trigger.setter
+    def lhand_task_trans_trigger(self, value):
+        self._lhand_task_trans_trigger = value
+
+    @property
+    def rhand_task_trans_trigger(self):
+        return self._rhand_task_trans_trigger
+
+    @rhand_task_trans_trigger.setter
+    def rhand_task_trans_trigger(self, value):
+        self._rhand_task_trans_trigger = value
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -44,6 +62,12 @@ class DoubleSupportBalance(StateMachine):
                 len(self._trajectory_managers["dcm"].footstep_list) > 0
         ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
             return True
+
+        if self._lhand_task_trans_trigger:
+            return True
+        if self._rhand_task_trans_trigger:
+            return True
+
         return False
 
     def get_next_state(self):
@@ -56,3 +80,8 @@ class DoubleSupportBalance(StateMachine):
                 return WalkingState.RF_CONTACT_TRANS_START
             else:
                 raise ValueError("Wrong Footstep Side")
+
+        if self._lhand_task_trans_trigger:
+            return WalkingState.LH_HANDREACH
+        if self._rhand_task_trans_trigger:
+            return WalkingState.RH_HANDREACH

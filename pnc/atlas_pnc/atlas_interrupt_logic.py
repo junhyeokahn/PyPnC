@@ -76,4 +76,22 @@ class AtlasInterruptLogic(InterruptLogic):
                 self._control_architecture.state_machine[
                     WalkingState.BALANCE].b_state_switch_trigger = True
 
+        if self._b_interrupt_button_one:
+            print("=" * 80)
+            print("[Interrupt Logic] button {} pressed: Left Hand Reaching".
+                  format(1))
+            print("=" * 80)
+            if self._control_architecture.state == WalkingState.BALANCE:
+                self._control_architecture.state_machine[
+                    WalkingState.BALANCE].lhand_task_trans_trigger = True
+
+        if self._b_interrupt_button_three:
+            print("=" * 80)
+            print("[Interrupt Logic] button {} pressed: Right Hand Reaching".
+                  format(3))
+            print("=" * 80)
+            if self._control_architecture.state == WalkingState.BALANCE:
+                self._control_architecture.state_machine[
+                    WalkingState.BALANCE].rhand_task_trans_trigger = True
+
         self._reset_flags()

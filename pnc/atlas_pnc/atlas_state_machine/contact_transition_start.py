@@ -32,10 +32,19 @@ class ContactTransitionStart(StateMachine):
                 self._sp.curr_time,
                 self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
 
-        for hm in self._hierarchy_managers.values():
-            hm.initialize_ramp_to_max(
-                self._sp.curr_time,
-                self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
+        # Initialize Hierarchy Ramp to Max
+        self._hierarchy_managers["rfoot_pos"].initialize_ramp_to_max(
+            self._sp.curr_time,
+            self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
+        self._hierarchy_managers["lfoot_pos"].initialize_ramp_to_max(
+            self._sp.curr_time,
+            self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
+        self._hierarchy_managers["rfoot_ori"].initialize_ramp_to_max(
+            self._sp.curr_time,
+            self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
+        self._hierarchy_managers["lfoot_ori"].initialize_ramp_to_max(
+            self._sp.curr_time,
+            self._trajectory_managers["dcm"].compute_rf_z_ramp_up_time())
 
         # Check if it is the last footstep
         if self._trajectory_managers["dcm"].no_reaming_steps():
@@ -71,8 +80,14 @@ class ContactTransitionStart(StateMachine):
             fm.update_ramp_to_max(self._sp.curr_time)
 
         # Update task hieararchy weights
-        for hm in self._hierarchy_managers.values():
-            hm.update_ramp_to_max(self._sp.curr_time)
+        self._hierarchy_managers["rfoot_pos"].update_ramp_to_max(
+            self._sp.curr_time)
+        self._hierarchy_managers["lfoot_pos"].update_ramp_to_max(
+            self._sp.curr_time)
+        self._hierarchy_managers["rfoot_ori"].update_ramp_to_max(
+            self._sp.curr_time)
+        self._hierarchy_managers["lfoot_ori"].update_ramp_to_max(
+            self._sp.curr_time)
 
         # Update floating base task
         self._trajectory_managers["dcm"].update_floating_base_task_desired(

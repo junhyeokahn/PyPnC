@@ -63,11 +63,23 @@ class AtlasTCIContainer(TCIContainer):
         self._lfoot_ori_task.kp = WBCConfig.KP_FOOT_ORI
         self._lfoot_ori_task.kd = WBCConfig.KD_FOOT_ORI
         self._lfoot_ori_task.w_hierarchy = WBCConfig.W_CONTACT_FOOT
+        # Rhand Pos Task
+        self._rhand_pos_task = BasicTask(robot, "LINK_XYZ", 3, "r_hand",
+                                         PnCConfig.SAVE_DATA)
+        self._rhand_pos_task.kp = WBCConfig.KP_HAND_POS
+        self._rhand_pos_task.kd = WBCConfig.KD_HAND_POS
+        self._rhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS_MIN
+        # Lhand Pos Task
+        self._lhand_pos_task = BasicTask(robot, "LINK_XYZ", 3, "l_hand",
+                                         PnCConfig.SAVE_DATA)
+        self._lhand_pos_task.kp = WBCConfig.KP_HAND_POS
+        self._lhand_pos_task.kd = WBCConfig.KD_HAND_POS
+        self._lhand_pos_task.w_hierarchy = WBCConfig.W_HAND_POS_MIN
 
         self._task_list = [
             self._com_task, self._pelvis_ori_task, self._upper_body_task,
             self._rfoot_pos_task, self._lfoot_pos_task, self._rfoot_ori_task,
-            self._lfoot_ori_task
+            self._lfoot_ori_task, self._rhand_pos_task, self._lhand_pos_task
         ]
 
         # ======================================================================
@@ -121,3 +133,11 @@ class AtlasTCIContainer(TCIContainer):
     @property
     def lfoot_contact(self):
         return self._lfoot_contact
+
+    @property
+    def rhand_pos_task(self):
+        return self._rhand_pos_task
+
+    @property
+    def lhand_pos_task(self):
+        return self._lhand_pos_task

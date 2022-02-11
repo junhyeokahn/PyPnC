@@ -2,7 +2,8 @@ import numpy as np
 
 
 class SimConfig(object):
-    CONTROLLER_DT = 0.00125
+    # CONTROLLER_DT = 0.00125
+    CONTROLLER_DT = 0.01
     N_SUBSTEP = 10
     CAMERA_DT = 0.05
     KP = 0.
@@ -34,9 +35,11 @@ class WBCConfig(object):
     # Task Hierarchy Weights
     W_COM = 10.0
     W_PELVIS = 20.0
-    W_UPPER_BODY = 20.0
+    W_UPPER_BODY = 1.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
+    W_HAND_POS_MIN = 0.
+    W_HAND_POS_MAX = 50.
 
     # Task Gains
     KP_COM = np.array([100., 100., 100])
@@ -47,6 +50,9 @@ class WBCConfig(object):
 
     KP_UPPER_BODY = 100.
     KD_UPPER_BODY = 10.
+
+    KP_HAND_POS = np.array([70., 70., 70.])
+    KD_HAND_POS = np.array([5., 5., 5.])
 
     KP_FOOT_POS = np.array([400., 400., 400.])
     KD_FOOT_POS = np.array([40., 40., 40.])
@@ -85,6 +91,12 @@ class WalkingConfig(object):
     NOMINAL_TURN_RADIANS = np.pi / 6
     NOMINAL_STRAFE_DISTANCE = 0.05
 
+    T_TRANS_DURATION = 1
+    T_REACHING_DURATION = 3.
+    RH_TARGET_POS = np.array([0.62, -0.54,
+                              0.96])  # initial: [0.42, -0.54, 0.96]
+    LH_TARGET_POS = np.array([0.52, 0.54, 0.96])  # initial: [0.41, 0.53, 0.96]
+
 
 class WalkingState(object):
     STAND = 0
@@ -95,3 +107,5 @@ class WalkingState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
+    RH_HANDREACH = 8
+    LH_HANDREACH = 9
