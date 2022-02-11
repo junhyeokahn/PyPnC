@@ -77,10 +77,10 @@ if __name__ == "__main__":
         p.connect(p.DIRECT)
     else:
         p.connect(p.GUI)
-        p.resetDebugVisualizerCamera(cameraDistance=1.0,
-                                     cameraYaw=120,
-                                     cameraPitch=-30,
-                                     cameraTargetPosition=[1, 0.5, 1.0])
+        p.resetDebugVisualizerCamera(cameraDistance=2.0,
+                                     cameraYaw=180 + 45,
+                                     cameraPitch=-15,
+                                     cameraTargetPosition=[0.5, 0.5, 0.6])
 
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
