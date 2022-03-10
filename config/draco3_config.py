@@ -80,8 +80,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.75  # m
-    SWING_HEIGHT = 0.05  # m
+    COM_HEIGHT = 0.73  # m
+    SWING_HEIGHT = 0.03  # m
 
     SWAYING_AMP = np.array([0., 0.08, 0.])
     SWAYING_FREQ = np.array([0., 0.3, 0.])
