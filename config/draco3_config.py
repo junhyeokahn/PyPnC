@@ -80,8 +80,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.73  # m
-    SWING_HEIGHT = 0.04  # m
+    COM_HEIGHT = 0.75  # m
+    SWING_HEIGHT = 0.05  # m
 
     SWAYING_AMP = np.array([0., 0.08, 0.])
     SWAYING_FREQ = np.array([0., 0.3, 0.])
@@ -90,15 +90,15 @@ class WalkingConfig(object):
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
     T_CONTACT_TRANS = 0.45
-    T_SWING = 0.55
+    T_SWING = 0.75
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.28
+    NOMINAL_FOOTWIDTH = 0.25
     NOMINAL_FORWARD_STEP = 0.1
     NOMINAL_BACKWARD_STEP = -0.1
     NOMINAL_TURN_RADIANS = np.pi / 10
-    NOMINAL_STRAFE_DISTANCE = 0.02
+    NOMINAL_STRAFE_DISTANCE = 0.05
 
 
 class WalkingState(object):
