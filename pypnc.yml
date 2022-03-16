@@ -7,6 +7,12 @@ dependencies:
   - liblapack=3.9.0
   - pinocchio=2.5.5
   - python=3.8
+  - ros-rospy
+  # Unclear whether the two below are necessary and/or sufficient or not. Used conda-forge
+  # packages to get rospy messages working with conda
+  #TODO: figure this out and/or at least write documentation for conda-forge steps somewhere here
+  - ros-sensor-msgs
+  - ros-geometry-msgs
   - pip
   - pip:
       - casadi==3.5.5

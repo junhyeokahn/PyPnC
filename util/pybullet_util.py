@@ -11,6 +11,10 @@ import imageio
 from util import util
 from util import liegroup
 
+import rospy
+from sensor_msgs.msg import PointCloud2, PointField, Image
+from std_msgs.msg import Header
+import struct
 
 def get_robot_config(robot,
                      initial_pos=None,
@@ -405,7 +409,153 @@ def get_point_cloud_data(depth_buffer, view_matrix, projection_matrix, d_hor,
 
             cf_point_cloud_data[np.int(h / d_ver),
                                 np.int(w / d_hor), :] = (
-                                    point_in_world /
-                                    point_in_world[3])[:3]  #camera frame
+                                    point_in_camera /
+                                    point_in_camera[3])[:3]  #camera frame
 
     return wf_point_cloud_data, cf_point_cloud_data
+
+def get_xyzrgb_pointcloud2(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_roll,
+                             fov, render_width, render_height, nearval, farval, d_hor, d_ver):
+
+    # Get view and projection matrices
+    # view_matrix = p.computeViewMatrixFromYawPitchRoll(
+    #     cameraTargetPosition=cam_target_pos,
+    #     distance=cam_dist,
+    #     yaw=cam_yaw,
+    #     pitch=cam_pitch,
+    #     roll=cam_roll,
+    #     upAxisIndex=2)
+
+    proj_matrix = p.computeProjectionMatrixFOV(fov=fov,
+                                               aspect=float(render_width) /
+                                                      float(render_height),
+                                               nearVal=nearval,
+                                               farVal=farval)
+
+    # Get rgb (px) and depth (pc) buffers
+    (_, _, px, pc, _) = p.getCameraImage(width=render_width,
+                                        height=render_height,
+                                        renderer=p.ER_BULLET_HARDWARE_OPENGL)#,
+                                        # viewMatrix=view_matrix,
+                                        # projectionMatrix=proj_matrix)
+
+    # view_matrix = np.asarray(view_matrix).reshape([4, 4], order='F')
+    projection_matrix = np.asarray(proj_matrix).reshape([4, 4],
+                                                              order='F')
+    # trans_world_to_pix = np.linalg.inv(np.matmul(projection_matrix, view_matrix))
+    trans_camera_to_pix = np.linalg.inv(projection_matrix)
+
+    # Combine buffers into xyzrgb np array for ROS PointCloud2 message
+    combined_cloud = np.empty([np.int(render_height / d_ver), np.int(render_width / d_hor), 4], np.float32)
+    for h in range(0, render_height, d_ver):
+        for w in range(0, render_width, d_hor):
+            x = (2 * w - render_width) / render_width
+            y = (2 * h - render_height) / render_height
+            z = 2 * pc[h, w] - 1
+            r = px[h][w][0]
+            g = px[h][w][1]
+            b = px[h][w][2]
+            # a = px[h][w][3]
+
+            # ROS PointCloud2 message definition has rgb values packed as bytes within a single float
+            packed_rgb = struct.pack('4B', np.ubyte(b),np.ubyte(g),np.ubyte(r),0)
+            [rgb] = struct.unpack('f', packed_rgb)
+
+            pix_pos = np.asarray([x, y, z, 1])
+
+            # point_in_world = np.matmul(trans_world_to_pix, pix_pos)
+            # point_in_world = (point_in_world / point_in_world[3])[:3]
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)] = np.asarray([point_in_world[0], point_in_world[1], point_in_world[2],rgb], np.float32)
+
+            # Transform to camera view
+            point_in_camera = np.matmul(trans_camera_to_pix, pix_pos)
+            point_in_camera = (point_in_camera / point_in_camera[3])[:3]
+            combined_cloud[np.int(h / d_ver), np.int(w / d_hor)] = np.asarray([point_in_camera[0], point_in_camera[1], point_in_camera[2],rgb], np.float32)
+
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)] = np.asarray([x,y,z,rgb], np.float32)
+
+    itemsize = np.dtype(np.float32).itemsize
+
+    # fields = [PointField(
+    #     name=n, offset=i*itemsize, datatype=PointField.FLOAT32, count=1)
+    #     for i, n in enumerate('xyzrgb')]
+
+    # Need to pack rgb floats into single float containing bgra bytes
+    fields = [PointField(
+        name=n, offset=i*itemsize, datatype=PointField.FLOAT32, count=1)
+        for i, n in enumerate('xyz')]
+    fields.append(PointField(name='rgb', offset=3*itemsize, datatype=PointField.FLOAT32, count=1))
+
+    data = combined_cloud.flatten().astype(np.float32).tobytes()
+
+    header = Header(stamp=rospy.Time.now(), frame_id='camera')
+
+    #Create RGB Image message
+    rgb_array = np.array(px[:, :, :3], dtype=np.uint8)
+    image_msg = Image()
+    image_msg.header.stamp = rospy.Time.now()
+    image_msg.height = render_height
+    image_msg.width = render_width
+    image_msg.encoding = "rgb8"
+    image_msg.is_bigendian = 0
+    image_msg.step = np.dtype(np.uint8).itemsize * 3 * render_height
+    image_msg.data = rgb_array.flatten().tobytes()
+
+    return PointCloud2(
+        header=header,
+        height=render_height,
+        width=render_width,
+        is_dense=False,
+        is_bigendian=False,
+        fields=fields,
+        point_step=(itemsize * 4),
+        row_step=(itemsize * 4 * render_width),
+        data=data
+    ), image_msg
+
+
+# Returning as separate rgb and depth images - above conversion into PointCloud2 is too slow
+# TODO: do we care about d_hor or d_ver. Or what about returning sensor data only every N sim steps?
+def get_rgb_and_depth_image(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_roll,
+                           fov, render_width, render_height, nearval, farval, d_hor, d_ver):
+
+    view_matrix = p.computeViewMatrixFromYawPitchRoll(
+        cameraTargetPosition=cam_target_pos,
+        distance=cam_dist,
+        yaw=cam_yaw,
+        pitch=cam_pitch,
+        roll=cam_roll,
+        upAxisIndex=2)
+
+    proj_matrix = p.computeProjectionMatrixFOV(fov=fov,
+                                               aspect=float(render_width) /
+                                                      float(render_height),
+                                               nearVal=nearval,
+                                               farVal=farval)
+
+    (_, _, px, pc, _) = p.getCameraImage(width=render_width,
+                                         height=render_height,
+                                         renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                                         viewMatrix=view_matrix,
+                                         projectionMatrix=proj_matrix)
+
+    header = Header(stamp=rospy.Time.now(), frame_id='camera')
+
+    return Image(
+        header=header,
+        height=render_height,
+        width=render_width,
+        is_bigendian=0,
+        encoding="32FC1",
+        step=(np.dtype(np.float32).itemsize * render_width),
+        data=pc.flatten().tobytes()
+    ), Image(
+        header=header,
+        height=render_height,
+        width=render_width,
+        encoding="bgr8",
+        is_bigendian=0,
+        step=np.dtype(np.uint8).itemsize * 3 * render_width,
+        # rgba -> bgr
+        data=np.array(px[:, :, :3][:, :, ::-1], dtype=np.uint8).flatten().tobytes()
+    )
