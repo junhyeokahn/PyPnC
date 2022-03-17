@@ -1,10 +1,12 @@
 import rospy
 from sensor_msgs.msg import JointState, Image
-# from geometry_msgs.msg import Pose, TransformStamped
+from geometry_msgs.msg import Pose, TransformStamped
 # from std_msgs.msg import Int16
 from util import pybullet_util
 from threading import Lock
 from simulator.pybullet.rosnode.srv import MoveEndEffectorToSrv, GripperCommandSrv, InterruptSrv, MoveEndEffectorToSrvResponse, GripperCommandSrvResponse, InterruptSrvResponse
+# import tf
+from scipy.spatial.transform import Rotation
 
 class DracoManipulationRosnode():
     def __init__(self):
@@ -12,10 +14,12 @@ class DracoManipulationRosnode():
 
         # Publishers
         self._joint_pub = rospy.Publisher('draco/joint_pos', JointState, queue_size=1)
+        # TODO: what is/where is the ee pose defined?
         # ee_pub = rospy.Publisher('ee_pos', Pose, queue_size=1)
         # self._pc_pub = rospy.Publisher('draco/pointcloud', PointCloud2, queue_size=1)
         self._depth_pub = rospy.Publisher('draco/depth', Image, queue_size=1)
         self._image_pub = rospy.Publisher('draco/image_raw', Image, queue_size=1)
+        self._camera_transform_pub = rospy.Publisher('draco/camera_transform', TransformStamped, queue_size=1)
 
         # Services
         # self._command_srv = rospy.Subscriber('draco/command', Int16, self.set_command, queue_size=1)
@@ -28,6 +32,20 @@ class DracoManipulationRosnode():
 
         # Broadcaster
         # self._broadcaster = tf2_ros.StaticTransformBroadcaster()
+        # self._broadcaster = tf.TransformBroadcaster()
+        self._camera_transform_msg = TransformStamped()
+        self._camera_transform_msg.transform.translation.x = 1.0
+        self._camera_transform_msg.transform.translation.y = 0.0
+        self._camera_transform_msg.transform.translation.z = 1.0
+        camera_quat = Rotation.from_euler('xyz', [-90,-15,0], degrees=True).as_quat()
+        print(camera_quat)
+        self._camera_transform_msg.transform.rotation.x = camera_quat[0]
+        self._camera_transform_msg.transform.rotation.y = camera_quat[1]
+        self._camera_transform_msg.transform.rotation.z = camera_quat[2]
+        self._camera_transform_msg.transform.rotation.w = camera_quat[3]
+        self._camera_transform_msg.header.frame_id = "camera"
+        self._camera_transform_msg.header.stamp = rospy.Time.now()
+        self._camera_transform_msg.child_frame_id = "world"
 
         # Temp stand in for actual service calls
         self._command_lock = Lock()
@@ -98,6 +116,8 @@ class DracoManipulationRosnode():
     def publish_data(self, sensor_data):
         # Publish data to ROS
         #Create ee Pose message
+        # left_ezgripper_knuckle_palm_L1_1
+        # l_hand_contact_frame
 
         # #Create JointState message
         joint_msg = JointState()
@@ -112,3 +132,11 @@ class DracoManipulationRosnode():
         depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image([1.0,0.0,1.0], 1.0, -90, -15, 0, 60., 320, 240, 0.1, 100., 1, 1)
         self._depth_pub.publish(depth_msg)
         self._image_pub.publish(image_msg)
+
+        # TODO: how to get updated camera transform when moving?
+        self._camera_transform_pub.publish(self._camera_transform_msg)
+        # self._broadcaster.sendTransform((1.0, 0.0, 1.0),
+        #                                 tf.transformations.quaternion_from_euler(-90, -15, 0),
+        #                                 rospy.Time.now(),
+        #                                 "camera",
+        #                                 "world")

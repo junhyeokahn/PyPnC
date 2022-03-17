@@ -8,11 +8,12 @@ dependencies:
   - pinocchio=2.5.5
   - python=3.8
   - ros-rospy
-  # Unclear whether the two below are necessary and/or sufficient or not. Used conda-forge
-  # packages to get rospy messages working with conda
-  #TODO: figure this out and/or at least write documentation for conda-forge steps somewhere here
   - ros-sensor-msgs
   - ros-geometry-msgs
+#  For some reason only ros-control-msgs out of the ros messages we want to use doesn't
+#   exist as a conda-forge package. Built and copied manually into this repo.
+#  TODO: can we get around this?
+#  - ros-control-msgs
   - pip
   - pip:
       - casadi==3.5.5
@@ -30,4 +31,8 @@ dependencies:
       - tqdm==4.56.0
       - yapf==0.30.0
       - open3d
+# Dependency issues using tf2-ros package alongside python3.8 and other listed dependencies
+# Broadcasting camera transform separately for now, but if we really need tf integration
+#   then figure out dependency conflicts or explore building from source
+#      - tf2-ros
 prefix: /home/seunghyeonbang/anaconda3/envs/pypnc
