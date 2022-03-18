@@ -418,13 +418,13 @@ def get_xyzrgb_pointcloud2(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_rol
                              fov, render_width, render_height, nearval, farval, d_hor, d_ver):
 
     # Get view and projection matrices
-    # view_matrix = p.computeViewMatrixFromYawPitchRoll(
-    #     cameraTargetPosition=cam_target_pos,
-    #     distance=cam_dist,
-    #     yaw=cam_yaw,
-    #     pitch=cam_pitch,
-    #     roll=cam_roll,
-    #     upAxisIndex=2)
+    view_matrix = p.computeViewMatrixFromYawPitchRoll(
+        cameraTargetPosition=cam_target_pos,
+        distance=cam_dist,
+        yaw=cam_yaw,
+        pitch=cam_pitch,
+        roll=cam_roll,
+        upAxisIndex=2)
 
     proj_matrix = p.computeProjectionMatrixFOV(fov=fov,
                                                aspect=float(render_width) /
@@ -435,9 +435,23 @@ def get_xyzrgb_pointcloud2(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_rol
     # Get rgb (px) and depth (pc) buffers
     (_, _, px, pc, _) = p.getCameraImage(width=render_width,
                                         height=render_height,
-                                        renderer=p.ER_BULLET_HARDWARE_OPENGL)#,
-                                        # viewMatrix=view_matrix,
-                                        # projectionMatrix=proj_matrix)
+                                        renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                                        viewMatrix=view_matrix,
+                                        projectionMatrix=proj_matrix)
+
+
+    # frame_id is just map for debugging in rviz
+    header = Header(stamp=rospy.Time.now(), frame_id='map')
+
+    image_msg = Image(header=header,
+                      height=render_height,
+                      width=render_width,
+                      encoding="bgr8",
+                      is_bigendian=0,
+                      step=np.dtype(np.uint8).itemsize * 3 * render_width,
+                      # rgba -> bgr
+                      data=np.array(px[:, :, :3][:, :, ::-1], dtype=np.uint8).flatten().tobytes()
+                      )
 
     # view_matrix = np.asarray(view_matrix).reshape([4, 4], order='F')
     projection_matrix = np.asarray(proj_matrix).reshape([4, 4],
@@ -471,6 +485,10 @@ def get_xyzrgb_pointcloud2(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_rol
             point_in_camera = np.matmul(trans_camera_to_pix, pix_pos)
             point_in_camera = (point_in_camera / point_in_camera[3])[:3]
             combined_cloud[np.int(h / d_ver), np.int(w / d_hor)] = np.asarray([point_in_camera[0], point_in_camera[1], point_in_camera[2],rgb], np.float32)
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)][0] = point_in_camera[0]
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)][1] = point_in_camera[1]
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)][2] = point_in_camera[2]
+            # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)][3] = rgb
 
             # combined_cloud[np.int(h / d_ver), np.int(w / d_hor)] = np.asarray([x,y,z,rgb], np.float32)
 
@@ -488,18 +506,6 @@ def get_xyzrgb_pointcloud2(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_rol
 
     data = combined_cloud.flatten().astype(np.float32).tobytes()
 
-    header = Header(stamp=rospy.Time.now(), frame_id='camera')
-
-    #Create RGB Image message
-    rgb_array = np.array(px[:, :, :3], dtype=np.uint8)
-    image_msg = Image()
-    image_msg.header.stamp = rospy.Time.now()
-    image_msg.height = render_height
-    image_msg.width = render_width
-    image_msg.encoding = "rgb8"
-    image_msg.is_bigendian = 0
-    image_msg.step = np.dtype(np.uint8).itemsize * 3 * render_height
-    image_msg.data = rgb_array.flatten().tobytes()
 
     return PointCloud2(
         header=header,
