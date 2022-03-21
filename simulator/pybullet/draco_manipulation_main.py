@@ -183,10 +183,15 @@ if __name__ == "__main__":
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
 
-    # Draw Camera Link
+    # Draw Frames
     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
     pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
+
+    ## TEST
+    __import__('ipdb').set_trace()
+    id = p.setPoseObject()
+    ## TEST
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:

@@ -12,7 +12,7 @@ class SimConfig(object):
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 
     PRINT_TIME = False
-    PRINT_ROBOT_INFO = False
+    PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
     RECORD_FREQ = 5
     SIMULATE_CAMERA = False
