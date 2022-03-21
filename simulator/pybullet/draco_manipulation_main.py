@@ -185,6 +185,10 @@ if __name__ == "__main__":
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
 
+    # Draw Camera Link
+    pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
+    pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
+
     gripper_command = dict()
     for gripper_joint in gripper_joints:
         gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
