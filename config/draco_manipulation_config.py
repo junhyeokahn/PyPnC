@@ -100,8 +100,8 @@ class WalkingConfig(object):
     SWING_HEIGHT = 0.04  # m
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
-    T_CONTACT_TRANS = 0.45
-    T_SWING = 0.55
+    T_CONTACT_TRANS = 1.0
+    T_SWING = 1.0
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
