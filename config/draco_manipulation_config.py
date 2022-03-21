@@ -113,6 +113,7 @@ class ManipulationConfig(object):
     T_TRANS_DURATION = 1
     T_REACHING_DURATION = 3.
 
+    ## !! This will be overwritten in main !! ##
     LH_TARGET_POS = np.array([0.29, 0.23, 0.96])
     LH_TARGET_QUAT = np.array([0.2, -0.64, -0.21, 0.71])
     # LH_TARGET_QUAT = np.array([0., 0., 0., 1.])

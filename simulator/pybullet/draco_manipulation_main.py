@@ -97,6 +97,15 @@ if __name__ == "__main__":
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
+    lh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
+                                 [0., 0, 0.], [0, 0, 0, 1])
+    lh_target_pos = np.array([0., 0., 0.])
+    lh_target_quat = np.array([0., 0., 0., 1.])
+    rh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf", [0, 0, 0],
+                                 [0, 0, 0, 1])
+    rh_target_pos = np.array([0., 0., 0.])
+    rh_target_quat = np.array([0., 0., 0., 1.])
+
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
@@ -187,11 +196,8 @@ if __name__ == "__main__":
     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
     pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
-
-    ## TEST
-    __import__('ipdb').set_trace()
-    id = p.setPoseObject()
-    ## TEST
+    pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
+    pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:
@@ -235,8 +241,18 @@ if __name__ == "__main__":
         elif pybullet_util.is_key_triggered(keys, '0'):
             interface.interrupt_logic.b_interrupt_button_zero = True
         elif pybullet_util.is_key_triggered(keys, '1'):
+            ## Update target pos and quat here
+            lh_target_pos = np.array([0.29, 0.23, 0.96])
+            lh_target_quat = np.array([0.2, -0.64, -0.21, 0.71])
+            interface.interrupt_logic.lh_target_pos = lh_target_pos
+            interface.interrupt_logic.lh_target_quat = lh_target_quat
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
+            ## Update target pos and quat here
+            rh_target_pos = np.array([0.29, -0.24, 0.96])
+            rh_target_quat = np.array([-0.14, -0.66, 0.15, 0.72])
+            interface.interrupt_logic.rh_target_pos = rh_target_pos
+            interface.interrupt_logic.rh_target_quat = rh_target_quat
             interface.interrupt_logic.b_interrupt_button_three = True
         elif pybullet_util.is_key_triggered(keys, 't'):
             interface.interrupt_logic.b_interrupt_button_t = True
@@ -251,6 +267,11 @@ if __name__ == "__main__":
         if SimConfig.PRINT_TIME:
             start_time = time.time()
         command = interface.get_command(copy.deepcopy(sensor_data))
+
+        p.resetBasePositionAndOrientation(lh_target_frame, lh_target_pos,
+                                          lh_target_quat)
+        p.resetBasePositionAndOrientation(rh_target_frame, rh_target_pos,
+                                          rh_target_quat)
 
         if SimConfig.PRINT_TIME:
             end_time = time.time()
