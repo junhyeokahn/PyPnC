@@ -36,10 +36,7 @@ class WBCConfig(object):
     # Task Hierarchy Weights
     W_COM = 20.0
     W_TORSO = 20.0
-    W_UPPER_BODY_MIN = 0.
-    W_UPPER_BODY_MAX = 40.0
-    W_NECK_MIN = 0.
-    W_NECK_MAX = 2.0
+    W_UPPER_BODY = 0.1
     W_HAND_POS_MIN = 0.
     W_HAND_POS_MAX = 10.0
     W_HAND_ORI_MIN = 0.
@@ -114,7 +111,7 @@ class WalkingConfig(object):
 
 class ManipulationConfig(object):
     T_TRANS_DURATION = 1
-    T_REACHING_DURATION = 5.
+    T_REACHING_DURATION = 3.
 
     LH_TARGET_POS = np.array([0.29, 0.23, 0.96])
     LH_TARGET_QUAT = np.array([0.2, -0.64, -0.21, 0.71])
@@ -133,8 +130,5 @@ class LocomanipulationState(object):
     LF_CONTACT_TRANS_START = 5
     LF_CONTACT_TRANS_END = 6
     LF_SWING = 7
-    HT_TRANS = 8
-    RH_HANDREACH = 9
-    LH_HANDREACH = 10
-    RH_MOVE = 11
-    LH_MOVE = 12
+    RH_HANDREACH = 8
+    LH_HANDREACH = 9

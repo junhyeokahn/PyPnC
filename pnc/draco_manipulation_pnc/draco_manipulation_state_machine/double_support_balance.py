@@ -16,7 +16,8 @@ class DoubleSupportBalance(StateMachine):
         self._start_time = 0.
         self._walking_trigger = False
         self._swaying_trigger = False
-        self._hand_task_trans_trigger = False
+        self._lhand_task_trans_trigger = False
+        self._rhand_task_trans_trigger = False
 
     @property
     def walking_trigger(self):
@@ -35,12 +36,20 @@ class DoubleSupportBalance(StateMachine):
         self._swaying_trigger = value
 
     @property
-    def hand_task_trans_trigger(self):
-        return self._hand_task_trans_trigger
+    def lhand_task_trans_trigger(self):
+        return self._lhand_task_trans_trigger
 
-    @hand_task_trans_trigger.setter
-    def hand_task_trans_trigger(self, value):
-        self._hand_task_trans_trigger = value
+    @lhand_task_trans_trigger.setter
+    def lhand_task_trans_trigger(self, value):
+        self._lhand_task_trans_trigger = value
+
+    @property
+    def rhand_task_trans_trigger(self):
+        return self._rhand_task_trans_trigger
+
+    @rhand_task_trans_trigger.setter
+    def rhand_task_trans_trigger(self, value):
+        self._rhand_task_trans_trigger = value
 
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
@@ -56,6 +65,8 @@ class DoubleSupportBalance(StateMachine):
     def first_visit(self):
         print("[LocomanipulationState] BALANCE")
         self._walking_trigger = False
+        self._rhand_task_trans_trigger = False
+        self._lhand_task_trans_trigger = False
         self._start_time = self._sp.curr_time
 
     def last_visit(self):
@@ -67,8 +78,9 @@ class DoubleSupportBalance(StateMachine):
         ) and not (self._trajectory_managers["dcm"].no_reaming_steps()):
             return True
 
-        if self._hand_task_trans_trigger:
-            self._b_hand_task_trans = True
+        if self._lhand_task_trans_trigger:
+            return True
+        if self._rhand_task_trans_trigger:
             return True
 
         return False
@@ -84,5 +96,7 @@ class DoubleSupportBalance(StateMachine):
             else:
                 raise ValueError("Wrong Footstep Side")
 
-        if self._hand_task_trans_trigger:
-            return LocomanipulationState.HT_TRANS
+        if self._lhand_task_trans_trigger:
+            return LocomanipulationState.LH_HANDREACH
+        if self._rhand_task_trans_trigger:
+            return LocomanipulationState.RH_HANDREACH
