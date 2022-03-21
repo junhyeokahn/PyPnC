@@ -93,8 +93,6 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    # robot = p.loadURDF(
-    # cwd + "/robot_model/draco3/draco3.urdf",
     robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
@@ -188,6 +186,7 @@ if __name__ == "__main__":
     # Draw Camera Link
     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
     pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
+    pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:

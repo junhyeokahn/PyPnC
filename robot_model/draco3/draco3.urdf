@@ -257,7 +257,7 @@
 
   <!--=============================== l_hand_contact_frame (l_hand_contact) ===========================-->
   <joint name="l_hand_contact_frame" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 -0.150052"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.2"/>
     <parent link="l_sake_gripper_link"/>
     <child link="l_hand_contact"/>
     <axis xyz="0 0 0"/>
@@ -456,7 +456,7 @@
 
   <!--=============================== r_hand_contact_frame (r_hand_contact) ===========================-->
   <joint name="r_hand_contact_frame" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 -0.150052"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.2"/>
     <parent link="r_sake_gripper_link"/>
     <child link="r_hand_contact"/>
     <axis xyz="0 0 0"/>
