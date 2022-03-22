@@ -15,8 +15,8 @@ class SimConfig(object):
     PRINT_ROBOT_INFO = True
     VIDEO_RECORD = False
     RECORD_FREQ = 5
-    SIMULATE_CAMERA = True
-    SAVE_CAMERA_DATA = True
+    SIMULATE_CAMERA = False
+    SAVE_CAMERA_DATA = False
 
 
 class PnCConfig(object):
@@ -33,9 +33,9 @@ class WBCConfig(object):
     RF_Z_MAX = 1000.0
 
     # Task Hierarchy Weights
-    W_COM = 20.0
-    W_TORSO = 20.0
-    W_UPPER_BODY = 40.0
+    W_COM = 80.0
+    W_TORSO = 80.0
+    W_UPPER_BODY = 20.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -80,8 +80,8 @@ class WalkingConfig(object):
     INIT_STAND_DUR = 1.0
     RF_Z_MAX_TIME = 0.1
 
-    COM_HEIGHT = 0.73  # m
-    SWING_HEIGHT = 0.04  # m
+    COM_HEIGHT = 0.70  # m
+    SWING_HEIGHT = 0.03  # m
 
     SWAYING_AMP = np.array([0., 0.08, 0.])
     SWAYING_FREQ = np.array([0., 0.3, 0.])
@@ -89,16 +89,16 @@ class WalkingConfig(object):
     # SWAYING_FREQ = np.array([0., 0., 0.3])
 
     T_ADDITIONAL_INI_TRANS = 0.  # sec
-    T_CONTACT_TRANS = 0.45
-    T_SWING = 0.55
+    T_CONTACT_TRANS = 1.0
+    T_SWING = 1.0
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
-    NOMINAL_FOOTWIDTH = 0.28
+    NOMINAL_FOOTWIDTH = 0.25
     NOMINAL_FORWARD_STEP = 0.1
     NOMINAL_BACKWARD_STEP = -0.1
     NOMINAL_TURN_RADIANS = np.pi / 10
-    NOMINAL_STRAFE_DISTANCE = 0.02
+    NOMINAL_STRAFE_DISTANCE = 0.05
 
 
 class WalkingState(object):

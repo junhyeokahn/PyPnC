@@ -9,6 +9,43 @@ class DracoManipulationInterruptLogic(InterruptLogic):
         super(DracoManipulationInterruptLogic, self).__init__()
         self._control_architecture = ctrl_arch
 
+        self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_target_quat = np.array([0., 0., 0., 1.])
+        self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_target_quat = np.array([0., 0., 0., 1.])
+
+    @property
+    def lh_target_pos(self):
+        return self._lh_target_pos
+
+    @lh_target_pos.setter
+    def lh_target_pos(self, value):
+        self._lh_target_pos = value
+
+    @property
+    def rh_target_pos(self):
+        return self._rh_target_pos
+
+    @rh_target_pos.setter
+    def rh_target_pos(self, value):
+        self._rh_target_pos = value
+
+    @property
+    def lh_target_quat(self):
+        return self._lh_target_quat
+
+    @lh_target_quat.setter
+    def lh_target_quat(self, value):
+        self._lh_target_quat = value
+
+    @property
+    def rh_target_quat(self):
+        return self._rh_target_quat
+
+    @rh_target_quat.setter
+    def rh_target_quat(self, value):
+        self._rh_target_quat = value
+
     def process_interrupts(self):
         if self._b_interrupt_button_eight:
             print("=" * 80)
@@ -82,12 +119,16 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                   format(1))
             print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
+                # Set target pos and goal here
                 self._control_architecture.state_machine[
                     LocomanipulationState.
-                    BALANCE].hand_task_trans_trigger = True
+                    LH_HANDREACH].lh_target_pos = self._lh_target_pos
                 self._control_architecture.state_machine[
                     LocomanipulationState.
-                    HT_TRANS].lhand_reaching_trigger = True
+                    LH_HANDREACH].lh_target_quat = self._lh_target_quat
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    BALANCE].lhand_task_trans_trigger = True
 
         if self._b_interrupt_button_three:
             print("=" * 80)
@@ -97,9 +138,12 @@ class DracoManipulationInterruptLogic(InterruptLogic):
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.state_machine[
                     LocomanipulationState.
-                    BALANCE].hand_task_trans_trigger = True
+                    BALANCE].rhand_task_trans_trigger = True
                 self._control_architecture.state_machine[
                     LocomanipulationState.
-                    HT_TRANS].rhand_reaching_trigger = True
+                    RH_HANDREACH].lh_target_pos = self._rh_target_pos
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    RH_HANDREACH].lh_target_quat = self._rh_target_quat
 
         self._reset_flags()

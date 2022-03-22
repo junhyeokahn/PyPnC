@@ -128,6 +128,31 @@ def set_joint_friction(robot, joint_id, max_force=0):
                                 forces=[max_force] * len(joint_id))
 
 
+def draw_frame(pos, rot, linewidth=5.0, text=None):
+    # This only works when the link has an visual element defined in the urdf file
+    if text is not None:
+        p.addUserDebugText(text, [0, 0, 0.1],
+                           textColorRGB=[1, 0, 0],
+                           textSize=1.5,
+                           parentObjectUniqueId=robot,
+                           parentLinkIndex=link_idx)
+
+    p.addUserDebugLine([0, 0, 0], [0.1, 0, 0], [1, 0, 0],
+                       linewidth,
+                       parentObjectUniqueId=robot,
+                       parentLinkIndex=link_idx)
+
+    p.addUserDebugLine([0, 0, 0], [0, 0.1, 0], [0, 1, 0],
+                       linewidth,
+                       parentObjectUniqueId=robot,
+                       parentLinkIndex=link_idx)
+
+    p.addUserDebugLine([0, 0, 0], [0, 0, 0.1], [0, 0, 1],
+                       linewidth,
+                       parentObjectUniqueId=robot,
+                       parentLinkIndex=link_idx)
+
+
 def draw_link_frame(robot, link_idx, linewidth=5.0, text=None):
     # This only works when the link has an visual element defined in the urdf file
     if text is not None:

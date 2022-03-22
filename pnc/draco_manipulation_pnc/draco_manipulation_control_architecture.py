@@ -19,8 +19,6 @@ from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.contact_transit
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.contact_transition_end import ContactTransitionEnd
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.single_support_swing import SingleSupportSwing
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.double_support_hand_reaching import DoubleSupportHandReach
-from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.hand_task_transition import HandTaskTransition
-# from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.double_support_swaying import DoubleSupportSwaying
 from pnc.draco_manipulation_pnc.draco_manipulation_state_provider import DracoManipulationStateProvider
 
 
@@ -57,9 +55,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             self._tci_container.lfoot_ori_task, robot)
         self._lfoot_tm.swing_height = WalkingConfig.SWING_HEIGHT
 
-        self._neck_tm = UpperBodyTrajectoryManager(
-            self._tci_container.neck_task, robot)
-
         self._upper_body_tm = UpperBodyTrajectoryManager(
             self._tci_container.upper_body_task, robot)
 
@@ -95,7 +90,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         self._trajectory_managers = {
             "rfoot": self._rfoot_tm,
             "lfoot": self._lfoot_tm,
-            "neck": self._neck_tm,
             "upper_body": self._upper_body_tm,
             "lhand": self._lhand_tm,
             "rhand": self._rhand_tm,
@@ -122,14 +116,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             self._tci_container.lfoot_ori_task, WBCConfig.W_CONTACT_FOOT,
             WBCConfig.W_SWING_FOOT)
 
-        self._upper_body_hm = TaskHierarchyManager(
-            self._tci_container.upper_body_task, WBCConfig.W_UPPER_BODY_MAX,
-            WBCConfig.W_UPPER_BODY_MIN)
-
-        self._neck_hm = TaskHierarchyManager(self._tci_container.neck_task,
-                                             WBCConfig.W_NECK_MAX,
-                                             WBCConfig.W_NECK_MIN)
-
         self._lhand_pos_hm = TaskHierarchyManager(
             self._tci_container.lhand_pos_task, WBCConfig.W_HAND_POS_MAX,
             WBCConfig.W_HAND_POS_MIN)
@@ -151,8 +137,6 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             "lfoot_pos": self._lfoot_pos_hm,
             "rfoot_ori": self._rfoot_ori_hm,
             "lfoot_ori": self._lfoot_ori_hm,
-            "upper_body": self._upper_body_hm,
-            "neck": self._neck_hm,
             "lhand_pos": self._lhand_pos_hm,
             "lhand_ori": self._lhand_ori_hm,
             "rhand_pos": self._rhand_pos_hm,
@@ -244,6 +228,9 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         self._state_machine[
             LocomanipulationState.
             RH_HANDREACH].rh_target_quat = ManipulationConfig.RH_TARGET_QUAT
+        self._state_machine[
+            LocomanipulationState.
+            RH_HANDREACH].trans_duration = ManipulationConfig.T_TRANS_DURATION
 
         self._state_machine[
             LocomanipulationState.LH_HANDREACH] = DoubleSupportHandReach(
@@ -259,15 +246,9 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         self._state_machine[
             LocomanipulationState.
             LH_HANDREACH].lh_target_quat = ManipulationConfig.LH_TARGET_QUAT
-
-        self._state_machine[
-            LocomanipulationState.HT_TRANS] = HandTaskTransition(
-                LocomanipulationState.HT_TRANS, self._trajectory_managers,
-                self._hierarchy_managers, self._reaction_force_managers,
-                self._robot)
         self._state_machine[
             LocomanipulationState.
-            HT_TRANS].duration = ManipulationConfig.T_TRANS_DURATION
+            LH_HANDREACH].trans_duration = ManipulationConfig.T_TRANS_DURATION
 
         # Set Starting State
         self._state = LocomanipulationState.STAND
@@ -285,6 +266,8 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
         self._state_machine[self._state].one_step()
 
         # Update State Machine Independent Trajectories
+        self._upper_body_tm.use_nominal_upper_body_joint_pos(
+            self._sp.nominal_joint_pos)
 
         # Get Whole Body Control Commands
         command = self._draco_manipulation_controller.get_command()

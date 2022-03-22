@@ -23,7 +23,6 @@ class DoubleSupportHandReach(StateMachine):
         self._state_machine_time = self._sp.curr_time - self._start_time
 
         # Update Hierarchy
-
         if self._state_id == WalkingState.LH_HANDREACH:
             self._hierarchy_managers["lhand_pos"].update_ramp_to_max(
                 self._sp.curr_time)

@@ -67,8 +67,8 @@ def signal_handler(signal, frame):
     #     pybullet_util.make_video(video_dir, False)
     p.disconnect()
     sys.exit(0)
-    
-    
+
+
 signal.signal(signal.SIGINT, signal_handler)
 
 # EW: No longer need this to be a class after actually implementing the rosnode, can return
@@ -96,11 +96,18 @@ class DracoManipulationMain():
 
         # Create Robot, Ground
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-        # robot = p.loadURDF(
-        # cwd + "/robot_model/draco3/draco3.urdf",
         self._robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
                            SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                            SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
+
+        self._lh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
+                                     [0., 0, 0.], [0, 0, 0, 1])
+        self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_target_quat = np.array([0., 0., 0., 1.])
+        self._rh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf", [0, 0, 0],
+                                     [0, 0, 0, 1])
+        self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_target_quat = np.array([0., 0., 0., 1.])
 
         p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
@@ -191,6 +198,13 @@ class DracoManipulationMain():
             self._robot, self._joint_id, self._link_id, self._pos_basejoint_to_basecom,
             self._rot_basejoint_to_basecom)
 
+        # Draw Frames
+        pybullet_util.draw_link_frame(self._robot, self._link_id['r_hand_contact'], text="rh")
+        pybullet_util.draw_link_frame(self._robot, self._link_id['l_hand_contact'], text="lh")
+        pybullet_util.draw_link_frame(self._robot, self._link_id['camera'], text="camera")
+        pybullet_util.draw_link_frame(self._lh_target_frame, -1, text="lh_target")
+        pybullet_util.draw_link_frame(self._rh_target_frame, -1, text="rh_target")
+
         self._gripper_command = dict()
         for gripper_joint in gripper_joints:
             self._gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
@@ -215,26 +229,63 @@ class DracoManipulationMain():
             sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
             sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
 
-            # TODO: Once draco interface is updated, modify this to match.
-            #   Look at gazebo_scorpio_plugin to see how it worked
-            #       one command at a time or multiple?
-            #       override commands or queue?
-            # Seems as though it was handled by scorpiointerface methods isReadyToMove
-            #   and isReadyToGrasp. If not ready then seems as though command was just discarded
+            # Get Keyboard Event
             command = self._rosnode.apply_command(self._interface)
-            #
             if command == 11:
                 for k, v in self._gripper_command.items():
                     self._gripper_command[k] += 1.94 / 3.
             elif command == 12:
                 for k, v in self._gripper_command.items():
                     self._gripper_command[k] -= 1.94 / 3.
+            # keys = p.getKeyboardEvents()
+            # if pybullet_util.is_key_triggered(keys, '8'):
+            #     interface.interrupt_logic.b_interrupt_button_eight = True
+            # elif pybullet_util.is_key_triggered(keys, '5'):
+            #     interface.interrupt_logic.b_interrupt_button_five = True
+            # elif pybullet_util.is_key_triggered(keys, '4'):
+            #     interface.interrupt_logic.b_interrupt_button_four = True
+            # elif pybullet_util.is_key_triggered(keys, '2'):
+            #     interface.interrupt_logic.b_interrupt_button_two = True
+            # elif pybullet_util.is_key_triggered(keys, '6'):
+            #     interface.interrupt_logic.b_interrupt_button_six = True
+            # elif pybullet_util.is_key_triggered(keys, '7'):
+            #     interface.interrupt_logic.b_interrupt_button_seven = True
+            # elif pybullet_util.is_key_triggered(keys, '9'):
+            #     interface.interrupt_logic.b_interrupt_button_nine = True
+            # elif pybullet_util.is_key_triggered(keys, '0'):
+            #     interface.interrupt_logic.b_interrupt_button_zero = True
+            # elif pybullet_util.is_key_triggered(keys, '1'):
+            #     ## Update target pos and quat here
+            #     self._lh_target_pos = np.array([0.29, 0.23, 0.96])
+            #     self._lh_target_quat = np.array([0.2, -0.64, -0.21, 0.71])
+            #     self._interface.interrupt_logic.lh_target_pos = self._lh_target_pos
+            #     self._interface.interrupt_logic.lh_target_quat = self._lh_target_quat
+            #     interface.interrupt_logic.b_interrupt_button_one = True
+            # elif pybullet_util.is_key_triggered(keys, '3'):
+            #     ## Update target pos and quat here
+            #     self._rh_target_pos = np.array([0.29, -0.24, 0.96])
+            #     self._rh_target_quat = np.array([-0.14, -0.66, 0.15, 0.72])
+            #     self._interface.interrupt_logic.rh_target_pos = self._rh_target_pos
+            #     self._interface.interrupt_logic.rh_target_quat = self._rh_target_quat
+            #     self._interface.interrupt_logic.b_interrupt_button_three = True
+            # elif pybullet_util.is_key_triggered(keys, 't'):
+            #     interface.interrupt_logic.b_interrupt_button_t = True
+            # elif pybullet_util.is_key_triggered(keys, 'c'):
+            #     for k, v in gripper_command.items():
+            #         gripper_command[k] += 1.94 / 3.
+            # elif pybullet_util.is_key_triggered(keys, 'o'):
+            #     for k, v in gripper_command.items():
+            #         gripper_command[k] -= 1.94 / 3.
 
             # Compute Command
             if SimConfig.PRINT_TIME:
                 start_time = time.time()
             command = self._interface.get_command(copy.deepcopy(sensor_data))
 
+            p.resetBasePositionAndOrientation(self._lh_target_frame, self._lh_target_pos,
+                                              self._lh_target_quat)
+            p.resetBasePositionAndOrientation(self._rh_target_frame, self._rh_target_pos,
+                                              self._rh_target_quat)
             if SimConfig.PRINT_TIME:
                 end_time = time.time()
                 print("ctrl computation time: ", end_time - start_time)

@@ -55,6 +55,7 @@ class SingleSupportSwing(StateMachine):
         self._trajectory_managers["dcm"].increment_step_idx()
 
     def end_of_state(self):
+        """
         if self._state_machine_time >= self._end_time:
             return True
         else:
@@ -69,6 +70,11 @@ class SingleSupportSwing(StateMachine):
                         print("Early right foot contact at {}/{}".format(
                             self._state_machine_time, self._end_time))
                         return True
+            return False
+        """
+        if self._state_machine_time >= self._end_time:
+            return True
+        else:
             return False
 
     def get_next_state(self):

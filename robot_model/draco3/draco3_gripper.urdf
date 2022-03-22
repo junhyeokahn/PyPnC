@@ -71,6 +71,28 @@
     </inertial>
   </link>
 
+
+  <!--=============================== camera frame ===========================-->
+  <joint name="camera_frame" type="fixed">
+    <origin rpy="0 0 0" xyz="0.08 0 0.08"/>
+    <parent link="neck_pitch_link"/>
+    <child link="camera"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <link name="camera">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+          <sphere radius="0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
   <!--=============================== l_shoulder_fe (l_shoulder_fe_link) ===========================-->
   <joint name="l_shoulder_fe" type="revolute">
     <origin rpy="0.523599 0 0" xyz="-0.05 0.156 0.2625"/>
@@ -344,19 +366,25 @@
   </joint>
 
   <!--=============================== l_hand_contact_frame (l_hand_contact) ===========================-->
-  <!--<joint name="l_hand_contact_frame" type="fixed">-->
-    <!--<origin rpy="0 0 0" xyz="0 0 -0.150052"/>-->
-    <!--<parent link="l_sake_gripper_link"/>-->
-    <!--<child link="l_hand_contact"/>-->
-    <!--<axis xyz="0 0 0"/>-->
-  <!--</joint>-->
-  <!--<link name="l_hand_contact">-->
-    <!--<inertial>-->
-      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
-      <!--<mass value="1e-9"/>-->
-      <!--<inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>-->
-    <!--</inertial>-->
-  <!--</link>-->
+  <joint name="l_hand_contact_frame" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.2"/>
+    <parent link="l_sake_gripper_link"/>
+    <child link="l_hand_contact"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <link name="l_hand_contact">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+          <sphere radius="0.001"/>
+      </geometry>
+    </visual>
+  </link>
 
   <!--=============================== r_shoulder_fe (r_shoulder_fe_link) ===========================-->
   <joint name="r_shoulder_fe" type="revolute">
@@ -631,19 +659,25 @@
   </joint>
 
   <!--=============================== r_hand_contact_frame (r_hand_contact) ===========================-->
-  <!--<joint name="r_hand_contact_frame" type="fixed">-->
-    <!--<origin rpy="0 0 0" xyz="0 0 -0.150052"/>-->
-    <!--<parent link="r_sake_gripper_link"/>-->
-    <!--<child link="r_hand_contact"/>-->
-    <!--<axis xyz="0 0 0"/>-->
-  <!--</joint>-->
-  <!--<link name="r_hand_contact">-->
-    <!--<inertial>-->
-      <!--<origin rpy="0 0 0" xyz="0 0 0"/>-->
-      <!--<mass value="1e-9"/>-->
-      <!--<inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>-->
-    <!--</inertial>-->
-  <!--</link>-->
+  <joint name="r_hand_contact_frame" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.2"/>
+    <parent link="r_sake_gripper_link"/>
+    <child link="r_hand_contact"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <link name="r_hand_contact">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+          <sphere radius="0.001"/>
+      </geometry>
+    </visual>
+  </link>
 
   <!--=============================== l_hip_ie (l_hip_ie_link) ===========================-->
   <joint name="l_hip_ie" type="revolute">
@@ -835,7 +869,8 @@
     <collision>
       <origin rpy="0 -0 0" xyz="0 -0.005 -0.046"/>
       <geometry>
-        <box size="0.2 0.1 0.0591"/>
+        <!--<box size="0.2 0.1 0.0591"/>-->
+        <box size="0.25 0.15 0.0591"/>
       </geometry>
     </collision>
     <inertial>
@@ -1050,7 +1085,8 @@
     <collision>
       <origin rpy="0 -0 0" xyz="0 0.005 -0.046"/>
       <geometry>
-        <box size="0.2 0.1 0.0591"/>
+        <!--<box size="0.2 0.1 0.0591"/>-->
+        <box size="0.25 0.15 0.0591"/>
       </geometry>
     </collision>
     <inertial>
