@@ -75,8 +75,6 @@ signal.signal(signal.SIGINT, signal_handler)
 #   to original loop in __main__
 class DracoManipulationMain():
     def __init__(self):
-        self._rosnode = DracoManipulationRosnode()
-
         # Environment Setup
         if SimConfig.B_USE_MESHCAT:
             p.connect(p.DIRECT)
@@ -110,7 +108,7 @@ class DracoManipulationMain():
             self._robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
             SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
-        xOffset = 1.0
+        xOffset = 1.5
 
         p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf",
                    useFixedBase=1,
@@ -118,13 +116,13 @@ class DracoManipulationMain():
                    baseOrientation=[0, 0, 0.7068252, 0.7068252])
         p.loadURDF(cwd + "/robot_model/bookcase/red_can.urdf",
                    useFixedBase=0,
-                   basePosition=[0 + xOffset, 0.75, 1.05])
+                   basePosition=[-0.3 + xOffset, 0.75, 1.05])
         p.loadURDF(cwd + "/robot_model/bookcase/green_can.urdf",
                    useFixedBase=0,
-                   basePosition=[0 + xOffset, -0.7, 1.35])
+                   basePosition=[-0.3 + xOffset, -0.7, 1.35])
         p.loadURDF(cwd + "/robot_model/bookcase/blue_can.urdf",
                    useFixedBase=0,
-                   basePosition=[0 + xOffset, 0, 0.7])
+                   basePosition=[-0.3 + xOffset, 0, 0.7])
 
         # Add Gear constraint
         c = p.createConstraint(self._robot,
@@ -179,6 +177,9 @@ class DracoManipulationMain():
 
         # Construct Interface
         self._interface = DracoManipulationInterface()
+
+        # Construct Rosnode
+        self._rosnode = DracoManipulationRosnode(self._robot, self._link_id)
 
         # Run Sim
         self._t = 0

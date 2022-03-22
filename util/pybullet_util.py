@@ -545,6 +545,8 @@ def get_rgb_and_depth_image(cam_target_pos, cam_dist, cam_yaw, cam_pitch, cam_ro
                                          viewMatrix=view_matrix,
                                          projectionMatrix=proj_matrix)
 
+    pc = (-(2 * nearval * farval / ((farval - nearval) * (2 * pc - 1) - nearval - farval))) * 1000
+
     header = Header(stamp=rospy.Time.now(), frame_id='camera')
 
     return Image(
