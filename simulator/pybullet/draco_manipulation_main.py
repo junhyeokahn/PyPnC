@@ -25,6 +25,44 @@ import pinocchio as pin
 
 import ipdb
 
+######################## Key stroke ########################
+############## Gripper
+# z: close left gripper
+# x: open left gripper
+# /: close right gripper
+# ,: open right gripper
+############## Manipulation
+## 1: move left hand
+# interface.interrupt_logic.lh_target_pos = lh_target_pos
+# interface.interrupt_logic.lh_target_quat = lh_target_quat
+# interface.interrupt_logic.b_interrupt_button_one = True
+## 3: move right hand
+# interface.interrupt_logic.rh_target_pos = rh_target_pos
+# interface.interrupt_logic.rh_target_quat = rh_target_quat
+# interface.interrupt_logic.b_interrupt_button_three = True
+############## Locomotion
+## m: move in x, y
+# interface.interrupt_logic.com_displacement = com_displacement
+# interface.interrupt_logic.b_interrupt_button_m = True
+## 5: walk in place
+## 4: walk left
+## 6: walk right
+## 2: walk backward
+## 8: walk forward
+############################################################
+
+######################## Variables ########################
+## Standby
+b_left_gripper_ready = False
+t_left_gripper_command_recv = 0.
+b_right_gripper_ready = False
+t_right_gripper_command_recv = 0.
+t_gripper_stab_dur = 2.
+b_left_hand_ready = False
+b_right_hand_ready = False
+b_walk_ready = False
+############################################################
+
 gripper_joints = [
     "left_ezgripper_knuckle_palm_L1_1", "left_ezgripper_knuckle_L1_L2_1",
     "left_ezgripper_knuckle_palm_L1_2", "left_ezgripper_knuckle_L1_L2_2",
@@ -242,26 +280,46 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_zero = True
         elif pybullet_util.is_key_triggered(keys, '1'):
             ## Update target pos and quat here
-            lh_target_pos = np.array([0.29, 0.23, 0.96])
-            lh_target_quat = np.array([0.2, -0.64, -0.21, 0.71])
+            lh_target_pos = np.array([0.4, 0.29, 0.83])
+            lh_target_quat = np.array(
+                p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
             interface.interrupt_logic.lh_target_pos = lh_target_pos
             interface.interrupt_logic.lh_target_quat = lh_target_quat
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
             ## Update target pos and quat here
-            rh_target_pos = np.array([0.29, -0.24, 0.96])
-            rh_target_quat = np.array([-0.14, -0.66, 0.15, 0.72])
+            rh_target_pos = np.array([0.4, -0.29, 0.83])
+            rh_target_quat = np.array(
+                p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
             interface.interrupt_logic.rh_target_pos = rh_target_pos
             interface.interrupt_logic.rh_target_quat = rh_target_quat
             interface.interrupt_logic.b_interrupt_button_three = True
         elif pybullet_util.is_key_triggered(keys, 't'):
             interface.interrupt_logic.b_interrupt_button_t = True
-        elif pybullet_util.is_key_triggered(keys, 'c'):
+        elif pybullet_util.is_key_triggered(keys, 'z'):
             for k, v in gripper_command.items():
-                gripper_command[k] += 1.94 / 3.
-        elif pybullet_util.is_key_triggered(keys, 'o'):
+                if k.split('_')[0] == "left":
+                    gripper_command[k] += 1.94 / 3.
+            t_left_gripper_command_recv = t
+        elif pybullet_util.is_key_triggered(keys, 'x'):
             for k, v in gripper_command.items():
-                gripper_command[k] -= 1.94 / 3.
+                if k.split('_')[0] == "left":
+                    gripper_command[k] -= 1.94 / 3.
+            t_left_gripper_command_recv = t
+        elif pybullet_util.is_key_triggered(keys, '/'):
+            for k, v in gripper_command.items():
+                if k.split('_')[0] == "right":
+                    gripper_command[k] += 1.94 / 3.
+            t_right_gripper_command_recv = t
+        elif pybullet_util.is_key_triggered(keys, '.'):
+            for k, v in gripper_command.items():
+                if k.split('_')[0] == "right":
+                    gripper_command[k] -= 1.94 / 3.
+            t_right_gripper_command_recv = t
+        elif pybullet_util.is_key_triggered(keys, 'm'):
+            com_displacement = np.array([0.53, 1.03])
+            interface.interrupt_logic.com_displacement = com_displacement
+            interface.interrupt_logic.b_interrupt_button_m = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:
@@ -288,6 +346,19 @@ if __name__ == "__main__":
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
         pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
+
+        # Update Stanby variables
+        if t >= t_left_gripper_command_recv + t_gripper_stab_dur:
+            b_left_gripper_ready = True
+        else:
+            b_left_gripper_ready = False
+        if t >= t_right_gripper_command_recv + t_gripper_stab_dur:
+            b_right_gripper_ready = True
+        else:
+            b_right_gripper_ready = False
+        b_left_hand_ready = interface.interrupt_logic.b_left_hand_ready
+        b_right_hand_ready = interface.interrupt_logic.b_right_hand_ready
+        b_walk_ready = interface.interrupt_logic.b_walk_ready
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):

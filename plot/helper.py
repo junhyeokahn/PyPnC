@@ -11,7 +11,7 @@ markers = ['*', '+', 'h', 'x', 'o', 'v', 'd']
 facecolors = [
     'grey', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple',
     'crimson'
-]
+] * 10
 
 
 def plot_task(time, pos_des, pos, vel_des, vel, phase, suptitle):
