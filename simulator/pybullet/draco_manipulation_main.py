@@ -147,6 +147,11 @@ if __name__ == "__main__":
     rh_target_pos = np.array([0., 0., 0.])
     rh_target_quat = np.array([0., 0., 0., 1.])
 
+    com_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
+                                  [0., 0, 0.], [0, 0, 0, 1])
+    com_target_x = 0.
+    com_target_y = 0.
+
     p.loadURDF(cwd + "/robot_model/ground/plane.urdf", [0, 0, 0])
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
     nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom = pybullet_util.get_robot_config(
@@ -239,6 +244,7 @@ if __name__ == "__main__":
     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
     pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
     pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
+    pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:
@@ -320,12 +326,12 @@ if __name__ == "__main__":
                     gripper_command[k] -= 1.94 / 3.
             t_right_gripper_command_recv = t
         elif pybullet_util.is_key_triggered(keys, 'm'):
-            com_displacement_x = 0.53
-            interface.interrupt_logic.com_displacement_x = com_displacement
+            com_target_x = 0.53
+            interface.interrupt_logic.com_displacement_x = com_target_x
             interface.interrupt_logic.b_interrupt_button_m = True
         elif pybullet_util.is_key_triggered(keys, 'n'):
-            com_displacement_y = 0.83
-            interface.interrupt_logic.com_displacement_y = com_displacement_y
+            com_target_y = 0.23
+            interface.interrupt_logic.com_displacement_y = com_target_y
             interface.interrupt_logic.b_interrupt_button_n = True
 
         # Compute Command
@@ -337,6 +343,9 @@ if __name__ == "__main__":
                                           lh_target_quat)
         p.resetBasePositionAndOrientation(rh_target_frame, rh_target_pos,
                                           rh_target_quat)
+        p.resetBasePositionAndOrientation(com_target_frame,
+                                          [com_target_x, com_target_y, 0.02],
+                                          [0., 0., 0., 1.])
 
         if SimConfig.PRINT_TIME:
             end_time = time.time()

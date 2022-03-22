@@ -213,18 +213,25 @@ class DCMTrajectoryManager(object):
 
     def walk_in_x(self, goal_x):
         self._reset_idx_and_clear_footstep_list()
+        self._update_starting_stance()
         curr_x = self._mf_stance.iso[0, 3]
-        nstep = np.abs(goal_x - curr_x) % self._nominal_forward_step
+        nstep = int(np.abs(goal_x - curr_x) // self._nominal_forward_step)
         xlen = (goal_x - curr_x) / nstep
         self._populate_walk_forward(nstep, xlen)
         self._alternate_leg()
 
     def walk_in_y(self, goal_y):
         self._reset_idx_and_clear_footstep_list()
+        self._update_starting_stance()
         curr_y = self._mf_stance.iso[1, 3]
-        nstep = np.abs(goal_x - curr_x) % self._nominal_strafe_distance
+        nstep = int(np.abs(goal_y - curr_y) // self._nominal_strafe_distance)
+        print("curr y : ", curr_y)
+        print("nstep : ", nstep)
         ylen = (goal_y - curr_y) / nstep
         self._populate_strafe(nstep, ylen)
+
+        for i, fst in enumerate(self._footstep_list):
+            print("{} th: pos {}".format(i, fst.iso[0:3, 3]))
 
     def walk_in_place(self):
         self._reset_idx_and_clear_footstep_list()
