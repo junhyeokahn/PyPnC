@@ -3,6 +3,8 @@ import numpy as np
 from pnc.interrupt_logic import InterruptLogic
 from config.draco_manipulation_config import LocomanipulationState
 
+COM_VEL_THRE = 0.01
+
 
 class DracoManipulationInterruptLogic(InterruptLogic):
     def __init__(self, ctrl_arch):
@@ -14,7 +16,8 @@ class DracoManipulationInterruptLogic(InterruptLogic):
         self._rh_target_pos = np.array([0., 0., 0.])
         self._rh_target_quat = np.array([0., 0., 0., 1.])
 
-        self._com_displacement = np.array([0., 0.])
+        self._com_displacement_x = 0.
+        self._com_displacement_y = 0.
 
         self._b_walk_in_progress = False
         self._b_walk_ready = False
@@ -22,12 +25,20 @@ class DracoManipulationInterruptLogic(InterruptLogic):
         self._b_right_hand_ready = False
 
     @property
-    def com_displacement(self):
-        return self._com_displacement
+    def com_displacement_x(self):
+        return self._com_displacement_x
 
-    @com_displacement.setter
-    def com_displacement(self, value):
-        self._com_displacement = value
+    @com_displacement_x.setter
+    def com_displacement_x(self, value):
+        self._com_displacement_x = value
+
+    @property
+    def com_displacement_y(self):
+        return self._com_displacement_y
+
+    @com_displacement_y.setter
+    def com_displacement_y(self, value):
+        self._com_displacement_y = value
 
     @property
     def lh_target_pos(self):
@@ -63,7 +74,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
 
     @property
     def b_walk_ready(self):
-        if self._control_architecture.state == LocomanipulationState.BALANCE:
+        com_vel = self._control_architecture._robot.get_com_lin_vel()
+        if np.linalg.norm(
+                com_vel
+        ) < COM_VEL_THRE and self._control_architecture.state == LocomanipulationState.BALANCE:
             self._b_walk_ready = True
         else:
             self._b_walk_ready = False
@@ -71,7 +85,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
 
     @property
     def b_left_hand_ready(self):
-        if self._control_architecture.state == LocomanipulationState.BALANCE:
+        com_vel = self._control_architecture._robot.get_com_lin_vel()
+        if np.linalg.norm(
+                com_vel
+        ) < COM_VEL_THRE and self._control_architecture.state == LocomanipulationState.BALANCE:
             self._b_left_hand_ready = True
         else:
             self._b_left_hand_ready = False
@@ -79,7 +96,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
 
     @property
     def b_right_hand_ready(self):
-        if self._control_architecture.state == LocomanipulationState.BALANCE:
+        com_vel = self._control_architecture._robot.get_com_lin_vel()
+        if np.linalg.norm(
+                com_vel
+        ) < COM_VEL_THRE and self._control_architecture.state == LocomanipulationState.BALANCE:
             self._b_right_hand_ready = True
         else:
             self._b_right_hand_ready = False
@@ -152,23 +172,23 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
-        if self._b_interrupt_button_m1:
+        if self._b_interrupt_button_m:
             print("=" * 80)
             print("[Interrupt Logic] button {} pressed".format('m'))
             print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_x(
-                    self._com_displacement[0])
+                    self._com_displacement_x)
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
-        if self._b_interrupt_button_m2:
+        if self._b_interrupt_button_n:
             print("=" * 80)
             print("[Interrupt Logic] button {} pressed".format('n'))
             print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_y(
-                    self._com_displacement[1])
+                    self._com_displacement_y)
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 

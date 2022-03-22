@@ -41,9 +41,12 @@ import ipdb
 # interface.interrupt_logic.rh_target_quat = rh_target_quat
 # interface.interrupt_logic.b_interrupt_button_three = True
 ############## Locomotion
-## m: move in x, y
-# interface.interrupt_logic.com_displacement = com_displacement
+## m: move in x
+# interface.interrupt_logic.com_displacement_x = com_displacement_x
 # interface.interrupt_logic.b_interrupt_button_m = True
+## n: move in y
+# interface.interrupt_logic.com_displacement_y = com_displacement_y
+# interface.interrupt_logic.b_interrupt_button_n = True
 ## 5: walk in place
 ## 4: walk left
 ## 6: walk right
@@ -317,9 +320,13 @@ if __name__ == "__main__":
                     gripper_command[k] -= 1.94 / 3.
             t_right_gripper_command_recv = t
         elif pybullet_util.is_key_triggered(keys, 'm'):
-            com_displacement = np.array([0.53, 1.03])
-            interface.interrupt_logic.com_displacement = com_displacement
+            com_displacement_x = 0.53
+            interface.interrupt_logic.com_displacement_x = com_displacement
             interface.interrupt_logic.b_interrupt_button_m = True
+        elif pybullet_util.is_key_triggered(keys, 'n'):
+            com_displacement_y = 0.83
+            interface.interrupt_logic.com_displacement_y = com_displacement_y
+            interface.interrupt_logic.b_interrupt_button_n = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:
