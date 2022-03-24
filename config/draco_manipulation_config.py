@@ -40,7 +40,7 @@ class WBCConfig(object):
     W_HAND_POS_MIN = 0.
     W_HAND_POS_MAX = 10.0
     W_HAND_ORI_MIN = 0.
-    W_HAND_ORI_MAX = 2.0
+    W_HAND_ORI_MAX = 10.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -62,11 +62,9 @@ class WBCConfig(object):
     KD_UPPER_BODY = np.array(
         [2., 8., 8., 8., 3., 2., 2., 8., 8., 8., 3., 2., 2.])
 
-    KP_NECK = np.array([4])
-    KD_NECK = np.array([4])
-    KP_HAND_POS = np.array([70., 70., 70.])
+    KP_HAND_POS = np.array([250., 250., 250.])
     KD_HAND_POS = np.array([5., 5., 5.])
-    KP_HAND_ORI = np.array([70., 70., 70.])
+    KP_HAND_ORI = np.array([250., 250., 250.])
     KD_HAND_ORI = np.array([5., 5., 5.])
 
     KP_FOOT_POS = np.array([300., 300., 300.])
@@ -102,6 +100,7 @@ class WalkingConfig(object):
     PERCENTAGE_SETTLE = 0.9
     ALPHA_DS = 0.5
 
+    ## !! This will be overwritten in main !! ##
     NOMINAL_FOOTWIDTH = 0.28
     NOMINAL_FORWARD_STEP = 0.1
     NOMINAL_BACKWARD_STEP = -0.1

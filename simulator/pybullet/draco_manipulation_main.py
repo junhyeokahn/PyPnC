@@ -27,6 +27,47 @@ import pinocchio as pin
 
 import ipdb
 
+######################## Key stroke ########################
+############## Gripper
+# z: close left gripper
+# x: open left gripper
+# /: close right gripper
+# ,: open right gripper
+############## Manipulation
+## 1: move left hand
+# interface.interrupt_logic.lh_target_pos = lh_target_pos
+# interface.interrupt_logic.lh_target_quat = lh_target_quat
+# interface.interrupt_logic.b_interrupt_button_one = True
+## 3: move right hand
+# interface.interrupt_logic.rh_target_pos = rh_target_pos
+# interface.interrupt_logic.rh_target_quat = rh_target_quat
+# interface.interrupt_logic.b_interrupt_button_three = True
+############## Locomotion
+## m: move in x
+# interface.interrupt_logic.com_displacement_x = com_displacement_x
+# interface.interrupt_logic.b_interrupt_button_m = True
+## n: move in y
+# interface.interrupt_logic.com_displacement_y = com_displacement_y
+# interface.interrupt_logic.b_interrupt_button_n = True
+## 5: walk in place
+## 4: walk left
+## 6: walk right
+## 2: walk backward
+## 8: walk forward
+############################################################
+
+######################## Variables ########################
+## Standby
+b_left_gripper_ready = False
+t_left_gripper_command_recv = 0.
+b_right_gripper_ready = False
+t_right_gripper_command_recv = 0.
+t_gripper_stab_dur = 2.
+b_left_hand_ready = False
+b_right_hand_ready = False
+b_walk_ready = False
+############################################################
+
 gripper_joints = [
     "left_ezgripper_knuckle_palm_L1_1", "left_ezgripper_knuckle_L1_L2_1",
     "left_ezgripper_knuckle_palm_L1_2", "left_ezgripper_knuckle_L1_L2_2",
@@ -95,15 +136,15 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
-                           SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
-                           SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
+                       SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+                       SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     lh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
-                                     [0., 0, 0.], [0, 0, 0, 1])
+                                 [0., 0, 0.], [0, 0, 0, 1])
     lh_target_pos = np.array([0., 0., 0.])
     lh_target_quat = np.array([0., 0., 0., 1.])
     rh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf", [0, 0, 0],
-                                     [0, 0, 0, 1])
+                                 [0, 0, 0, 1])
     rh_target_pos = np.array([0., 0., 0.])
     rh_target_quat = np.array([0., 0., 0., 1.])
 
@@ -134,7 +175,7 @@ if __name__ == "__main__":
                useFixedBase=0,
                basePosition=[-0.4 + xOffset, 0.1, 0.7])
 
-        # Add Gear constraint
+    # Add Gear constraint
     c = p.createConstraint(robot,
                            link_id['l_knee_fe_lp'],
                            robot,
@@ -198,8 +239,8 @@ if __name__ == "__main__":
     jpg_count = 0
 
     nominal_sensor_data = pybullet_util.get_sensor_data(
-    robot, joint_id, link_id, pos_basejoint_to_basecom,
-    rot_basejoint_to_basecom)
+        robot, joint_id, link_id, pos_basejoint_to_basecom,
+        rot_basejoint_to_basecom)
 
     # Draw Frames
     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
@@ -207,7 +248,7 @@ if __name__ == "__main__":
     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
     pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
     pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
-    # pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
+    pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:
@@ -226,9 +267,9 @@ if __name__ == "__main__":
             del sensor_data['joint_vel'][gripper_joint]
 
         rf_height = pybullet_util.get_link_iso(robot,
-                                           link_id['r_foot_contact'])[2, 3]
+                                               link_id['r_foot_contact'])[2, 3]
         lf_height = pybullet_util.get_link_iso(robot,
-                                           link_id['l_foot_contact'])[2, 3]
+                                               link_id['l_foot_contact'])[2, 3]
         sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
         sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
 
@@ -257,18 +298,19 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_zero = True
         elif command == 1:
             ## Update target pos and quat here
-            lh_target_pos = np.array([0.29, 0.23, 0.96])
-            lh_target_quat = np.array([0.2, -0.64, -0.21, 0.71])
+            lh_target_pos = np.array([0.4, 0.29, 0.83])
+            lh_target_quat = np.array(
+                p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
             interface.interrupt_logic.lh_target_pos = lh_target_pos
             interface.interrupt_logic.lh_target_quat = lh_target_quat
             interface.interrupt_logic.b_interrupt_button_one = True
         elif command == 3:
             ## Update target pos and quat here
-            # rh_target_pos = np.array([0.29, -0.24, 0.96])
+            # rh_target_pos = np.array([0.4, -0.29, 0.83])
             # rh_target_pos = np.array([1.1438913892327487, 0.5728717559681102, 0.9297155125446818])
             rh_target_pos = np.array([1.06, .088, 0.787])
-            # rh_target_quat = np.array([-0.14, -0.66, 0.15, 0.72])
-            # rh_target_quat = np.array([0.7982853216171371, 0.13284627061082785, -0.273157764732058, 0.5200742728130325])
+            # rh_target_quat = np.array(
+            #     p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))            # rh_target_quat = np.array([0.7982853216171371, 0.13284627061082785, -0.273157764732058, 0.5200742728130325])
             rh_target_quat = np.array([0.7793, 0.2959338171752087, -0.17152155322599372, 0.5250648597243313])
             interface.interrupt_logic.rh_target_pos = rh_target_pos
             interface.interrupt_logic.rh_target_quat = rh_target_quat
@@ -277,10 +319,32 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_t = True
         elif command == 11:
             for k, v in gripper_command.items():
-                gripper_command[k] += 1.94 / 3.
+                if k.split('_')[0] == "left":
+                    gripper_command[k] += 1.94 / 3.
+            t_left_gripper_command_recv = t
         elif command == 12:
             for k, v in gripper_command.items():
-                gripper_command[k] -= 1.94 / 3.
+                if k.split('_')[0] == "left":
+                    gripper_command[k] -= 1.94 / 3.
+            t_left_gripper_command_recv = t
+        elif command == 13:
+            for k, v in gripper_command.items():
+                if k.split('_')[0] == "right":
+                    gripper_command[k] += 1.94 / 3.
+            t_right_gripper_command_recv = t
+        elif command == 14:
+            for k, v in gripper_command.items():
+                if k.split('_')[0] == "right":
+                    gripper_command[k] -= 1.94 / 3.
+            t_right_gripper_command_recv = t
+        # elif pybullet_util.is_key_triggered(keys, 'm'):
+        #     com_target_x = 0.53
+        #     interface.interrupt_logic.com_displacement_x = com_target_x
+        #     interface.interrupt_logic.b_interrupt_button_m = True
+        # elif pybullet_util.is_key_triggered(keys, 'n'):
+        #     com_target_y = 0.23
+        #     interface.interrupt_logic.com_displacement_y = com_target_y
+        #     interface.interrupt_logic.b_interrupt_button_n = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:
@@ -291,9 +355,9 @@ if __name__ == "__main__":
                                           lh_target_quat)
         p.resetBasePositionAndOrientation(rh_target_frame, rh_target_pos,
                                           rh_target_quat)
-        # p.resetBasePositionAndOrientation(com_target_frame,
-        #                                   [com_target_x, com_target_y, 0.02],
-        #                                   [0., 0., 0., 1.])
+        p.resetBasePositionAndOrientation(com_target_frame,
+                                          [com_target_x, com_target_y, 0.02],
+                                          [0., 0., 0., 1.])
 
         if SimConfig.PRINT_TIME:
             end_time = time.time()
@@ -310,6 +374,19 @@ if __name__ == "__main__":
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
         pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
+
+        # Update Stanby variables
+        if t >= t_left_gripper_command_recv + t_gripper_stab_dur:
+            b_left_gripper_ready = True
+        else:
+            b_left_gripper_ready = False
+        if t >= t_right_gripper_command_recv + t_gripper_stab_dur:
+            b_right_gripper_ready = True
+        else:
+            b_right_gripper_ready = False
+        b_left_hand_ready = interface.interrupt_logic.b_left_hand_ready
+        b_right_hand_ready = interface.interrupt_logic.b_right_hand_ready
+        b_walk_ready = interface.interrupt_logic.b_walk_ready
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):
