@@ -289,8 +289,7 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_zero = True
         elif pybullet_util.is_key_triggered(keys, '1'):
             ## Update target pos and quat here
-            # lh_target_pos = np.array([0.4, 0.29, 0.83])
-            lh_target_pos = np.array([0.9, 0.29, 0.83])
+            lh_target_pos = np.array([0.4, 0.29, 0.83])
             lh_target_quat = np.array(
                 p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
             interface.interrupt_logic.lh_target_pos = lh_target_pos
