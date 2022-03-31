@@ -159,7 +159,7 @@ if __name__ == "__main__":
         robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
-    xOffset = 1.5
+    xOffset = 1.1
 
     p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf",
                useFixedBase=1,
@@ -173,9 +173,9 @@ if __name__ == "__main__":
                basePosition=[-0.4 + xOffset, -0.7, 1.35])
     p.loadURDF(cwd + "/robot_model/bookcase/blue_can.urdf",
                useFixedBase=0,
-               basePosition=[-0.4 + xOffset, 0.1, 0.7])
+               basePosition=[-0.35 + xOffset, 0.2, 0.7])
 
-    # Add Gear constraint
+# Add Gear constraint
     c = p.createConstraint(robot,
                            link_id['l_knee_fe_lp'],
                            robot,
@@ -229,9 +229,6 @@ if __name__ == "__main__":
     # Construct Interface
     interface = DracoManipulationInterface()
 
-    # Construct Rosnode
-    rosnode = DracoManipulationRosnode(robot, link_id)
-
     # Run Sim
     t = 0
     dt = SimConfig.CONTROLLER_DT
@@ -255,6 +252,9 @@ if __name__ == "__main__":
         gripper_command[gripper_joint] = nominal_sensor_data['joint_pos'][
             gripper_joint]
 
+    # Construct Rosnode
+    rosnode = DracoManipulationRosnode(robot, link_id, gripper_command)
+
     while (1):
 
         # Get SensorData
@@ -273,78 +273,9 @@ if __name__ == "__main__":
         sensor_data['b_rf_contact'] = True if rf_height <= 0.01 else False
         sensor_data['b_lf_contact'] = True if lf_height <= 0.01 else False
 
-        # Get Keyboard Event
-        # command = self._rosnode.apply_command(self._interface)
-        keys = p.getKeyboardEvents()
-        command = -1
-        if pybullet_util.is_key_triggered(keys, '3'):
-            command = 3
-        # command = rosnode.get_command()
-        if command == 8:
-            interface.interrupt_logic.b_interrupt_button_eight = True
-        elif command == 5:
-            interface.interrupt_logic.b_interrupt_button_five = True
-        elif command == 4:
-            interface.interrupt_logic.b_interrupt_button_four = True
-        elif command == 2:
-            interface.interrupt_logic.b_interrupt_button_two = True
-        elif command == 6:
-            interface.interrupt_logic.b_interrupt_button_six = True
-        elif command == 7:
-            interface.interrupt_logic.b_interrupt_button_seven = True
-        elif command == 9:
-            interface.interrupt_logic.b_interrupt_button_nine = True
-        elif command == 0:
-            interface.interrupt_logic.b_interrupt_button_zero = True
-        elif command == 1:
-            ## Update target pos and quat here
-            lh_target_pos = np.array([0.4, 0.29, 0.83])
-            lh_target_quat = np.array(
-                p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
-            interface.interrupt_logic.lh_target_pos = lh_target_pos
-            interface.interrupt_logic.lh_target_quat = lh_target_quat
-            interface.interrupt_logic.b_interrupt_button_one = True
-        elif command == 3:
-            ## Update target pos and quat here
-            # rh_target_pos = np.array([0.4, -0.29, 0.83])
-            # rh_target_pos = np.array([1.1438913892327487, 0.5728717559681102, 0.9297155125446818])
-            rh_target_pos = np.array([1.06, .088, 0.787])
-            # rh_target_quat = np.array(
-            #     p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))            # rh_target_quat = np.array([0.7982853216171371, 0.13284627061082785, -0.273157764732058, 0.5200742728130325])
-            rh_target_quat = np.array([0.7793, 0.2959338171752087, -0.17152155322599372, 0.5250648597243313])
-            interface.interrupt_logic.rh_target_pos = rh_target_pos
-            interface.interrupt_logic.rh_target_quat = rh_target_quat
-            interface.interrupt_logic.b_interrupt_button_three = True
-        elif command == 10:
-            interface.interrupt_logic.b_interrupt_button_t = True
-        elif command == 11:
-            for k, v in gripper_command.items():
-                if k.split('_')[0] == "left":
-                    gripper_command[k] += 1.94 / 3.
-            t_left_gripper_command_recv = t
-        elif command == 12:
-            for k, v in gripper_command.items():
-                if k.split('_')[0] == "left":
-                    gripper_command[k] -= 1.94 / 3.
-            t_left_gripper_command_recv = t
-        elif command == 13:
-            for k, v in gripper_command.items():
-                if k.split('_')[0] == "right":
-                    gripper_command[k] += 1.94 / 3.
-            t_right_gripper_command_recv = t
-        elif command == 14:
-            for k, v in gripper_command.items():
-                if k.split('_')[0] == "right":
-                    gripper_command[k] -= 1.94 / 3.
-            t_right_gripper_command_recv = t
-        # elif pybullet_util.is_key_triggered(keys, 'm'):
-        #     com_target_x = 0.53
-        #     interface.interrupt_logic.com_displacement_x = com_target_x
-        #     interface.interrupt_logic.b_interrupt_button_m = True
-        # elif pybullet_util.is_key_triggered(keys, 'n'):
-        #     com_target_y = 0.23
-        #     interface.interrupt_logic.com_displacement_y = com_target_y
-        #     interface.interrupt_logic.b_interrupt_button_n = True
+        if t > 0:
+            # TODO: do we just want to move this entire loop into the rosnode/merge these two files?
+            lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command = rosnode.apply_commands(interface, t)
 
         # Compute Command
         if SimConfig.PRINT_TIME:
@@ -374,19 +305,6 @@ if __name__ == "__main__":
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
         pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
-
-        # Update Stanby variables
-        if t >= t_left_gripper_command_recv + t_gripper_stab_dur:
-            b_left_gripper_ready = True
-        else:
-            b_left_gripper_ready = False
-        if t >= t_right_gripper_command_recv + t_gripper_stab_dur:
-            b_right_gripper_ready = True
-        else:
-            b_right_gripper_ready = False
-        b_left_hand_ready = interface.interrupt_logic.b_left_hand_ready
-        b_right_hand_ready = interface.interrupt_logic.b_right_hand_ready
-        b_walk_ready = interface.interrupt_logic.b_walk_ready
 
         # Save Image
         if (SimConfig.VIDEO_RECORD) and (count % SimConfig.RECORD_FREQ == 0):

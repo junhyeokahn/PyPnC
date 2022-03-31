@@ -1,3 +1,5 @@
+import time
+
 import pybullet
 import rospy
 from sensor_msgs.msg import JointState, Image, PointCloud2
@@ -6,114 +8,259 @@ from geometry_msgs.msg import Pose, TransformStamped
 from util import pybullet_util
 from threading import Lock
 from simulator.pybullet.rosnode.srv import MoveEndEffectorToSrv, GripperCommandSrv, InterruptSrv, MoveEndEffectorToSrvResponse, GripperCommandSrvResponse, InterruptSrvResponse
+from simulator.pybullet.rosnode.srv._LocomotionCommandSrv import LocomotionCommandSrv, LocomotionCommandSrvRequest, LocomotionCommandSrvResponse
 # import tf
 from scipy.spatial.transform import Rotation
 import numpy as np
 
+t_gripper_stab_dur = 2.0
+
 class DracoManipulationRosnode():
-    def __init__(self, robot, link_id):
+    def __init__(self, robot, link_id, gripper_command):
         rospy.init_node('draco')
         self._robot = robot
         self._link_id = link_id
 
         # Publishers
         self._joint_pub = rospy.Publisher('draco/joint_pos', JointState, queue_size=1)
-        # TODO: what is/where is the ee pose defined?
-        # ee_pub = rospy.Publisher('ee_pos', Pose, queue_size=1)
+        self._l_ee_pub = rospy.Publisher('draco/l_ee_pose', Pose, queue_size=1)
+        self._r_ee_pub = rospy.Publisher('draco/r_ee_pose', Pose, queue_size=1)
         self._pc_pub = rospy.Publisher('draco/pointcloud', PointCloud2, queue_size=1)
         self._depth_pub = rospy.Publisher('draco/depth', Image, queue_size=1)
         self._image_pub = rospy.Publisher('draco/image_raw', Image, queue_size=1)
         self._camera_transform_pub = rospy.Publisher('draco/camera_transform', TransformStamped, queue_size=1)
 
         # Services
-        # self._command_srv = rospy.Subscriber('draco/command', Int16, self.set_command, queue_size=1)
         # Manually copied GripperCommand message file into this project and changed message constructors in
         #   srv file without changing msg type in desc/headers. Will this work? -> Seems to
         # There were no conda-forge packages for control_msgs even though they existed for geometry, sensor, etc
-        self._move_ee_srv = rospy.Service('draco/gripper_command_srv', GripperCommandSrv, self.handle_gripper_command)
+        self._gripper_srv = rospy.Service('draco/gripper_command_srv', GripperCommandSrv, self.handle_gripper_command)
         self._move_ee_srv = rospy.Service('draco/end_effector_command_srv', MoveEndEffectorToSrv, self.handle_ee_command)
-        self._move_ee_srv = rospy.Service('draco/interrupt_srv', InterruptSrv, self.handle_interrupt)
+        # Is this still a thing? Walk in place?
+        # self._interrupt_srv = rospy.Service('draco/interrupt_srv', InterruptSrv, self.handle_interrupt)
+        self._walk_srv = rospy.Service('draco/locomotion_srv', LocomotionCommandSrv, self.handle_locomotion_command)
 
-        # Temp stand in for actual service calls
-        self._command_lock = Lock()
-        self._remote_command = -1
+        # Current behavior would be for pending commands of the same type to be overwritten if still pending, but
+        #   if already active then the newly incoming command would be discarded.
+        # TODO: is the ^ what we want?
 
-    def set_command(self, com):
-        print("setCommand, have com", com)
-        self._command_lock.acquire()
-        try:
-            self._remote_command = com#.data
-        finally:
-            self._command_lock.release()
+        # Lock to be held by main apply_command function during each simulation iteration, which should need to be
+        #   available for service calls to go through
+        self._command_iteration_lock = Lock()
 
-    def get_command(self):
-        self._command_lock.acquire()
-        try:
-            command = self._remote_command
-            self._remote_command = -1
-        finally:
-            self._command_lock.release()
-            return command
+        # Whether each type of command is ready to be recieved [left_gripper,right_gripper,left_hand,right_hand,walk]
+        self._ready_state = np.ones(5)
+        # Commands:
+        #   Adjust left gripper
+        #   Adjust right gripper
+        #   Move left hand
+        #   Move right hand
+        #   Walk in X
+        #   Walk in Y
+        self._command_state = np.zeros(6)
 
-    # def apply_command(self, interface):
-    #     command = -1
-    #     self._command_lock.acquire()
-    #     try:
-    #         if self._remote_command == 8:
-    #             interface.interrupt_logic.b_interrupt_button_eight = True
-    #         elif self._remote_command == 5:
-    #             interface.interrupt_logic.b_interrupt_button_five = True
-    #         elif self._remote_command == 4:
-    #             interface.interrupt_logic.b_interrupt_button_four = True
-    #         elif self._remote_command == 2:
-    #             interface.interrupt_logic.b_interrupt_button_two = True
-    #         elif self._remote_command == 6:
-    #             interface.interrupt_logic.b_interrupt_button_six = True
-    #         elif self._remote_command == 7:
-    #             interface.interrupt_logic.b_interrupt_button_seven = True
-    #         elif self._remote_command == 9:
-    #             interface.interrupt_logic.b_interrupt_button_nine = True
-    #         elif self._remote_command == 0:
-    #             interface.interrupt_logic.b_interrupt_button_zero = True
-    #         elif self._remote_command == 1:
-    #             interface.interrupt_logic.b_interrupt_button_one = True
-    #         elif self._remote_command == 3:
-    #             interface.interrupt_logic.b_interrupt_button_three = True
-    #         elif self._remote_command == 10: #'t'
-    #             interface.interrupt_logic.b_interrupt_button_t = True
-    #         elif self._remote_command == 11:
-    #             self._remote_command = 'c'
-    #         #     for k, v in self._gripper_command.items():
-    #         #         self._gripper_command[k] += 1.94 / 3.
-    #         elif self._remote_command == 12:
-    #             self._remote_command = 'o'
-    #         #     for k, v in self._gripper_command.items():
-    #         #         self._gripper_command[k] -= 1.94 / 3.
-    #         command = self._remote_command
-    #         self._remote_command = -1
-    #     finally:
-    #         self._command_lock.release()
-    #         return command
+        self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_target_quat = np.array([0., 0., 0., 1.])
+        self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_target_quat = np.array([0., 0., 0., 1.])
+        self._com_target_x = 0.
+        self._com_target_y = 0.
+        self._gripper_command = gripper_command
+        self._t_left_gripper_command_recv = 0
+        self._t_right_gripper_command_recv = 0
 
-    # TODO: modify these service callbacks to call correspoding scorpiointerface methods once updated
+    def apply_commands(self, interface, t):
+        self._command_iteration_lock.acquire()
+
+        # Copy results of any pending commands and return as targets
+        gripper_command = self._gripper_command.copy()
+        lh_target_pos = self._lh_target_pos.copy()
+        rh_target_pos = self._rh_target_pos.copy()
+        lh_target_quat = self._lh_target_quat.copy()
+        rh_target_quat = self._rh_target_quat.copy()
+        com_displacement_x = self._com_target_x
+        com_displacement_y = self._com_target_y
+
+        # Update any relevant interruption interface
+        if self._command_state[0]:
+            print("got left gripper command: ", gripper_command)
+            self._t_left_gripper_command_recv = t
+            self._ready_state[0] = 0
+            self._command_state[0] = 0
+        elif self._command_state[1]:
+            print("got right gripper command: ", gripper_command)
+            self._t_right_gripper_command_recv = t
+            self._ready_state[1] = 0
+            self._command_state[1] = 0
+        elif self._command_state[2]:
+            print("got left ee command: ", lh_target_pos, lh_target_quat)
+            interface.interrupt_logic.lh_target_pos = lh_target_pos
+            interface.interrupt_logic.lh_target_quat = lh_target_quat
+            interface.interrupt_logic.b_interrupt_button_one = True
+            self._command_state[2] = 0
+        elif self._command_state[3]:
+            print("got right ee command: ", rh_target_pos, rh_target_quat)
+            interface.interrupt_logic.rh_target_pos = rh_target_pos
+            interface.interrupt_logic.rh_target_quat = rh_target_quat
+            interface.interrupt_logic.b_interrupt_button_three = True
+            self._command_state[3] = 0
+        elif self._command_state[4]:
+            print("got walk in x command: ", com_displacement_x)
+            interface.interrupt_logic.com_displacement_x = com_displacement_x
+            interface.interrupt_logic.b_interrupt_button_m = True
+            self._command_state[4] = 0
+        elif self._command_state[5]:
+            print("got walk in y command: ", com_displacement_y)
+            interface.interrupt_logic.com_displacement_y = com_displacement_y
+            interface.interrupt_logic.b_interrupt_button_n = True
+            self._command_state[5] = 0
+
+        # Update internal standby variables
+        if t_gripper_stab_dur < t <= self._t_left_gripper_command_recv + t_gripper_stab_dur:
+            self._ready_state[0] = 0
+        else:
+            self._ready_state[0] = 1
+        if t_gripper_stab_dur < t <= self._t_right_gripper_command_recv + t_gripper_stab_dur:
+            self._ready_state[1] = 0
+        else:
+            self._ready_state[1] = 1
+        self._ready_state[2] = interface.interrupt_logic.b_left_hand_ready
+        self._ready_state[3] = interface.interrupt_logic.b_right_hand_ready
+        self._ready_state[4] = interface.interrupt_logic.b_walk_ready
+
+        self._command_iteration_lock.release()
+        return lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command
+
     def handle_gripper_command(self, req):
         print("handle_gripper_command", req)
-        self.set_command(11)
-        return GripperCommandSrvResponse()
+
+        # Wait for current simulation iteration to finish applying any pending commands and update ready_state, then
+        #   process incoming command
+        self._command_iteration_lock.acquire()
+        resp = GripperCommandSrvResponse()
+        side = int(req.side)
+        if req.side:
+            if self._ready_state[1]:
+                for k, v in self._gripper_command.items():
+                    if k.split('_')[0] == "right":
+                        self._gripper_command[k] = req.command.position
+                print("setting right gripper command state to 1")
+                self._command_state[1] = 1
+            else:
+                print("gripper not ready, returning success = false for right gripper command")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        else:
+            if self._ready_state[0]:
+                for k, v in self._gripper_command.items():
+                    if k.split('_')[0] == "left":
+                        self._gripper_command[k] = req.command.position
+                print("setting left gripper command state to 1")
+                self._command_state[0] = 1
+            else:
+                print("gripper not ready, returning success = false for left gripper command")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        self._command_iteration_lock.release()
+
+        # Now results of command will be input next sim iteration, want to wait on command being done (ready_state for
+        #   component to be True again)
+        print("waiting for gripper state to be ready again")
+        while not self._ready_state[side] or self._command_state[side]:
+            print(self._ready_state[side], self._command_state[side], side)
+            time.sleep(1)
+        print("gripper command finished, returning response")
+
+        # TODO: check if command was actually successful or not by querying gripper location
+        resp.success = True
+
+        return resp
 
     def handle_ee_command(self, req):
         print("handle_ee_command", req)
-        self.set_command(1)
-        return MoveEndEffectorToSrvResponse()
 
-    def handle_interrupt(self, req):
-        print("handle_interrupt", req)
-        self.set_command(3)
-        return InterruptSrvResponse()
+        # Wait for current simulation iteration to finish applying any pending commands and update ready_state, then
+        #   process incoming command
+        self._command_iteration_lock.acquire()
+        resp = MoveEndEffectorToSrvResponse()
 
+        if req.side:
+            if self._ready_state[3]:
+                print("right ee command ready, setting")
+                self._rh_target_pos = np.array([req.ee_pose.position.x, req.ee_pose.position.y, req.ee_pose.position.z])
+                self._rh_target_quat = np.array([req.ee_pose.orientation.x, req.ee_pose.orientation.y, req.ee_pose.orientation.z, req.ee_pose.orientation.w])
+                self._command_state[3] = 1
+            else:
+                print("right ee command not ready, returning false")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        else:
+            if self._ready_state[2]:
+                print("left ee command ready, setting")
+                # self._lh_target_pos = np.array([point[0], point[1], point[2]])
+                self._lh_target_pos = np.array([req.ee_pose.position.x, req.ee_pose.position.y, req.ee_pose.position.z])
+                self._lh_target_quat = np.array([req.ee_pose.orientation.x, req.ee_pose.orientation.y, req.ee_pose.orientation.z, req.ee_pose.orientation.w])
+                self._command_state[2] = 1
+            else:
+                print("left ee command not ready, returning false")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        self._command_iteration_lock.release()
+
+        # Now results of command will be input next sim iteration, want to wait on command being done (ready_state for
+        #   component to be True again)
+        print("waiting on ee to be ready again")
+        while not self._ready_state[2+int(req.side)] or self._command_state[2+int(req.side)]:
+            time.sleep(1)
+        print("ee ready again, returning")
+
+        # TODO: check if command was actually successful or not by querying ee location
+        #   Also, do we still even care about return val if we don't need to manually verify things?
+        resp.success = True
+
+        return resp
+
+    # # Is this still even a thing?
+    # def handle_interrupt(self, req):
+    #     print("handle_interrupt", req)
+    #     # self.set_command(3)
+    #     return InterruptSrvResponse()
+
+    def handle_locomotion_command(self, req):
+        print("handle_locomotion_command")
+
+        # Wait for current simulation iteration to finish applying any pending commands and update ready_state, then
+        #   process incoming command
+        self._command_iteration_lock.acquire()
+        resp = LocomotionCommandSrvResponse()
+        # TODO: allow separate x and y locomotion commands to not overwrite each other
+        if self._ready_state[4]:
+            self._com_target_y = req.y
+            self._com_target_x = req.x
+            self._command_state[4] = 1
+            self._command_state[5] = 1
+        else:
+            resp.success = False
+            self._command_iteration_lock.release()
+            return resp
+        self._command_iteration_lock.release()
+
+        # Now results of command will be input next sim iteration, want to wait on command being done (ready_state for
+        #   component to be True again)
+        while not self._ready_state[4] or self._command_state[4]:
+            time.sleep(1)
+
+        # TODO: check if command was actually successful or not by querying base location
+        resp.success = True
+
+        return resp
+
+    # Publish data to ROS
     def publish_data(self, sensor_data):
-        # Publish data to ROS
-
         #Create ee Pose message
         right_ee_transform = pybullet.getLinkState(self._robot, self._link_id['r_hand_contact'],1,1)
         r_gripper_pose = Pose()
@@ -134,9 +281,10 @@ class DracoManipulationRosnode():
         l_gripper_pose.orientation.z = left_ee_transform[1][2]
         l_gripper_pose.orientation.w = left_ee_transform[1][3]
 
-        # TODO: publish ee poses
+        self._l_ee_pub.publish(l_gripper_pose)
+        self._r_ee_pub.publish(r_gripper_pose)
 
-        # #Create JointState message
+        # Create JointState message
         joint_msg = JointState()
         joint_msg.header.stamp = rospy.Time.now()
         joint_msg.name = sensor_data['joint_pos'].keys()
@@ -144,39 +292,62 @@ class DracoManipulationRosnode():
         joint_msg.velocity = sensor_data['joint_vel'].values()
         self._joint_pub.publish(joint_msg)
 
-        # Get camera transform
+
+        nearval = 0.1
+        # Step 1:
+        # Build view matrix to pass to pybullet to get rgb and depth buffers
+
+        # Get rotation matrix from camera link transform
+        #   cam_trans contains
+        #       link com pos wrt world, link com ori wrt world
+        #       link com pos wrt frame, link com ori wrt frame
+        #       frame pos wrt world, frame ori wrt world
+        #       _, _
         cam_trans = pybullet.getLinkState(self._robot, self._link_id['camera'],1,1)
-        cam_rpy = Rotation.from_quat(cam_trans[1]).as_euler('xyz',degrees=True)
 
-        # Transform for getLinkState and for pybullet not aligned
-        cam_rpy[0] -= 90
-        # This is simply bc current camera can't actually see enough of the bookshelf
-        # Isn't accurate to frame, remove eventually
-        cam_rpy[1] -= 15
+        # original camera orientation wrt world
+        # rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
 
+        #TODO: remove - using base camera transform of 0,0,1 and orientation of 0,0,0,1 for testing
+        cam_rpy = np.array([0,0,0])
+        cam_trans = [[0,0,1]]
+
+        # 'Manually tilt' p camera to view down and build view matrix to get camera image
+        down_tilt_angle = 15
+        # TODO: comment back in when above removed
+        # cam_rpy = Rotation.from_quat(cam_trans[1]).as_euler('xyz',degrees=True)
+        cam_rpy += [0,down_tilt_angle,0]
+        cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
+        rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
+        rot = np.array(rot).reshape(3,3)
+
+        # Given Camera transform, compute view matrix to get correct pybullet camera frames
+        global_camera_x_unit = np.array([1, 0, 0])
+        global_camera_z_unit = np.array([0, 0, 1])
+        camera_eye_pos = cam_trans[0]# + np.dot(rot, nearval * global_camera_x_unit)
+        camera_target_pos = cam_trans[0] + np.dot(rot, 1.0 * global_camera_x_unit)
+        camera_up_vector = np.dot(rot, global_camera_z_unit)
+        view_matrix = pybullet.computeViewMatrix(camera_eye_pos, camera_target_pos,
+                                          camera_up_vector)
+
+
+        # TODO: this isn't correct -> update in line with most recent changes with vision/dracocomponent
+        vision_quat = Rotation.from_euler('xyz', [-90 - down_tilt_angle,0,0], degrees=True).as_quat()
         camera_transform_msg = TransformStamped()
-        camera_transform_msg.transform.translation.x = cam_trans[0][0]
-        camera_transform_msg.transform.translation.y = cam_trans[0][1]
-        camera_transform_msg.transform.translation.z = cam_trans[0][2]
-        camera_quat = Rotation.from_euler('xyz', [cam_rpy[1] - 90, cam_rpy[2], cam_rpy[0]], degrees=True).as_quat()
-        camera_transform_msg.transform.rotation.x = camera_quat[0]
-        camera_transform_msg.transform.rotation.y = camera_quat[1]
-        camera_transform_msg.transform.rotation.z = camera_quat[2]
-        camera_transform_msg.transform.rotation.w = camera_quat[3]
+        camera_transform_msg.transform.translation.x = cam_trans[0][0]#camera_eye_pos[0]
+        camera_transform_msg.transform.translation.y = cam_trans[0][1]#camera_eye_pos[1]
+        camera_transform_msg.transform.translation.z = cam_trans[0][2]#camera_eye_pos[2]
+        camera_transform_msg.transform.rotation.x = vision_quat[0]
+        camera_transform_msg.transform.rotation.y = vision_quat[1]
+        camera_transform_msg.transform.rotation.z = vision_quat[2]
+        camera_transform_msg.transform.rotation.w = vision_quat[3]
         camera_transform_msg.header.frame_id = "camera"
         camera_transform_msg.header.stamp = rospy.Time.now()
         camera_transform_msg.child_frame_id = "world"
         self._camera_transform_pub.publish(camera_transform_msg)
 
-        # Not sure exactly how dist param of pybullet cam data works. Make focus point 1 unit ahead of cam pos and set dist to 1
-        cam_pos = np.array(cam_trans[0]) + [1.0,0,0]
-
-        # #Get camera data
-        #     depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image(self.camera_transform[0], 1.0, self.camera_transform[1][0], self.camera_transform[1][1], self.camera_transform[1][2], 60., 320, 240, 0.1, 100., 1, 1)
-        depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image(cam_pos, 1.0, cam_rpy[0], cam_rpy[1], cam_rpy[2], 60., 320, 240, 0.1, 100., 1, 1)
+        # pc_msg, image_msg = pybullet_util.get_xyzrgb_pointcloud2(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
+        depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
+        # self._pc_pub.publish(pc_msg)
         self._depth_pub.publish(depth_msg)
         self._image_pub.publish(image_msg)
-
-        # pc_msg, image_msg = pybullet_util.get_xyzrgb_pointcloud2(self.camera_transform[0], 1.0, self.camera_transform[1][0], self.camera_transform[1][1], self.camera_transform[1][2], 60., 320, 240, 0.1, 100., 1, 1)
-        # self._pc_pub.publish(pc_msg)
-        # self._image_pub.publish(image_msg)

@@ -1,0 +1,5 @@
+float64 x
+float64 y
+---
+geometry_msgs/Pose base_pose
+bool success
