@@ -5,8 +5,6 @@ class SimConfig(object):
     CONTROLLER_DT = 0.01
     N_SUBSTEP = 10
     CAMERA_DT = 0.05
-    KP = 0.
-    KD = 0.
 
     INITIAL_POS_WORLD_TO_BASEJOINT = [0, 0, 1.5 - 0.757]
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
@@ -19,6 +17,64 @@ class SimConfig(object):
     SAVE_CAMERA_DATA = False
 
     B_USE_MESHCAT = False
+
+    KP, KD = dict(), dict()
+
+    KP["l_hip_ie"] = 1.0
+    KP["l_hip_aa"] = 1.0
+    KP["l_hip_fe"] = 1.0
+    KP["l_knee_fe_jp"] = 1.0
+    KP["l_knee_fe_jd"] = 1.0
+    KP["l_ankle_fe"] = 1.0
+    KP["l_ankle_ie"] = 1.0
+    KP["l_shoulder_fe"] = 1.0
+    KP["l_shoulder_aa"] = 1.0
+    KP["l_shoulder_ie"] = 1.0
+    KP["l_elbow_fe"] = 1.0
+    KP["l_wrist_ps"] = 1.0
+    KP["l_wrist_pitch"] = 1.0
+    KP["neck_pitch"] = 1.0
+    KP["r_hip_ie"] = 1.0
+    KP["r_hip_aa"] = 1.0
+    KP["r_hip_fe"] = 1.0
+    KP["r_knee_fe_jp"] = 1.0
+    KP["r_knee_fe_jd"] = 1.0
+    KP["r_ankle_fe"] = 1.0
+    KP["r_ankle_ie"] = 1.0
+    KP["r_shoulder_fe"] = 1.0
+    KP["r_shoulder_aa"] = 1.0
+    KP["r_shoulder_ie"] = 1.0
+    KP["r_elbow_fe"] = 1.0
+    KP["r_wrist_ps"] = 1.0
+    KP["r_wrist_pitch"] = 1.0
+
+    KD["l_hip_ie"] = 0.0
+    KD["l_hip_aa"] = 0.0
+    KD["l_hip_fe"] = 0.0
+    KD["l_knee_fe_jp"] = 0.0
+    KD["l_knee_fe_jd"] = 0.0
+    KD["l_ankle_fe"] = 0.0
+    KD["l_ankle_ie"] = 0.0
+    KD["l_shoulder_fe"] = 0.0
+    KD["l_shoulder_aa"] = 0.0
+    KD["l_shoulder_ie"] = 0.0
+    KD["l_elbow_fe"] = 0.0
+    KD["l_wrist_ps"] = 0.0
+    KD["l_wrist_pitch"] = 0.0
+    KD["neck_pitch"] = 0.0
+    KD["r_hip_ie"] = 0.0
+    KD["r_hip_aa"] = 0.0
+    KD["r_hip_fe"] = 0.0
+    KD["r_knee_fe_jp"] = 0.0
+    KD["r_knee_fe_jd"] = 0.0
+    KD["r_ankle_fe"] = 0.0
+    KD["r_ankle_ie"] = 0.0
+    KD["r_shoulder_fe"] = 0.0
+    KD["r_shoulder_aa"] = 0.0
+    KD["r_shoulder_ie"] = 0.0
+    KD["r_elbow_fe"] = 0.0
+    KD["r_wrist_ps"] = 0.0
+    KD["r_wrist_pitch"] = 0.0
 
 
 class PnCConfig(object):

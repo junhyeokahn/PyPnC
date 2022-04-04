@@ -12,8 +12,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
         self._control_architecture = ctrl_arch
 
         self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_waypoint_pos = np.array([0., 0., 0.])
         self._lh_target_quat = np.array([0., 0., 0., 1.])
         self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_waypoint_pos = np.array([0., 0., 0.])
         self._rh_target_quat = np.array([0., 0., 0., 1.])
 
         self._com_displacement_x = 0.
@@ -55,6 +57,22 @@ class DracoManipulationInterruptLogic(InterruptLogic):
     @rh_target_pos.setter
     def rh_target_pos(self, value):
         self._rh_target_pos = value
+
+    @property
+    def rh_waypoint_pos(self):
+        return self._rh_waypoint_pos
+
+    @rh_waypoint_pos.setter
+    def rh_waypoint_pos(self, value):
+        self._rh_waypoint_pos = value
+
+    @property
+    def lh_waypoint_pos(self):
+        return self._lh_waypoint_pos
+
+    @lh_waypoint_pos.setter
+    def lh_waypoint_pos(self, value):
+        self._lh_waypoint_pos = value
 
     @property
     def lh_target_quat(self):
@@ -204,6 +222,9 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     LH_HANDREACH].lh_target_pos = self._lh_target_pos
                 self._control_architecture.state_machine[
                     LocomanipulationState.
+                    LH_HANDREACH].lh_waypoint_pos = self._lh_waypoint_pos
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
                     LH_HANDREACH].lh_target_quat = self._lh_target_quat
                 self._control_architecture.state_machine[
                     LocomanipulationState.
@@ -221,6 +242,9 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                 self._control_architecture.state_machine[
                     LocomanipulationState.
                     RH_HANDREACH].rh_target_pos = self._rh_target_pos
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    RH_HANDREACH].rh_waypoint_pos = self._rh_waypoint_pos
                 self._control_architecture.state_machine[
                     LocomanipulationState.
                     RH_HANDREACH].rh_target_quat = self._rh_target_quat
