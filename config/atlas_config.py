@@ -29,6 +29,8 @@ class PnCConfig(object):
 
 
 class WBCConfig(object):
+    VERBOSE = False
+
     # Max normal force per contact
     RF_Z_MAX = 2000.
 

@@ -322,7 +322,6 @@ if __name__ == "__main__":
             ## Update target pos and quat here
             lh_target_pos = np.array([0.4, 0.0, 0.83])
             lh_target_rot = np.dot(RIGHTUP_GRIPPER, x_rot(-np.pi / 4.))
-            # lh_target_rot = np.copy(RIGHTUP_GRIPPER)
             lh_target_quat = util.rot_to_quat(lh_target_rot)
             lh_target_iso = liegroup.RpToTrans(lh_target_rot, lh_target_pos)
             lh_waypoint_pos = generate_keypoint(lh_target_iso)[0:3, 3]
@@ -333,10 +332,11 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
             ## Update target pos and quat here
-            rh_target_pos = np.array([0.4, -0.29, 0.83])
-            rh_waypoint_pos = np.array([0.4, -0.29, 0.83])
-            rh_target_quat = np.array(
-                p.getQuaternionFromEuler([0., -np.pi / 2, 0.]))
+            rh_target_pos = np.array([0.4, 0., 0.83])
+            rh_target_rot = np.dot(RIGHTUP_GRIPPER, x_rot(np.pi / 4.))
+            rh_target_quat = util.rot_to_quat(rh_target_rot)
+            rh_target_iso = liegroup.RpToTrans(rh_target_rot, rh_target_pos)
+            rh_waypoint_pos = generate_keypoint(rh_target_iso)[0:3, 3]
             interface.interrupt_logic.rh_target_pos = rh_target_pos
             interface.interrupt_logic.rh_waypoint_pos = rh_waypoint_pos
             interface.interrupt_logic.rh_target_quat = rh_target_quat

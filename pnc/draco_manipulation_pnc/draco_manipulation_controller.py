@@ -95,7 +95,8 @@ class DracoManipulationController(object):
         # WBC commands
         joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
             self._tci_container.task_list, self._tci_container.contact_list,
-            self._tci_container.internal_constraint_list, None, False)
+            self._tci_container.internal_constraint_list, None,
+            WBCConfig.VERBOSE)
         ###consider transmission constraint
         # joint_trq_cmd, joint_acc_cmd, rf_cmd = self._ihwbc.solve(
         # self._tci_container.task_list, self._tci_container.contact_list,

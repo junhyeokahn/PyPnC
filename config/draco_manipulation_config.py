@@ -86,6 +86,8 @@ class PnCConfig(object):
 
 
 class WBCConfig(object):
+    VERBOSE = False
+
     # Max normal force per contact
     RF_Z_MAX = 1000.0
 
@@ -94,9 +96,9 @@ class WBCConfig(object):
     W_TORSO = 20.0
     W_UPPER_BODY = 0.1
     W_HAND_POS_MIN = 0.
-    W_HAND_POS_MAX = 10.0
+    W_HAND_POS_MAX = 100.0
     W_HAND_ORI_MIN = 0.
-    W_HAND_ORI_MAX = 10.0
+    W_HAND_ORI_MAX = 100.0
     W_CONTACT_FOOT = 60.0
     W_SWING_FOOT = 40.0
 
@@ -118,8 +120,10 @@ class WBCConfig(object):
     KD_UPPER_BODY = np.array(
         [2., 8., 8., 8., 3., 2., 2., 8., 8., 8., 3., 2., 2.])
 
-    KP_HAND_POS = np.array([250., 250., 250.])
-    KD_HAND_POS = np.array([5., 5., 5.])
+    KP_HAND_POS = np.array([400., 400., 400.])
+    KD_HAND_POS = np.array([40., 40., 40.])
+    # KP_HAND_POS = np.array([250., 250., 250.])
+    # KD_HAND_POS = np.array([5., 5., 5.])
     KP_HAND_ORI = np.array([250., 250., 250.])
     KD_HAND_ORI = np.array([5., 5., 5.])
 
