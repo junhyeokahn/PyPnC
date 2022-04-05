@@ -152,7 +152,7 @@ def draw_frame(pos, rot, linewidth=5.0, text=None):
 def draw_link_frame(robot, link_idx, linewidth=5.0, text=None):
     # This only works when the link has an visual element defined in the urdf file
     if text is not None:
-        p.addUserDebugText(text, [0, 0, 0.1],
+        p.addUserDebugText(text, [0, 0, 0.02],
                            textColorRGB=[1, 0, 0],
                            textSize=1.5,
                            parentObjectUniqueId=robot,
