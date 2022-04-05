@@ -355,8 +355,8 @@ class IHWBC(object):
 
         joint_acc_cmd = np.dot(self._sa, sol_q_ddot)
 
-        # if verbose:
-        if True:
+        if verbose:
+            # if True:
             print("joint_trq_cmd: ", joint_trq_cmd)
             print("sol_q_ddot: ", sol_q_ddot)
             print("sol_rf: ", sol_rf)
