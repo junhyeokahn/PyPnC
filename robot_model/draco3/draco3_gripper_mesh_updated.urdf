@@ -17,6 +17,10 @@
       <color rgba="0 0 0 1"/>
   </material>
 
+  <material name = "white">
+    <color rgba="0.8 0.8 0.8 1"/>
+  </material>
+
   <!--=============================== root (torso) ===========================-->
   <link name="torso_link">
     <visual>
@@ -111,7 +115,7 @@
       <geometry>
         <mesh filename="package://meshes/l_shoulder_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.0270089 -0.0272215 0"/>
@@ -135,7 +139,7 @@
       <geometry>
         <mesh filename="package://meshes/l_shoulder_aa_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.0189446 0.000135529 0.00688183"/>
@@ -184,7 +188,7 @@
       <geometry>
         <mesh filename="package://meshes/l_elbow_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.0190443 0 -0.0633779"/>
@@ -208,7 +212,7 @@
       <geometry>
         <mesh filename="package://meshes/l_wrist_ps_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.000433726 0.0158433 -0.154"/>
@@ -247,7 +251,7 @@
       <geometry>
         <mesh filename="package://meshes/l_sake_gripper_mount.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="5.4498e-05 0.000382544 -0.0372594"/>
@@ -267,7 +271,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Palm_Dual_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".3"/>
@@ -281,7 +285,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".025"/>
@@ -294,7 +298,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".025"/>
@@ -307,14 +311,14 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </collision>
     <inertial>
       <mass value=".025"/>
@@ -327,14 +331,14 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </collision>
     <inertial>
       <mass value=".025"/>
@@ -406,7 +410,7 @@
       <geometry>
         <mesh filename="package://meshes/r_shoulder_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.0825089 0.0272215 6.40505e-05"/>
@@ -430,7 +434,7 @@
       <geometry>
         <mesh filename="package://meshes/r_shoulder_aa_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.0189446 0.000135529 0.00688183"/>
@@ -479,7 +483,7 @@
       <geometry>
         <mesh filename="package://meshes/r_elbow_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.0190415 1.75896e-05 -0.0633849"/>
@@ -503,7 +507,7 @@
       <geometry>
         <mesh filename="package://meshes/r_wrist_ps_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.000229308 0.0158433 -0.154481"/>
@@ -542,7 +546,7 @@
       <geometry>
         <mesh filename="package://meshes/r_sake_gripper_mount.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="5.4498e-05 0.000382544 -0.0372594"/>
@@ -562,7 +566,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Palm_Dual_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".3"/>
@@ -576,7 +580,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".025"/>
@@ -589,7 +593,7 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <mass value=".025"/>
@@ -602,14 +606,14 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </collision>
     <inertial>
       <mass value=".025"/>
@@ -622,14 +626,14 @@
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="white"/>
     </collision>
     <inertial>
       <mass value=".025"/>
@@ -701,7 +705,7 @@
       <geometry>
         <mesh filename="package://meshes/l_hip_ie_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.00699855 0.00580214 -0.0245826"/>
@@ -725,7 +729,7 @@
       <geometry>
         <mesh filename="package://meshes/l_hip_aa_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.00107664 0.00164809 -0.00149004"/>
@@ -774,7 +778,7 @@
       <geometry>
         <mesh filename="package://meshes/l_knee_fe_lp.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-4.80156e-09 0.00425279 -0.0291238"/>
@@ -795,7 +799,7 @@
       <geometry>
         <mesh filename="package://meshes/l_knee_adj_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0.006 -0.0323676"/>
@@ -843,7 +847,7 @@
       <geometry>
         <mesh filename="package://meshes/l_ankle_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="2.67715e-05 0.0277455 -0.000699218"/>
@@ -867,7 +871,7 @@
       <geometry>
         <mesh filename="package://meshes/l_ankle_ie_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 -0.005 -0.046"/>-->
@@ -918,7 +922,7 @@
       <geometry>
         <mesh filename="package://meshes/r_hip_ie_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.00703461 -0.00580298 -0.0246181"/>
@@ -942,7 +946,7 @@
       <geometry>
         <mesh filename="package://meshes/r_hip_aa_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.000513526 -0.0019221 -0.00112805"/>
@@ -991,7 +995,7 @@
       <geometry>
         <mesh filename="package://meshes/r_knee_fe_lp.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="4.28378e-09 -0.000374047 -0.0259832"/>
@@ -1012,7 +1016,7 @@
       <geometry>
         <mesh filename="package://meshes/r_knee_adj_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 -0.006 -0.0323676"/>
@@ -1061,7 +1065,7 @@
       <geometry>
         <mesh filename="package://meshes/r_ankle_fe_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 -0.0277456 -0.000698932"/>
@@ -1085,7 +1089,7 @@
       <geometry>
         <mesh filename="package://meshes/r_ankle_ie_link.stl"/>
       </geometry>
-      <material name="dark_gray"/>
+      <material name="black"/>
     </visual>
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 0.005 -0.046"/>-->
