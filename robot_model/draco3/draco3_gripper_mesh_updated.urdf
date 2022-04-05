@@ -847,7 +847,7 @@
       <geometry>
         <mesh filename="package://meshes/l_ankle_fe_link.stl"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="2.67715e-05 0.0277455 -0.000699218"/>
@@ -871,7 +871,7 @@
       <geometry>
         <mesh filename="package://meshes/l_ankle_ie_link.stl"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 -0.005 -0.046"/>-->
@@ -1065,7 +1065,7 @@
       <geometry>
         <mesh filename="package://meshes/r_ankle_fe_link.stl"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 -0.0277456 -0.000698932"/>
@@ -1089,7 +1089,7 @@
       <geometry>
         <mesh filename="package://meshes/r_ankle_ie_link.stl"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <!--<visual>-->
       <!--<origin rpy="0 -0 0" xyz="0 0.005 -0.046"/>-->
