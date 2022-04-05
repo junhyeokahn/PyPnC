@@ -60,7 +60,7 @@ class DoubleSupportHandReach(StateMachine):
         self._start_time = self._sp.curr_time
 
         if self._state_id == LocomanipulationState.RH_HANDREACH:
-            print("[LocomanipulationState] Right Hand Reaching")
+            # print("[LocomanipulationState] Right Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._rh_target_quat)
             target_hand_iso[0:3, 3] = self._rh_target_pos
@@ -78,7 +78,7 @@ class DoubleSupportHandReach(StateMachine):
             self._hierarchy_managers["rhand_ori"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
-            print("[LocomanipulationState] Left Hand Reaching")
+            # print("[LocomanipulationState] Left Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._lh_target_quat)
             target_hand_iso[0:3, 3] = self._lh_target_pos

@@ -24,9 +24,10 @@ class DracoManipulationInterface(Interface):
 
         self._robot = PinocchioRobotSystem(
             cwd + "/robot_model/draco3/draco3.urdf",
-            cwd + "/robot_model/draco3", False, PnCConfig.PRINT_ROBOT_INFO)
+            cwd + "/robot_model/draco3", False, False)
 
         self._sp = DracoManipulationStateProvider(self._robot)
+        self._sp.initialize(self._robot)
         self._se = DracoManipulationStateEstimator(self._robot)
         self._control_architecture = DracoManipulationControlArchitecture(
             self._robot)
@@ -48,9 +49,9 @@ class DracoManipulationInterface(Interface):
 
         # Update State Estimator
         if self._count == 0:
-            print("=" * 80)
-            print("Initialize")
-            print("=" * 80)
+            # print("=" * 80)
+            # print("Initialize")
+            # print("=" * 80)
             self._se.initialize(sensor_data)
         self._se.update(sensor_data)
 

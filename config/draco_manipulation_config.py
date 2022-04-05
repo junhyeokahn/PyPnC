@@ -10,9 +10,9 @@ class SimConfig(object):
     INITIAL_QUAT_WORLD_TO_BASEJOINT = [0., 0., 0., 1.]
 
     PRINT_TIME = False
-    PRINT_ROBOT_INFO = True
+    PRINT_ROBOT_INFO = False
     VIDEO_RECORD = False
-    RECORD_FREQ = 5
+    RECORD_FREQ = 5000000000000
     SIMULATE_CAMERA = False
     SAVE_CAMERA_DATA = False
 
@@ -147,8 +147,9 @@ class WBCConfig(object):
 
 class WalkingConfig(object):
     # STAND
-    INIT_STAND_DUR = 1.0
-    RF_Z_MAX_TIME = 0.1
+    # INIT_STAND_DUR = 1.0
+    INIT_STAND_DUR = 0.1
+    RF_Z_MAX_TIME = 0.05
 
     # COM_HEIGHT = 0.73  # m
     COM_HEIGHT = 0.65  # m
@@ -169,8 +170,8 @@ class WalkingConfig(object):
 
 
 class ManipulationConfig(object):
-    T_TRANS_DURATION = 1
-    T_REACHING_DURATION = 3.
+    T_TRANS_DURATION = 0.75
+    T_REACHING_DURATION = 1.5
 
     ## !! This will be overwritten in main !! ##
     LH_TARGET_POS = np.array([0.29, 0.23, 0.96])
