@@ -214,7 +214,7 @@
 
 `  <link name="back">
     <visual>
-      <origin rpy="0 0 0" xyz="0 .01 0.75"/>
+      <origin rpy="0 0 0" xyz="20 .01 0.75"/>
       <geometry>
         <box size="2.1 0.02 1.5"/>
       </geometry>

@@ -13,7 +13,7 @@ from simulator.pybullet.rosnode.srv._LocomotionCommandSrv import LocomotionComma
 from scipy.spatial.transform import Rotation
 import numpy as np
 
-t_gripper_stab_dur = 2.0
+t_gripper_stab_dur = 0.1
 
 class DracoManipulationRosnode():
     def __init__(self, robot, link_id, gripper_command):
@@ -169,7 +169,6 @@ class DracoManipulationRosnode():
         #   component to be True again)
         print("waiting for gripper state to be ready again")
         while not self._ready_state[side] or self._command_state[side]:
-            print(self._ready_state[side], self._command_state[side], side)
             time.sleep(1)
         print("gripper command finished, returning response")
 
@@ -200,7 +199,6 @@ class DracoManipulationRosnode():
         else:
             if self._ready_state[2]:
                 print("left ee command ready, setting")
-                # self._lh_target_pos = np.array([point[0], point[1], point[2]])
                 self._lh_target_pos = np.array([req.ee_pose.position.x, req.ee_pose.position.y, req.ee_pose.position.z])
                 self._lh_target_quat = np.array([req.ee_pose.orientation.x, req.ee_pose.orientation.y, req.ee_pose.orientation.z, req.ee_pose.orientation.w])
                 self._command_state[2] = 1
@@ -294,49 +292,61 @@ class DracoManipulationRosnode():
 
 
         nearval = 0.1
-        # Step 1:
-        # Build view matrix to pass to pybullet to get rgb and depth buffers
+        ## Build view matrix to pass to pybullet to get rgb and depth buffers
 
-        # Get rotation matrix from camera link transform
-        #   cam_trans contains
-        #       link com pos wrt world, link com ori wrt world
-        #       link com pos wrt frame, link com ori wrt frame
-        #       frame pos wrt world, frame ori wrt world
-        #       _, _
-        cam_trans = pybullet.getLinkState(self._robot, self._link_id['camera'],1,1)
+        # ## Use camera frame to build view_matrix and get corresponding sensor data
+        # # Get rotation matrix from camera link transform
+        # #   cam_trans contains
+        # #       link com pos wrt world, link com ori wrt world
+        # #       link com pos wrt frame, link com ori wrt frame
+        # #       frame pos wrt world, frame ori wrt world
+        # #       _, _
+        # cam_trans = pybullet.getLinkState(self._robot, self._link_id['camera'],1,1)
+        # cam_pos = np.asarray(cam_trans[0])
+        # cam_rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
 
-        # original camera orientation wrt world
-        # rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
-
-        #TODO: remove - using base camera transform of 0,0,1 and orientation of 0,0,0,1 for testing
+        ## Testing: keeping pos and orientation static
         cam_rpy = np.array([0,0,0])
-        cam_trans = [[0,0,1]]
-
-        # 'Manually tilt' p camera to view down and build view matrix to get camera image
-        down_tilt_angle = 15
-        # TODO: comment back in when above removed
-        # cam_rpy = Rotation.from_quat(cam_trans[1]).as_euler('xyz',degrees=True)
-        cam_rpy += [0,down_tilt_angle,0]
+        cam_pos = [0,0,0.9]
         cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
-        rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
-        rot = np.array(rot).reshape(3,3)
+        cam_rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
 
         # Given Camera transform, compute view matrix to get correct pybullet camera frames
+        cam_rot = np.array(cam_rot).reshape(3,3)
         global_camera_x_unit = np.array([1, 0, 0])
         global_camera_z_unit = np.array([0, 0, 1])
-        camera_eye_pos = cam_trans[0]# + np.dot(rot, nearval * global_camera_x_unit)
-        camera_target_pos = cam_trans[0] + np.dot(rot, 1.0 * global_camera_x_unit)
-        camera_up_vector = np.dot(rot, global_camera_z_unit)
+        camera_eye_pos = cam_pos
+        camera_target_pos = cam_pos + np.dot(cam_rot, 1.0 * global_camera_x_unit)
+        camera_up_vector = np.dot(cam_rot, global_camera_z_unit)
         view_matrix = pybullet.computeViewMatrix(camera_eye_pos, camera_target_pos,
                                           camera_up_vector)
 
 
-        # TODO: this isn't correct -> update in line with most recent changes with vision/dracocomponent
-        vision_quat = Rotation.from_euler('xyz', [-90 - down_tilt_angle,0,0], degrees=True).as_quat()
+        # This works with 3 axes transform for segmentation (was this when applying view matrix to cloud?)
+        # Compute transform we need to send to vision (currently transform between pybullet camera coordinates
+        #   (x left, y down, z backwards) to vision coordinates (x right, y down, z forwards)
+        # Example transform of point: [1,2,3] -> [-1,2,-3]
+        # Matrix to achieve this transform:
+        # # [[-1,0,0]
+        # #  [0,1,0]
+        # #  [0,0,-1]]
+        # # This transformation is a flip about y
+        #
+        # In terms of euler angles the above is [0,180,0]
+        # Any further rotations in terms of euler adhere to +x,+y,+z -> -z,+x,180-y
+        # # e.g. [10,20,30] -> [20,180-30,-10]
+        # # TODO: don't do this as swapping euler angles
+        # # cam_rpy = Rotation.from_quat(cam_trans[1]).as_euler('xyz', degrees=True)
+        # cam_rpy = (cam_rpy[1],180-cam_rpy[2],-cam_rpy[0])
+        # vision_quat = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
+
+        # Works in static case when modifying cloud to align with vision coords
+        vision_quat = Rotation.from_euler('xyz', [-90,0,-90], degrees=True).as_quat()
+
         camera_transform_msg = TransformStamped()
-        camera_transform_msg.transform.translation.x = cam_trans[0][0]#camera_eye_pos[0]
-        camera_transform_msg.transform.translation.y = cam_trans[0][1]#camera_eye_pos[1]
-        camera_transform_msg.transform.translation.z = cam_trans[0][2]#camera_eye_pos[2]
+        camera_transform_msg.transform.translation.x = cam_pos[2]#cam_pos[0]
+        camera_transform_msg.transform.translation.y = cam_pos[1]#cam_pos[1]
+        camera_transform_msg.transform.translation.z = cam_pos[0]#cam_pos[2]
         camera_transform_msg.transform.rotation.x = vision_quat[0]
         camera_transform_msg.transform.rotation.y = vision_quat[1]
         camera_transform_msg.transform.rotation.z = vision_quat[2]

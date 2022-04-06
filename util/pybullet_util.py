@@ -551,7 +551,6 @@ def get_rgb_and_depth_image(view_matrix,
                                                nearVal=nearval,
                                                farVal=farval)
 
-
     (_, _, px, pc, _) = p.getCameraImage(width=render_width,
                                              height=render_height,
                                              renderer=p.ER_BULLET_HARDWARE_OPENGL,
