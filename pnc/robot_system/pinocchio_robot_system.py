@@ -51,7 +51,6 @@ class PinocchioRobotSystem(RobotSystem):
 
         passing_idx = 0
         for j_id, j_name in enumerate(self._model.names):
-            print(j_id, ": ", j_name)
             if j_name == 'root_joint' or j_name == 'universe':
                 passing_idx += 1
             else:

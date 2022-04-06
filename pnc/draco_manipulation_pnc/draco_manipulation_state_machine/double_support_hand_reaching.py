@@ -17,8 +17,10 @@ class DoubleSupportHandReach(StateMachine):
         self._moving_duration = 0.
         self._trans_duration = 0.
         self._rh_target_pos = np.zeros(3)
+        self._rh_waypoint_pos = np.zeros(3)
         self._rh_target_quat = np.zeros(4)
         self._lh_target_pos = np.zeros(3)
+        self._lh_waypoint_pos = np.zeros(3)
         self._lh_target_quat = np.zeros(4)
 
     def one_step(self):
@@ -42,10 +44,14 @@ class DoubleSupportHandReach(StateMachine):
 
         # Update Hand Task
         if self._state_id == LocomanipulationState.RH_HANDREACH:
-            self._trajectory_managers['rhand'].update_hand_trajectory(
+            # self._trajectory_managers['rhand'].update_hand_trajectory(
+            # self._sp.curr_time)
+            self._trajectory_managers['rhand'].update_keypoint_hand_trajectory(
                 self._sp.curr_time)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
-            self._trajectory_managers['lhand'].update_hand_trajectory(
+            # self._trajectory_managers['lhand'].update_hand_trajectory(
+            # self._sp.curr_time)
+            self._trajectory_managers['lhand'].update_keypoint_hand_trajectory(
                 self._sp.curr_time)
         else:
             raise ValueError("Wrong LocomanipulationState: HandSide")
@@ -54,23 +60,37 @@ class DoubleSupportHandReach(StateMachine):
         self._start_time = self._sp.curr_time
 
         if self._state_id == LocomanipulationState.RH_HANDREACH:
-            print("[LocomanipulationState] Right Hand Reaching")
+            # print("[LocomanipulationState] Right Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._rh_target_quat)
             target_hand_iso[0:3, 3] = self._rh_target_pos
-            self._trajectory_managers['rhand'].initialize_hand_trajectory(
-                self._start_time, self._moving_duration, target_hand_iso)
+
+            # self._trajectory_managers['rhand'].initialize_hand_trajectory(
+            # self._start_time, self._moving_duration, target_hand_iso)
+
+            self._trajectory_managers[
+                'rhand'].initialize_keypoint_hand_trajectory(
+                    self._start_time, self._moving_duration,
+                    self._rh_waypoint_pos, target_hand_iso)
+
             self._hierarchy_managers["rhand_pos"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)
             self._hierarchy_managers["rhand_ori"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
-            print("[LocomanipulationState] Left Hand Reaching")
+            # print("[LocomanipulationState] Left Hand Reaching")
             target_hand_iso = np.eye(4)
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._lh_target_quat)
             target_hand_iso[0:3, 3] = self._lh_target_pos
-            self._trajectory_managers['lhand'].initialize_hand_trajectory(
-                self._start_time, self._moving_duration, target_hand_iso)
+
+            # self._trajectory_managers['lhand'].initialize_hand_trajectory(
+            # self._start_time, self._moving_duration, target_hand_iso)
+
+            self._trajectory_managers[
+                'lhand'].initialize_keypoint_hand_trajectory(
+                    self._start_time, self._moving_duration,
+                    self._lh_waypoint_pos, target_hand_iso)
+
             self._hierarchy_managers["lhand_pos"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)
             self._hierarchy_managers["lhand_ori"].initialize_ramp_to_max(
@@ -137,3 +157,19 @@ class DoubleSupportHandReach(StateMachine):
     @lh_target_quat.setter
     def lh_target_quat(self, value):
         self._lh_target_quat = value
+
+    @property
+    def rh_waypoint_pos(self):
+        return self._rh_waypoint_pos
+
+    @rh_waypoint_pos.setter
+    def rh_waypoint_pos(self, value):
+        self._rh_waypoint_pos = value
+
+    @property
+    def lh_waypoint_pos(self):
+        return self._lh_waypoint_pos
+
+    @lh_waypoint_pos.setter
+    def lh_waypoint_pos(self, value):
+        self._lh_waypoint_pos = value

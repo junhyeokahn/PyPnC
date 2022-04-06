@@ -36,10 +36,12 @@ import ipdb
 ############## Manipulation
 ## 1: move left hand
 # interface.interrupt_logic.lh_target_pos = lh_target_pos
+# interface.interrupt_logic.lh_waypoint_pos = lh_waypoint_pos
 # interface.interrupt_logic.lh_target_quat = lh_target_quat
 # interface.interrupt_logic.b_interrupt_button_one = True
 ## 3: move right hand
 # interface.interrupt_logic.rh_target_pos = rh_target_pos
+# interface.interrupt_logic.rh_waypoint_pos = rh_waypoint_pos
 # interface.interrupt_logic.rh_target_quat = rh_target_quat
 # interface.interrupt_logic.b_interrupt_button_three = True
 ############## Locomotion
@@ -74,6 +76,25 @@ gripper_joints = [
     "right_ezgripper_knuckle_palm_L1_1", "right_ezgripper_knuckle_L1_L2_1",
     "right_ezgripper_knuckle_palm_L1_2", "right_ezgripper_knuckle_L1_L2_2"
 ]
+
+KEYPOINT_OFFSET = 0.1
+RIGHTUP_GRIPPER = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]])
+
+
+def x_rot(angle):
+    return np.array([[1, 0, 0], [0, np.cos(angle), -np.sin(angle)],
+                     [0, np.sin(angle), np.cos(angle)]])
+
+
+def generate_keypoint(target_iso):
+    ret = np.copy(target_iso)
+    R_wl = np.copy(target_iso[0:3, 0:3])
+    local_z_offset = np.array([0., 0., KEYPOINT_OFFSET])
+    global_z_offset = np.dot(R_wl, local_z_offset)
+    ret[0:3, 3] += global_z_offset
+
+    return ret
+
 
 def set_initial_config(robot, joint_id):
     # Upperbody
@@ -135,9 +156,10 @@ if __name__ == "__main__":
 
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
-                       SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
-                       SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
+    robot = p.loadURDF(
+        cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf",
+        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
+        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
     lh_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
                                  [0., 0, 0.], [0, 0, 0, 1])
@@ -147,6 +169,15 @@ if __name__ == "__main__":
                                  [0, 0, 0, 1])
     rh_target_pos = np.array([0., 0., 0.])
     rh_target_quat = np.array([0., 0., 0., 1.])
+
+    lh_waypoint_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
+                                   [0., 0, 0.], [0, 0, 0, 1])
+    lh_waypoint_pos = np.array([0., 0., 0.])
+    lh_waypoint_quat = np.array([0., 0., 0., 1.])
+    rh_waypoint_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
+                                   [0, 0, 0], [0, 0, 0, 1])
+    rh_waypoint_pos = np.array([0., 0., 0.])
+    rh_waypoint_quat = np.array([0., 0., 0., 1.])
 
     com_target_frame = p.loadURDF(cwd + "/robot_model/etc/ball.urdf",
                                   [0., 0, 0.], [0, 0, 0, 1])
@@ -175,7 +206,7 @@ if __name__ == "__main__":
                useFixedBase=0,
                basePosition=[-0.35 + xOffset, 0.2, 0.7])
 
-# Add Gear constraint
+    # Add Gear constraint
     c = p.createConstraint(robot,
                            link_id['l_knee_fe_lp'],
                            robot,
@@ -245,6 +276,8 @@ if __name__ == "__main__":
     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
     pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
     pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
+    pybullet_util.draw_link_frame(lh_waypoint_frame, -1)
+    pybullet_util.draw_link_frame(rh_waypoint_frame, -1)
     pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
 
     gripper_command = dict()
@@ -286,6 +319,10 @@ if __name__ == "__main__":
                                           lh_target_quat)
         p.resetBasePositionAndOrientation(rh_target_frame, rh_target_pos,
                                           rh_target_quat)
+        p.resetBasePositionAndOrientation(lh_waypoint_frame, lh_waypoint_pos,
+                                          lh_target_quat)
+        p.resetBasePositionAndOrientation(rh_waypoint_frame, rh_waypoint_pos,
+                                          rh_target_quat)
         p.resetBasePositionAndOrientation(com_target_frame,
                                           [com_target_x, com_target_y, 0.02],
                                           [0., 0., 0., 1.])
@@ -304,6 +341,9 @@ if __name__ == "__main__":
 
         # Apply Command
         pybullet_util.set_motor_trq(robot, joint_id, command['joint_trq'])
+        # pybullet_util.set_motor_impedance(robot, joint_id, command,
+        # SimConfig.KP, SimConfig.KD)
+
         pybullet_util.set_motor_pos(robot, joint_id, gripper_command)
 
         # Save Image

@@ -12,8 +12,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
         self._control_architecture = ctrl_arch
 
         self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_waypoint_pos = np.array([0., 0., 0.])
         self._lh_target_quat = np.array([0., 0., 0., 1.])
         self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_waypoint_pos = np.array([0., 0., 0.])
         self._rh_target_quat = np.array([0., 0., 0., 1.])
 
         self._com_displacement_x = 0.
@@ -55,6 +57,22 @@ class DracoManipulationInterruptLogic(InterruptLogic):
     @rh_target_pos.setter
     def rh_target_pos(self, value):
         self._rh_target_pos = value
+
+    @property
+    def rh_waypoint_pos(self):
+        return self._rh_waypoint_pos
+
+    @rh_waypoint_pos.setter
+    def rh_waypoint_pos(self, value):
+        self._rh_waypoint_pos = value
+
+    @property
+    def lh_waypoint_pos(self):
+        return self._lh_waypoint_pos
+
+    @lh_waypoint_pos.setter
+    def lh_waypoint_pos(self, value):
+        self._lh_waypoint_pos = value
 
     @property
     def lh_target_quat(self):
@@ -107,75 +125,75 @@ class DracoManipulationInterruptLogic(InterruptLogic):
 
     def process_interrupts(self):
         if self._b_interrupt_button_eight:
-            print("=" * 80)
-            print(
-                "[Interrupt Logic] button {} pressed: Walk Forward".format(8))
-            print("=" * 80)
+            # print("=" * 80)
+            # print(
+            # "[Interrupt Logic] button {} pressed: Walk Forward".format(8))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_forward()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_five:
-            print("=" * 80)
-            print(
-                "[Interrupt Logic] button {} pressed: Walk In Place".format(5))
-            print("=" * 80)
+            # print("=" * 80)
+            # print(
+            # "[Interrupt Logic] button {} pressed: Walk In Place".format(5))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_place()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_four:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Walk Left".format(4))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Walk Left".format(4))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.strafe_left()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_six:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Walk Right".format(6))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Walk Right".format(6))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.strafe_right()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_two:
-            print("=" * 80)
-            print(
-                "[Interrupt Logic] button {} pressed: Walk Backward".format(2))
-            print("=" * 80)
+            # print("=" * 80)
+            # print(
+            # "[Interrupt Logic] button {} pressed: Walk Backward".format(2))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_backward()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_seven:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Turn Left".format(7))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Turn Left".format(7))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.turn_left()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_nine:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Turn Right".format(9))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Turn Right".format(9))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.turn_right()
                 self._control_architecture.state_machine[
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_m:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed".format('m'))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed".format('m'))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_x(
                     self._com_displacement_x)
@@ -183,9 +201,9 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_n:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed".format('n'))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed".format('n'))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.dcm_tm.walk_in_y(
                     self._com_displacement_y)
@@ -193,15 +211,18 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     LocomanipulationState.BALANCE].walking_trigger = True
 
         if self._b_interrupt_button_one:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Left Hand Reaching".
-                  format(1))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Left Hand Reaching".
+            # format(1))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 # Set target pos and goal here
                 self._control_architecture.state_machine[
                     LocomanipulationState.
                     LH_HANDREACH].lh_target_pos = self._lh_target_pos
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    LH_HANDREACH].lh_waypoint_pos = self._lh_waypoint_pos
                 self._control_architecture.state_machine[
                     LocomanipulationState.
                     LH_HANDREACH].lh_target_quat = self._lh_target_quat
@@ -210,10 +231,10 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     BALANCE].lhand_task_trans_trigger = True
 
         if self._b_interrupt_button_three:
-            print("=" * 80)
-            print("[Interrupt Logic] button {} pressed: Right Hand Reaching".
-                  format(3))
-            print("=" * 80)
+            # print("=" * 80)
+            # print("[Interrupt Logic] button {} pressed: Right Hand Reaching".
+            # format(3))
+            # print("=" * 80)
             if self._control_architecture.state == LocomanipulationState.BALANCE:
                 self._control_architecture.state_machine[
                     LocomanipulationState.
@@ -223,6 +244,21 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     RH_HANDREACH].rh_target_pos = self._rh_target_pos
                 self._control_architecture.state_machine[
                     LocomanipulationState.
+                    RH_HANDREACH].rh_waypoint_pos = self._rh_waypoint_pos
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
                     RH_HANDREACH].rh_target_quat = self._rh_target_quat
+
+        if self._b_interrupt_button_r:
+            if self._control_architecture.state == LocomanipulationState.BALANCE:
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    BALANCE].rhand_task_return_trigger = True
+
+        if self._b_interrupt_button_e:
+            if self._control_architecture.state == LocomanipulationState.BALANCE:
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    BALANCE].lhand_task_return_trigger = True
 
         self._reset_flags()

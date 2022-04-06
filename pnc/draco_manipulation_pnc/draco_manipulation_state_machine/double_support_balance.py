@@ -18,6 +18,8 @@ class DoubleSupportBalance(StateMachine):
         self._swaying_trigger = False
         self._lhand_task_trans_trigger = False
         self._rhand_task_trans_trigger = False
+        self._lhand_task_return_trigger = False
+        self._rhand_task_return_trigger = False
 
     @property
     def walking_trigger(self):
@@ -51,6 +53,22 @@ class DoubleSupportBalance(StateMachine):
     def rhand_task_trans_trigger(self, value):
         self._rhand_task_trans_trigger = value
 
+    @property
+    def lhand_task_return_trigger(self):
+        return self._lhand_task_return_trigger
+
+    @lhand_task_return_trigger.setter
+    def lhand_task_return_trigger(self, value):
+        self._lhand_task_return_trigger = value
+
+    @property
+    def rhand_task_return_trigger(self):
+        return self._rhand_task_return_trigger
+
+    @rhand_task_return_trigger.setter
+    def rhand_task_return_trigger(self, value):
+        self._rhand_task_return_trigger = value
+
     def one_step(self):
         self._state_machine_time = self._sp.curr_time - self._start_time
 
@@ -63,10 +81,12 @@ class DoubleSupportBalance(StateMachine):
         # self._trajectory_managers["rhand"].use_current()
 
     def first_visit(self):
-        print("[LocomanipulationState] BALANCE")
+        # print("[LocomanipulationState] BALANCE")
         self._walking_trigger = False
         self._rhand_task_trans_trigger = False
         self._lhand_task_trans_trigger = False
+        self._rhand_task_return_trigger = False
+        self._lhand_task_return_trigger = False
         self._start_time = self._sp.curr_time
 
     def last_visit(self):
@@ -81,6 +101,11 @@ class DoubleSupportBalance(StateMachine):
         if self._lhand_task_trans_trigger:
             return True
         if self._rhand_task_trans_trigger:
+            return True
+
+        if self._lhand_task_return_trigger:
+            return True
+        if self._rhand_task_return_trigger:
             return True
 
         return False
@@ -100,3 +125,7 @@ class DoubleSupportBalance(StateMachine):
             return LocomanipulationState.LH_HANDREACH
         if self._rhand_task_trans_trigger:
             return LocomanipulationState.RH_HANDREACH
+        if self._lhand_task_return_trigger:
+            return LocomanipulationState.LH_HANDRETURN
+        if self._rhand_task_return_trigger:
+            return LocomanipulationState.RH_HANDRETURN
