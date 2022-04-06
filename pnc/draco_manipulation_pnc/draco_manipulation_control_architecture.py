@@ -19,6 +19,7 @@ from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.contact_transit
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.contact_transition_end import ContactTransitionEnd
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.single_support_swing import SingleSupportSwing
 from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.double_support_hand_reaching import DoubleSupportHandReach
+from pnc.draco_manipulation_pnc.draco_manipulation_state_machine.double_support_hand_return import DoubleSupportHandReturn
 from pnc.draco_manipulation_pnc.draco_manipulation_state_provider import DracoManipulationStateProvider
 
 
@@ -230,7 +231,7 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             RH_HANDREACH].rh_target_quat = ManipulationConfig.RH_TARGET_QUAT
         self._state_machine[
             LocomanipulationState.
-            RH_HANDREACH].trans_duration = ManipulationConfig.T_TRANS_DURATION
+            RH_HANDREACH].trans_duration = ManipulationConfig.T_REACHING_TRANS_DURATION
 
         self._state_machine[
             LocomanipulationState.LH_HANDREACH] = DoubleSupportHandReach(
@@ -248,7 +249,25 @@ class DracoManipulationControlArchitecture(ControlArchitecture):
             LH_HANDREACH].lh_target_quat = ManipulationConfig.LH_TARGET_QUAT
         self._state_machine[
             LocomanipulationState.
-            LH_HANDREACH].trans_duration = ManipulationConfig.T_TRANS_DURATION
+            LH_HANDREACH].trans_duration = ManipulationConfig.T_REACHING_TRANS_DURATION
+
+        self._state_machine[
+            LocomanipulationState.RH_HANDRETURN] = DoubleSupportHandReturn(
+                LocomanipulationState.RH_HANDRETURN, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                self._robot)
+        self._state_machine[
+            LocomanipulationState.
+            RH_HANDRETURN].trans_duration = ManipulationConfig.T_RETURNING_TRANS_DURATION
+
+        self._state_machine[
+            LocomanipulationState.LH_HANDRETURN] = DoubleSupportHandReturn(
+                LocomanipulationState.LH_HANDRETURN, self._trajectory_managers,
+                self._hierarchy_managers, self._reaction_force_managers,
+                self._robot)
+        self._state_machine[
+            LocomanipulationState.
+            LH_HANDRETURN].trans_duration = ManipulationConfig.T_RETURNING_TRANS_DURATION
 
         # Set Starting State
         self._state = LocomanipulationState.STAND

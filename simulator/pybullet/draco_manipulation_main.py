@@ -372,6 +372,10 @@ if __name__ == "__main__":
             com_target_y = 0.23
             interface.interrupt_logic.com_displacement_y = com_target_y
             interface.interrupt_logic.b_interrupt_button_n = True
+        elif pybullet_util.is_key_triggered(keys, 'r'):
+            interface.interrupt_logic.b_interrupt_button_r = True
+        elif pybullet_util.is_key_triggered(keys, 'e'):
+            interface.interrupt_logic.b_interrupt_button_e = True
 
         # Compute Command
         if SimConfig.PRINT_TIME:

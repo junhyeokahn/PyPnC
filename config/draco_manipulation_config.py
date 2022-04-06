@@ -170,8 +170,10 @@ class WalkingConfig(object):
 
 
 class ManipulationConfig(object):
-    T_TRANS_DURATION = 0.75
+    T_REACHING_TRANS_DURATION = 0.75
     T_REACHING_DURATION = 1.5
+
+    T_RETURNING_TRANS_DURATION = 0.75
 
     ## !! This will be overwritten in main !! ##
     LH_TARGET_POS = np.array([0.29, 0.23, 0.96])
@@ -193,3 +195,5 @@ class LocomanipulationState(object):
     LF_SWING = 7
     RH_HANDREACH = 8
     LH_HANDREACH = 9
+    RH_HANDRETURN = 10
+    LH_HANDRETURN = 11

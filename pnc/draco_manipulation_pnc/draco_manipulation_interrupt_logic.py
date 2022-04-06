@@ -249,4 +249,16 @@ class DracoManipulationInterruptLogic(InterruptLogic):
                     LocomanipulationState.
                     RH_HANDREACH].rh_target_quat = self._rh_target_quat
 
+        if self._b_interrupt_button_r:
+            if self._control_architecture.state == LocomanipulationState.BALANCE:
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    BALANCE].rhand_task_return_trigger = True
+
+        if self._b_interrupt_button_e:
+            if self._control_architecture.state == LocomanipulationState.BALANCE:
+                self._control_architecture.state_machine[
+                    LocomanipulationState.
+                    BALANCE].lhand_task_return_trigger = True
+
         self._reset_flags()
