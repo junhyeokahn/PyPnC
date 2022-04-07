@@ -181,7 +181,8 @@ def try_multiprocess(args_list, num_cpu, f, max_timeouts=1):
 
     return results
 
-def prevent_quat_jump(quat_des,quat_act):
+
+def prevent_quat_jump(quat_des, quat_act):
     # print("quat_des:",quat_des)
     # print("quat_act:",quat_act)
     a = quat_des - quat_act
@@ -193,3 +194,12 @@ def prevent_quat_jump(quat_des,quat_act):
 
     return new_quat_act
 
+
+def is_colliding_3d(start, goal, min, max, threshold, N):
+    for i in range(3):
+        for j in range(N):
+            p = start[i] + (goal[i] - start[i]) * j / N
+            if min[i] + np.abs(threshold[i]) <= p and p <= max[i] - np.abs(
+                    threshold[i]):
+                return True
+    return False
