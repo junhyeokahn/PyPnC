@@ -140,8 +140,8 @@ def set_initial_config(robot, joint_id):
 
 
 def run_sim(inp):
-    goal_pos = np.copy(inp[0:3])
-    angle = inp[3]
+    goal_pos = np.copy(inp)
+    angle = 0.
 
     if not p.isConnected():
         if not B_VISUALIZE:
@@ -327,7 +327,7 @@ N = 1024
 prior_rollouts = []
 
 for i in tqdm(range(N)):
-    inp = np.random.uniform([0.3, -0.2, 0.7, -np.pi / 3], [0.7, 0.5, 1.0, 0.])
+    inp = np.random.uniform([0.3, -0.2, 0.7], [0.7, 0.5, 1.0])
     logging.info('*' * 80)
     logging.info('input: {}'.format(inp))
     success = run_sim(inp)
