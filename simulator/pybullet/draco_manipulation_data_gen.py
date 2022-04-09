@@ -49,11 +49,20 @@ KEYPOINT_OFFSET = 0.1
 
 TRACKING_ERROR_THRESHOLD = [0.02, 0.02, 0.04, 0.1]
 NOMINAL_BASE_COM_HEIGHT = 0.9
+"""
+0: falling right
+1: falling left
+2: falling forward
+3: falling backward
+4: falling down
+5: falling up
+6: no reaching
+"""
 
 
 ################### SAFETY
 def is_safe(robot, link_id, sensor_data):
-    safe = True
+    safe_list = [True, True, True, True, True, True]
     rfoot_pos = pybullet_util.get_link_iso(robot,
                                            link_id['r_foot_contact'])[0:3, 3]
     lfoot_pos = pybullet_util.get_link_iso(robot,
@@ -61,20 +70,24 @@ def is_safe(robot, link_id, sensor_data):
 
     if sensor_data['base_com_pos'][1] <= rfoot_pos[1]:
         logging.info("reasoning: com falling to the right")
-        safe = False
+        safe_list[0] = False
     if sensor_data['base_com_pos'][1] >= lfoot_pos[1]:
-        safe = False
+        safe_list[1] = False
         logging.info("reasoning: com falling to the left")
     if sensor_data['base_com_pos'][0] >= 0.2:
-        safe = False
+        logging.info("reasoning: com falling forward")
+        safe_list[2] = False
     if sensor_data['base_com_pos'][0] <= -0.2:
-        logging.info("reasoning: com soared")
-        safe = False
-    if np.abs(sensor_data['base_com_pos'][2] - NOMINAL_BASE_COM_HEIGHT) >= 0.1:
-        logging.info("reasoning: com flopped down")
-        safe = False
+        logging.info("reasoning: com falling back")
+        safe_list[3] = False
+    if sensor_data['base_com_pos'][2] <= NOMINAL_BASE_COM_HEIGHT - 0.1:
+        logging.info("reasoning: com too low")
+        safe_list[4] = False
+    if sensor_data['base_com_pos'][2] >= NOMINAL_BASE_COM_HEIGHT + 0.1:
+        logging.info("reasoning: com too high")
+        safe_list[5] = False
 
-    return safe
+    return safe_list
 
 
 def is_tracking_error_safe(goal_pos, angle, robot, link_id):
@@ -140,8 +153,8 @@ def set_initial_config(robot, joint_id):
 
 
 def run_sim(inp):
-    goal_pos = np.copy(inp[0:3])
-    angle = inp[3]
+    goal_pos = np.copy(inp)
+    angle = 0.
 
     if not p.isConnected():
         if not B_VISUALIZE:
@@ -303,42 +316,46 @@ def run_sim(inp):
         count += 1
 
         ## Safety On the run
-        if is_safe(robot, link_id, sensor_data):
+        safe_list = is_safe(robot, link_id, sensor_data)
+        if all(safe_list):
             pass
         else:
-            success = False
+            safe_list.append(False)
             del interface
             break
 
         ## Safety at the end
         if t >= time_command_recved + ManipulationConfig.T_REACHING_DURATION + 0.2:
             if is_tracking_error_safe(global_goal_pos, angle, robot, link_id):
-                success = True
+                safe_list.append(True)
             else:
-                success = False
+                safe_list.append(False)
             del interface
             break
 
-    return success
+    return safe_list
 
 
 N = 1024
 
-prior_rollouts = []
+prior_rollout_lists = [[], [], [], [], [], [], []]
 
 for i in tqdm(range(N)):
-    inp = np.random.uniform([0.3, -0.2, 0.7, -np.pi / 3], [0.7, 0.5, 1.0, 0.])
+    inp = np.random.uniform([0.3, -0.2, 0.7], [0.9, 0.7, 1.0])
     logging.info('*' * 80)
     logging.info('input: {}'.format(inp))
     success = run_sim(inp)
     logging.info('label: {}'.format(success))
-    prior_rollouts.append([inp, success])
+    for i in range(7):
+        prior_rollout_lists[i].append([inp, success[i]])
 
 for f in os.listdir('data'):
-    if f == "prior_rollouts.pkl":
-        os.remove('data/' + f)
-with open('data/prior_rollouts.pkl', 'ab') as f:
-    pickle.dump(prior_rollouts, f)
+    for i in range(7):
+        if f == "prior_rollouts_{}.pkl".format(i):
+            os.remove('data/' + f)
+for i in range(7):
+    with open('data/prior_rollouts_{}.pkl'.format(i), 'ab') as f:
+        pickle.dump(prior_rollout_list[i], f)
 """
 
 run_sim(np.array([0.6, 0.6, 0.85, 0.]))
