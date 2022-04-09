@@ -57,6 +57,8 @@ import ipdb
 ## 2: walk backward
 ## 8: walk forward
 ############################################################
+# r: right hand return
+# e: left hand return
 
 ######################## Variables ########################
 ## Standby
@@ -190,7 +192,7 @@ if __name__ == "__main__":
         robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
-    xOffset = 0.8
+    xOffset = 0.9
 
     p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf",
                useFixedBase=1,
@@ -308,7 +310,7 @@ if __name__ == "__main__":
 
         if t > 0:
             # TODO: do we just want to move this entire loop into the rosnode/merge these two files?
-            lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command = rosnode.apply_commands(interface, t)
+            lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command, lh_waypoint_pos, rh_waypoint_pos = rosnode.apply_commands(interface, t)
 
         # Compute Command
         if SimConfig.PRINT_TIME:

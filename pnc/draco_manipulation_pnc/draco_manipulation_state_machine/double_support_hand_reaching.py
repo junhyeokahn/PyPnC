@@ -44,15 +44,15 @@ class DoubleSupportHandReach(StateMachine):
 
         # Update Hand Task
         if self._state_id == LocomanipulationState.RH_HANDREACH:
-            # self._trajectory_managers['rhand'].update_hand_trajectory(
-            # self._sp.curr_time)
-            self._trajectory_managers['rhand'].update_keypoint_hand_trajectory(
-                self._sp.curr_time)
+            self._trajectory_managers['rhand'].update_hand_trajectory(
+            self._sp.curr_time)
+            # self._trajectory_managers['rhand'].update_keypoint_hand_trajectory(
+            #     self._sp.curr_time)
         elif self._state_id == LocomanipulationState.LH_HANDREACH:
-            # self._trajectory_managers['lhand'].update_hand_trajectory(
-            # self._sp.curr_time)
-            self._trajectory_managers['lhand'].update_keypoint_hand_trajectory(
-                self._sp.curr_time)
+            self._trajectory_managers['lhand'].update_hand_trajectory(
+            self._sp.curr_time)
+            # self._trajectory_managers['lhand'].update_keypoint_hand_trajectory(
+            #     self._sp.curr_time)
         else:
             raise ValueError("Wrong LocomanipulationState: HandSide")
 
@@ -65,13 +65,13 @@ class DoubleSupportHandReach(StateMachine):
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._rh_target_quat)
             target_hand_iso[0:3, 3] = self._rh_target_pos
 
-            # self._trajectory_managers['rhand'].initialize_hand_trajectory(
-            # self._start_time, self._moving_duration, target_hand_iso)
+            self._trajectory_managers['rhand'].initialize_hand_trajectory(
+            self._start_time, self._moving_duration, target_hand_iso)
 
-            self._trajectory_managers[
-                'rhand'].initialize_keypoint_hand_trajectory(
-                    self._start_time, self._moving_duration,
-                    self._rh_waypoint_pos, target_hand_iso)
+            # self._trajectory_managers[
+            #     'rhand'].initialize_keypoint_hand_trajectory(
+            #         self._start_time, self._moving_duration,
+            #         self._rh_waypoint_pos, target_hand_iso)
 
             self._hierarchy_managers["rhand_pos"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)
@@ -83,13 +83,13 @@ class DoubleSupportHandReach(StateMachine):
             target_hand_iso[0:3, 0:3] = util.quat_to_rot(self._lh_target_quat)
             target_hand_iso[0:3, 3] = self._lh_target_pos
 
-            # self._trajectory_managers['lhand'].initialize_hand_trajectory(
-            # self._start_time, self._moving_duration, target_hand_iso)
+            self._trajectory_managers['lhand'].initialize_hand_trajectory(
+            self._start_time, self._moving_duration, target_hand_iso)
 
-            self._trajectory_managers[
-                'lhand'].initialize_keypoint_hand_trajectory(
-                    self._start_time, self._moving_duration,
-                    self._lh_waypoint_pos, target_hand_iso)
+            # self._trajectory_managers[
+            #     'lhand'].initialize_keypoint_hand_trajectory(
+            #         self._start_time, self._moving_duration,
+            #         self._lh_waypoint_pos, target_hand_iso)
 
             self._hierarchy_managers["lhand_pos"].initialize_ramp_to_max(
                 self._sp.curr_time, self._trans_duration)

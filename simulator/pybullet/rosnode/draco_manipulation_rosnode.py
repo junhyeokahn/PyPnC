@@ -9,6 +9,7 @@ from util import pybullet_util
 from threading import Lock
 from simulator.pybullet.rosnode.srv import MoveEndEffectorToSrv, GripperCommandSrv, InterruptSrv, MoveEndEffectorToSrvResponse, GripperCommandSrvResponse, InterruptSrvResponse
 from simulator.pybullet.rosnode.srv._LocomotionCommandSrv import LocomotionCommandSrv, LocomotionCommandSrvRequest, LocomotionCommandSrvResponse
+from simulator.pybullet.rosnode.srv._ReturnEESrv import ReturnEESrv, ReturnEESrvResponse
 # import tf
 from scipy.spatial.transform import Rotation
 import numpy as np
@@ -39,6 +40,7 @@ class DracoManipulationRosnode():
         # Is this still a thing? Walk in place?
         # self._interrupt_srv = rospy.Service('draco/interrupt_srv', InterruptSrv, self.handle_interrupt)
         self._walk_srv = rospy.Service('draco/locomotion_srv', LocomotionCommandSrv, self.handle_locomotion_command)
+        self._return_srv = rospy.Service('draco/return_ee_srv', ReturnEESrv, self.handle_return_ee_command)
 
         # Current behavior would be for pending commands of the same type to be overwritten if still pending, but
         #   if already active then the newly incoming command would be discarded.
@@ -57,11 +59,15 @@ class DracoManipulationRosnode():
         #   Move right hand
         #   Walk in X
         #   Walk in Y
-        self._command_state = np.zeros(6)
+        #   Return left ee nominal
+        #   Return right ee nominal
+        self._command_state = np.zeros(8)
 
         self._lh_target_pos = np.array([0., 0., 0.])
+        self._lh_waypoint_pos = np.array([0., 0., 0.])
         self._lh_target_quat = np.array([0., 0., 0., 1.])
         self._rh_target_pos = np.array([0., 0., 0.])
+        self._rh_waypoint_pos = np.array([0., 0., 0.])
         self._rh_target_quat = np.array([0., 0., 0., 1.])
         self._com_target_x = 0.
         self._com_target_y = 0.
@@ -75,8 +81,10 @@ class DracoManipulationRosnode():
         # Copy results of any pending commands and return as targets
         gripper_command = self._gripper_command.copy()
         lh_target_pos = self._lh_target_pos.copy()
-        rh_target_pos = self._rh_target_pos.copy()
+        lh_waypoint_pos = self._lh_waypoint_pos.copy()
         lh_target_quat = self._lh_target_quat.copy()
+        rh_target_pos = self._rh_target_pos.copy()
+        rh_waypoint_pos = self._rh_waypoint_pos.copy()
         rh_target_quat = self._rh_target_quat.copy()
         com_displacement_x = self._com_target_x
         com_displacement_y = self._com_target_y
@@ -95,12 +103,21 @@ class DracoManipulationRosnode():
         elif self._command_state[2]:
             print("got left ee command: ", lh_target_pos, lh_target_quat)
             interface.interrupt_logic.lh_target_pos = lh_target_pos
+            # # lh_target_rot = np.dot(RIGHTUP_GRIPPER, x_rot(-np.pi / 4.))
+            # # # lh_target_rot = np.copy(RIGHTUP_GRIPPER)
+            # # lh_target_quat = util.rot_to_quat(lh_target_rot)
+            # # lh_target_iso = liegroup.RpToTrans(lh_target_rot, lh_target_pos)
+            # # lh_waypoint_pos = generate_keypoint(lh_target_iso)[0:3, 3]
+            # lh_waypoint_pos = lh_target_pos - [0.1,0.,0.]
+            # interface.interrupt_logic.lh_waypoint_pos = lh_waypoint_pos
             interface.interrupt_logic.lh_target_quat = lh_target_quat
             interface.interrupt_logic.b_interrupt_button_one = True
             self._command_state[2] = 0
         elif self._command_state[3]:
             print("got right ee command: ", rh_target_pos, rh_target_quat)
             interface.interrupt_logic.rh_target_pos = rh_target_pos
+            # rh_waypoint_pos = rh_target_pos - [0.1,0,0]
+            # interface.interrupt_logic.rh_waypoint_pos = rh_waypoint_pos
             interface.interrupt_logic.rh_target_quat = rh_target_quat
             interface.interrupt_logic.b_interrupt_button_three = True
             self._command_state[3] = 0
@@ -114,6 +131,15 @@ class DracoManipulationRosnode():
             interface.interrupt_logic.com_displacement_y = com_displacement_y
             interface.interrupt_logic.b_interrupt_button_n = True
             self._command_state[5] = 0
+        # TODO: not sure of behavior in case of conflicting return nominal and move ee commands
+        elif self._command_state[6]:
+            print("got return left ee to nominal command")
+            interface.interrupt_logic.b_interrupt_button_e = True
+            self._command_state[6] = 0
+        elif self._command_state[7]:
+            print("got return right ee to nominal command")
+            interface.interrupt_logic.b_interrupt_button_r = True
+            self._command_state[7] = 0
 
         # Update internal standby variables
         if t_gripper_stab_dur < t <= self._t_left_gripper_command_recv + t_gripper_stab_dur:
@@ -129,7 +155,7 @@ class DracoManipulationRosnode():
         self._ready_state[4] = interface.interrupt_logic.b_walk_ready
 
         self._command_iteration_lock.release()
-        return lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command
+        return lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command, lh_waypoint_pos, rh_waypoint_pos
 
     def handle_gripper_command(self, req):
         print("handle_gripper_command", req)
@@ -213,6 +239,47 @@ class DracoManipulationRosnode():
         #   component to be True again)
         print("waiting on ee to be ready again")
         while not self._ready_state[2+int(req.side)] or self._command_state[2+int(req.side)]:
+            time.sleep(1)
+        print("ee ready again, returning")
+
+        # TODO: check if command was actually successful or not by querying ee location
+        #   Also, do we still even care about return val if we don't need to manually verify things?
+        resp.success = True
+
+        return resp
+
+    def handle_return_ee_command(self, req):
+        print("handle_ee_return_command", req)
+
+        # Wait for current simulation iteration to finish applying any pending commands and update ready_state, then
+        #   process incoming command
+        self._command_iteration_lock.acquire()
+        resp = ReturnEESrvResponse()
+
+        if req.side:
+            if self._ready_state[3]:
+                print("right ee command ready, setting")
+                self._command_state[7] = 1
+            else:
+                print("right ee command not ready, returning false")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        else:
+            if self._ready_state[2]:
+                print("left ee command ready, setting")
+                self._command_state[6] = 1
+            else:
+                print("left ee command not ready, returning false")
+                resp.success = False
+                self._command_iteration_lock.release()
+                return resp
+        self._command_iteration_lock.release()
+
+        # Now results of command will be input next sim iteration, want to wait on command being done (ready_state for
+        #   component to be True again)
+        print("waiting on ee to be ready again")
+        while not self._ready_state[2+int(req.side)] or self._command_state[5+int(req.side)]:
             time.sleep(1)
         print("ee ready again, returning")
 
@@ -340,13 +407,19 @@ class DracoManipulationRosnode():
         # cam_rpy = (cam_rpy[1],180-cam_rpy[2],-cam_rpy[0])
         # vision_quat = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
 
+        # This attempt may have been static case built from view matrix?
+        # view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='F')[:3]])
+        # view_rot = Rotation.from_matrix(view_mat).as_euler('xyz',degrees=True)
+        # trans_euler = [view_rot[0] - 180, view_rot[1], view_rot[2]]
+        # vision_quat = Rotation.from_euler('xyz', trans_euler, degrees=True).as_quat()
+
         # Works in static case when modifying cloud to align with vision coords
         vision_quat = Rotation.from_euler('xyz', [-90,0,-90], degrees=True).as_quat()
 
         camera_transform_msg = TransformStamped()
-        camera_transform_msg.transform.translation.x = cam_pos[2]#cam_pos[0]
+        camera_transform_msg.transform.translation.x = cam_pos[0]#cam_pos[0]
         camera_transform_msg.transform.translation.y = cam_pos[1]#cam_pos[1]
-        camera_transform_msg.transform.translation.z = cam_pos[0]#cam_pos[2]
+        camera_transform_msg.transform.translation.z = cam_pos[2]#cam_pos[2]
         camera_transform_msg.transform.rotation.x = vision_quat[0]
         camera_transform_msg.transform.rotation.y = vision_quat[1]
         camera_transform_msg.transform.rotation.z = vision_quat[2]
