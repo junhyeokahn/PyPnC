@@ -79,9 +79,9 @@ gripper_joints = [
 KEYPOINT_OFFSET = 0.1
 RIGHTUP_GRIPPER = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]])
 
-SAFETY_THRESHOLD = 0.8
+SAFETY_THRESHOLD = 0.5
 
-grid_location = util.GridLocation(np.array([0.1, 0.1, 0.15]))
+grid_location = util.GridLocation(np.array([0.1, 0.1, 0.1]))
 saf_list = [None] * 7
 for i in range(7):
     with open('saf/saf_{}.pkl'.format(i), 'rb') as f:
