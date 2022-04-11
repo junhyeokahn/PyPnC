@@ -14,14 +14,89 @@ from simulator.pybullet.rosnode.srv._SafetyAssessmentSrv import SafetyAssessment
 # import tf
 from scipy.spatial.transform import Rotation
 import numpy as np
+from util import util
+import pickle
 
 t_gripper_stab_dur = 0.1
+
+
+SAFETY_THRESHOLD = 0.5
+
+grid_location = util.GridLocation(np.array([0.1, 0.1, 0.1]))
+saf_list = [None] * 7
+for i in range(7):
+    with open('saf/saf_{}.pkl'.format(i), 'rb') as f:
+        saf_list[i] = pickle.load(f)
+
+
+def is_lh_reachable(sensor_data, global_goal):
+    """
+    0: falling right
+    1: falling left
+    2: falling forward
+    3: falling backward
+    4: falling down
+    5: falling up
+    6: no reaching
+    """
+    local_goal = global_goal - sensor_data['base_com_pos']
+    local_goal[2] = global_goal[2]
+    normalized_goal = local_goal - np.array([0.6, 0.25, 0.85])
+    grid_idx = grid_location.get_grid_idx(normalized_goal)
+    labels = [False] * 7
+    print("lhand")
+    print("grid: ", grid_idx)
+    for i in range(7):
+        print("{}th prob: {}".format(i, saf_list[i][grid_idx]))
+        labels[i] = False if saf_list[i][grid_idx] < SAFETY_THRESHOLD else True
+
+    return labels
+
+
+def is_rh_reachable(sensor_data, global_goal):
+    """
+    0: falling right
+    1: falling left
+    2: falling forward
+    3: falling backward
+    4: falling down
+    5: falling up
+    6: no reaching
+    """
+    local_goal = global_goal - sensor_data['base_com_pos']
+    local_goal[1] *= -1
+    local_goal[2] = global_goal[2]
+    normalized_goal = local_goal - np.array([0.6, 0.25, 0.85])
+    grid_idx = grid_location.get_grid_idx(normalized_goal)
+    labels = [False] * 7
+    print("rhand")
+    print("grid: ", grid_idx)
+    for i in range(7):
+        print("{}th prob: {}".format(i, saf_list[i][grid_idx]))
+        labels[i] = False if saf_list[i][grid_idx] < SAFETY_THRESHOLD else True
+
+    return labels
+
+
+def is_colliding(start, waypoint, goal, obs_min, obs_max, threshold, n):
+    """
+    start, waypoint, goal, OBS_MIN, OBS_MAX, THRESHOLD: 3d np.array
+    N: number of check point
+    """
+    if util.is_colliding_3d(start, waypoint, obs_min, obs_max, threshold, n):
+        return false
+    if util.is_colliding_3d(waypoint, goal, obs_min, obs_max, threshold, n):
+        return false
+    return true
 
 class DracoManipulationRosnode():
     def __init__(self, robot, link_id, gripper_command):
         rospy.init_node('draco')
         self._robot = robot
         self._link_id = link_id
+
+        # For demo, going to stop doing vision publishing when we are done using it for speed reasons
+        self.command_recieved = False
 
         # Publishers
         self._joint_pub = rospy.Publisher('draco/joint_pos', JointState, queue_size=1)
@@ -156,8 +231,6 @@ class DracoManipulationRosnode():
         self._ready_state[3] = interface.interrupt_logic.b_right_hand_ready
         self._ready_state[4] = interface.interrupt_logic.b_walk_ready
 
-#         print(self._ready_state)
-
         self._command_iteration_lock.release()
         return lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command, lh_waypoint_pos, rh_waypoint_pos
 
@@ -285,7 +358,7 @@ class DracoManipulationRosnode():
         print("waiting on ee to be ready again")
 #        Seemingly there is a delay before ready is set to false for this but not ee_reach
         time.sleep(2)
-        while not self._ready_state[2+int(req.side)] or self._command_state[5+int(req.side)]:
+        while not self._ready_state[2+int(req.side)] or self._command_state[6+int(req.side)]:
             time.sleep(1)
         print("ee ready again, returning")
 
@@ -332,46 +405,54 @@ class DracoManipulationRosnode():
 
     def handle_safety_assessment(self, req):
         #call safety assessment function with req.ee_pose and req.side
-        safety_vals = [False * 7]
+        if (req.side):
+            safety_vals = is_rh_reachable(self.sensor_data, [req.ee_pose.position.x,req.ee_pose.position.y,req.ee_pose.position.z])
+        else:
+            safety_vals = is_lh_reachable(self.sensor_data,[req.ee_pose.position.x,req.ee_pose.position.y,req.ee_pose.position.z])
+#         safety_vals = [False * 7]
+        print(safety_vals)
 
         #create response object
-        resp = SafetyAssessmentSrvResponse
+        resp = SafetyAssessmentSrvResponse()
         resp.safetyVals = safety_vals
 
         return resp
 
     # Publish data to ROS
     def publish_data(self, sensor_data):
-        #Create ee Pose message
-        right_ee_transform = pybullet.getLinkState(self._robot, self._link_id['r_hand_contact'],1,1)
-        r_gripper_pose = Pose()
-        r_gripper_pose.position.x = right_ee_transform[0][0]
-        r_gripper_pose.position.y = right_ee_transform[0][1]
-        r_gripper_pose.position.z = right_ee_transform[0][2]
-        r_gripper_pose.orientation.x = right_ee_transform[1][0]
-        r_gripper_pose.orientation.y = right_ee_transform[1][1]
-        r_gripper_pose.orientation.z = right_ee_transform[1][2]
-        r_gripper_pose.orientation.w = right_ee_transform[1][3]
-        left_ee_transform = pybullet.getLinkState(self._robot, self._link_id['l_hand_contact'],1,1)
-        l_gripper_pose = Pose()
-        l_gripper_pose.position.x = left_ee_transform[0][0]
-        l_gripper_pose.position.y = left_ee_transform[0][1]
-        l_gripper_pose.position.z = left_ee_transform[0][2]
-        l_gripper_pose.orientation.x = left_ee_transform[1][0]
-        l_gripper_pose.orientation.y = left_ee_transform[1][1]
-        l_gripper_pose.orientation.z = left_ee_transform[1][2]
-        l_gripper_pose.orientation.w = left_ee_transform[1][3]
+        self.sensor_data = sensor_data
 
-        self._l_ee_pub.publish(l_gripper_pose)
-        self._r_ee_pub.publish(r_gripper_pose)
-
-        # Create JointState message
-        joint_msg = JointState()
-        joint_msg.header.stamp = rospy.Time.now()
-        joint_msg.name = sensor_data['joint_pos'].keys()
-        joint_msg.position = sensor_data['joint_pos'].values()
-        joint_msg.velocity = sensor_data['joint_vel'].values()
-        self._joint_pub.publish(joint_msg)
+# Commenting out for demo speed reasons
+#         #Create ee Pose message
+#         right_ee_transform = pybullet.getLinkState(self._robot, self._link_id['r_hand_contact'],1,1)
+#         r_gripper_pose = Pose()
+#         r_gripper_pose.position.x = right_ee_transform[0][0]
+#         r_gripper_pose.position.y = right_ee_transform[0][1]
+#         r_gripper_pose.position.z = right_ee_transform[0][2]
+#         r_gripper_pose.orientation.x = right_ee_transform[1][0]
+#         r_gripper_pose.orientation.y = right_ee_transform[1][1]
+#         r_gripper_pose.orientation.z = right_ee_transform[1][2]
+#         r_gripper_pose.orientation.w = right_ee_transform[1][3]
+#         left_ee_transform = pybullet.getLinkState(self._robot, self._link_id['l_hand_contact'],1,1)
+#         l_gripper_pose = Pose()
+#         l_gripper_pose.position.x = left_ee_transform[0][0]
+#         l_gripper_pose.position.y = left_ee_transform[0][1]
+#         l_gripper_pose.position.z = left_ee_transform[0][2]
+#         l_gripper_pose.orientation.x = left_ee_transform[1][0]
+#         l_gripper_pose.orientation.y = left_ee_transform[1][1]
+#         l_gripper_pose.orientation.z = left_ee_transform[1][2]
+#         l_gripper_pose.orientation.w = left_ee_transform[1][3]
+#
+#         self._l_ee_pub.publish(l_gripper_pose)
+#         self._r_ee_pub.publish(r_gripper_pose)
+#
+#         # Create JointState message
+#         joint_msg = JointState()
+#         joint_msg.header.stamp = rospy.Time.now()
+#         joint_msg.name = sensor_data['joint_pos'].keys()
+#         joint_msg.position = sensor_data['joint_pos'].values()
+#         joint_msg.velocity = sensor_data['joint_vel'].values()
+#         self._joint_pub.publish(joint_msg)
 
 
         nearval = 0.1
@@ -392,7 +473,7 @@ class DracoManipulationRosnode():
 
         cam_rpy = np.array([0,0,0])
 #         #base
-        cam_pos = [0.3,0,0.9]
+        cam_pos = [0.2,0.2,0.9]
         cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
         cam_rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
 
@@ -447,8 +528,14 @@ class DracoManipulationRosnode():
         camera_transform_msg.child_frame_id = "world"
         self._camera_transform_pub.publish(camera_transform_msg)
 
-        # pc_msg, image_msg = pybullet_util.get_xyzrgb_pointcloud2(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
-        depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
-        # self._pc_pub.publish(pc_msg)
-        self._depth_pub.publish(depth_msg)
-        self._image_pub.publish(image_msg)
+
+        # Stopping capture once recieving a command for demo speed reasons
+        if np.any(self._command_state):
+            self.command_recieved = True
+
+        if not self.command_recieved:
+            # pc_msg, image_msg = pybullet_util.get_xyzrgb_pointcloud2(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
+            depth_msg, image_msg = pybullet_util.get_rgb_and_depth_image(view_matrix, 60., 320, 240, nearval, 100., 1, 1)
+            # self._pc_pub.publish(pc_msg)
+            self._depth_pub.publish(depth_msg)
+            self._image_pub.publish(image_msg)
