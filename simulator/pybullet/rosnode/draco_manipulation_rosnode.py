@@ -22,7 +22,7 @@ t_gripper_stab_dur = 0.1
 
 SAFETY_THRESHOLD = 0.5
 
-grid_location = util.GridLocation(np.array([0.1, 0.1, 0.1]))
+grid_location = util.GridLocation(np.array([0.05, 0.05, 0.05]))
 saf_list = [None] * 7
 for i in range(7):
     with open('saf/saf_{}.pkl'.format(i), 'rb') as f:
