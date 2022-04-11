@@ -10,8 +10,8 @@
 	    <geometry>
 	      <cylinder length="0.15" radius="0.075"/>
 	    </geometry>
-	    <material name = "red">
-	     	<color rgba="1 0.1 0 1"/>
+	    <material name = "prop1">
+	     	<color rgba="1 0.5 0.4 1"/>
 	  	</material>
 	  </visual>
     <collision>

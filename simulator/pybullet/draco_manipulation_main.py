@@ -143,9 +143,9 @@ if __name__ == "__main__":
     else:
         p.connect(p.GUI)
         p.resetDebugVisualizerCamera(cameraDistance=2.0,
-                                     cameraYaw=180 + 45,
-                                     cameraPitch=-15,
-                                     cameraTargetPosition=[0.5, 0.5, 0.6])
+                                     cameraYaw=246,
+                                     cameraPitch=-28,
+                                     cameraTargetPosition=[0.5, 0.3, 0.6])
 
     p.setGravity(0, 0, -9.8)
     p.setPhysicsEngineParameter(fixedTimeStep=SimConfig.CONTROLLER_DT,
@@ -192,21 +192,53 @@ if __name__ == "__main__":
         robot, SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT, SimConfig.PRINT_ROBOT_INFO)
 
-    xOffset = 0.9
+    #Grasp works from starting position
+#     xOffset = 0.9
+#     yOffset = 0.0
+
+#     #Need to take two steps forward
+    xOffset = 0.9 + 0.3 #Each step is 0.125 natively in PyPnC?
+    yOffset = 0.0
+
+#     #Need to take two steps left
+#     xOffset = 0.9
+#     yOffset = 0.3 #(but 0.15m left)
 
     p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf",
                useFixedBase=1,
-               basePosition=[0 + xOffset, 0, 0.025],
+               basePosition=[0 + xOffset, 0 + yOffset, 0.025],
                baseOrientation=[0, 0, 0.7068252, 0.7068252])
     p.loadURDF(cwd + "/robot_model/bookcase/red_can.urdf",
                useFixedBase=0,
-               basePosition=[-0.4 + xOffset, 0.75, 1.05])
+#                basePosition=[-0.4 + xOffset, 0.75 + yOffset, 1.05])
+               basePosition=[-0.35 + xOffset, 0.5 + yOffset, 0.75])
     p.loadURDF(cwd + "/robot_model/bookcase/green_can.urdf",
                useFixedBase=0,
-               basePosition=[-0.4 + xOffset, -0.7, 1.35])
+               basePosition=[-0.35 + xOffset, -0.7 + yOffset, 1.35])
     p.loadURDF(cwd + "/robot_model/bookcase/blue_can.urdf",
                useFixedBase=0,
-               basePosition=[-0.35 + xOffset, 0.2, 0.7])
+               basePosition=[-0.35 + xOffset, 0.2 + yOffset, 0.75])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop1.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, 0.5 + yOffset, 1.35])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop2.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, -0.3 + yOffset, 1.35])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop3.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, -0.4 + yOffset, 0.75])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop4.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, 0.8 + yOffset, 0.75])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop5.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, -0.5 + yOffset, 1.05])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop6.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, 0.6 + yOffset, 1.05])
+    p.loadURDF(cwd + "/robot_model/bookcase/prop7.urdf",
+               useFixedBase=0,
+               basePosition=[-0.35 + xOffset, 0.05 + yOffset, 1.05])
 
     # Add Gear constraint
     c = p.createConstraint(robot,

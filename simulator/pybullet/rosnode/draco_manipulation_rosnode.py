@@ -10,6 +10,7 @@ from threading import Lock
 from simulator.pybullet.rosnode.srv import MoveEndEffectorToSrv, GripperCommandSrv, InterruptSrv, MoveEndEffectorToSrvResponse, GripperCommandSrvResponse, InterruptSrvResponse
 from simulator.pybullet.rosnode.srv._LocomotionCommandSrv import LocomotionCommandSrv, LocomotionCommandSrvRequest, LocomotionCommandSrvResponse
 from simulator.pybullet.rosnode.srv._ReturnEESrv import ReturnEESrv, ReturnEESrvResponse
+from simulator.pybullet.rosnode.srv._SafetyAssessmentSrv import SafetyAssessmentSrv, SafetyAssessmentSrvResponse
 # import tf
 from scipy.spatial.transform import Rotation
 import numpy as np
@@ -41,6 +42,7 @@ class DracoManipulationRosnode():
         # self._interrupt_srv = rospy.Service('draco/interrupt_srv', InterruptSrv, self.handle_interrupt)
         self._walk_srv = rospy.Service('draco/locomotion_srv', LocomotionCommandSrv, self.handle_locomotion_command)
         self._return_srv = rospy.Service('draco/return_ee_srv', ReturnEESrv, self.handle_return_ee_command)
+        self._safety_srv = rospy.Service('draco/safety_assessment', SafetyAssessmentSrv, self.handle_safety_assessment)
 
         # Current behavior would be for pending commands of the same type to be overwritten if still pending, but
         #   if already active then the newly incoming command would be discarded.
@@ -121,12 +123,12 @@ class DracoManipulationRosnode():
             interface.interrupt_logic.rh_target_quat = rh_target_quat
             interface.interrupt_logic.b_interrupt_button_three = True
             self._command_state[3] = 0
-        elif self._command_state[4]:
+        elif self._command_state[4] and com_displacement_x != 0:
             print("got walk in x command: ", com_displacement_x)
             interface.interrupt_logic.com_displacement_x = com_displacement_x
             interface.interrupt_logic.b_interrupt_button_m = True
             self._command_state[4] = 0
-        elif self._command_state[5]:
+        elif self._command_state[5] and com_displacement_y != 0:
             print("got walk in y command: ", com_displacement_y)
             interface.interrupt_logic.com_displacement_y = com_displacement_y
             interface.interrupt_logic.b_interrupt_button_n = True
@@ -153,6 +155,8 @@ class DracoManipulationRosnode():
         self._ready_state[2] = interface.interrupt_logic.b_left_hand_ready
         self._ready_state[3] = interface.interrupt_logic.b_right_hand_ready
         self._ready_state[4] = interface.interrupt_logic.b_walk_ready
+
+#         print(self._ready_state)
 
         self._command_iteration_lock.release()
         return lh_target_pos, rh_target_pos, lh_target_quat, rh_target_quat, gripper_command, lh_waypoint_pos, rh_waypoint_pos
@@ -279,6 +283,8 @@ class DracoManipulationRosnode():
         # Now results of command will be input next sim iteration, want to wait on command being done (ready_state for
         #   component to be True again)
         print("waiting on ee to be ready again")
+#        Seemingly there is a delay before ready is set to false for this but not ee_reach
+        time.sleep(2)
         while not self._ready_state[2+int(req.side)] or self._command_state[5+int(req.side)]:
             time.sleep(1)
         print("ee ready again, returning")
@@ -321,6 +327,16 @@ class DracoManipulationRosnode():
 
         # TODO: check if command was actually successful or not by querying base location
         resp.success = True
+
+        return resp
+
+    def handle_safety_assessment(self, req):
+        #call safety assessment function with req.ee_pose and req.side
+        safety_vals = [False * 7]
+
+        #create response object
+        resp = SafetyAssessmentSrvResponse
+        resp.safetyVals = safety_vals
 
         return resp
 
@@ -373,8 +389,10 @@ class DracoManipulationRosnode():
         # cam_rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
 
         ## Testing: keeping pos and orientation static
+
         cam_rpy = np.array([0,0,0])
-        cam_pos = [0,0,0.9]
+#         #base
+        cam_pos = [0.3,0,0.9]
         cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
         cam_rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
 

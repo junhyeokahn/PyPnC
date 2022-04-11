@@ -1,3 +1,0 @@
-control_msgs/GripperCommand command
----
-bool success
