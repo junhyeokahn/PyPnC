@@ -128,7 +128,7 @@ def is_rh_reachable(sensor_data, global_goal):
     normalized_goal = local_goal - np.array([0.6, 0.25, 0.85])
     grid_idx = grid_location.get_grid_idx(normalized_goal)
     labels = [False] * 7
-    print("lhand")
+    print("rhand")
     print("grid: ", grid_idx)
     for i in range(7):
         print("{}th prob: {}".format(i, saf_list[i][grid_idx]))
