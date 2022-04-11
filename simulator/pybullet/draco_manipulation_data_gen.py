@@ -336,18 +336,44 @@ def run_sim(inp):
     return safe_list
 
 
-N = 1024
+################################################################################
+N = 2**15
+
+XMIN, XMAX = 0.3, 0.9
+XMID = (XMIN + XMAX) / 2.
+YMIN, YMAX = -0.2, 0.7
+YMID = (YMIN + YMAX) / 2.
+ZMIN, ZMAX = 0.7, 1.0
+ZMID = (ZMIN + ZMAX) / 2.
+################################################################################
+
+MID = np.array([XMID, YMID, ZMID])
 
 prior_rollout_lists = [[], [], [], [], [], [], []]
+'''
+def _random_rollout():
+    inp = np.random.uniform([XMIN, YMIN, ZMIN], [XMAX, YMAX, ZMAX])
+    logging.info('*' * 80)
+    logging.info('input: {}'.format(inp))
+    success = run_sim(inp)
+    logging.info('label: {}'.format(success))
+
+    for i in range(7):
+        prior_rollout_lists[i].append([inp - MID, success[i]])
+
+
+Parallel(n_jobs=8,
+         prefer="threads")(delayed(_random_rollout)() for i in range(N))
+'''
 
 for i in tqdm(range(N)):
-    inp = np.random.uniform([0.3, -0.2, 0.7], [0.9, 0.7, 1.0])
+    inp = np.random.uniform([XMIN, YMIN, ZMIN], [XMAX, YMAX, ZMAX])
     logging.info('*' * 80)
     logging.info('input: {}'.format(inp))
     success = run_sim(inp)
     logging.info('label: {}'.format(success))
     for i in range(7):
-        prior_rollout_lists[i].append([inp, success[i]])
+        prior_rollout_lists[i].append([inp - MID, success[i]])
 
 for f in os.listdir('data'):
     for i in range(7):
@@ -355,7 +381,7 @@ for f in os.listdir('data'):
             os.remove('data/' + f)
 for i in range(7):
     with open('data/prior_rollouts_{}.pkl'.format(i), 'ab') as f:
-        pickle.dump(prior_rollout_list[i], f)
+        pickle.dump(prior_rollout_lists[i], f)
 """
 
 run_sim(np.array([0.6, 0.6, 0.85, 0.]))

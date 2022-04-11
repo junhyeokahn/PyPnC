@@ -26,6 +26,7 @@ from pinocchio.visualize import MeshcatVisualizer
 import pinocchio as pin
 
 import ipdb
+import pickle
 
 ######################## Key stroke ########################
 ############## Gripper
@@ -81,6 +82,75 @@ gripper_joints = [
 
 KEYPOINT_OFFSET = 0.1
 RIGHTUP_GRIPPER = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]])
+
+SAFETY_THRESHOLD = 0.5
+
+grid_location = util.GridLocation(np.array([0.1, 0.1, 0.1]))
+saf_list = [None] * 7
+for i in range(7):
+    with open('saf/saf_{}.pkl'.format(i), 'rb') as f:
+        saf_list[i] = pickle.load(f)
+
+
+def is_lh_reachable(sensor_data, global_goal):
+    """
+    0: falling right
+    1: falling left
+    2: falling forward
+    3: falling backward
+    4: falling down
+    5: falling up
+    6: no reaching
+    """
+    local_goal = global_goal - sensor_data['base_com_pos']
+    local_goal[2] = global_goal[2]
+    normalized_goal = local_goal - np.array([0.6, 0.25, 0.85])
+    grid_idx = grid_location.get_grid_idx(normalized_goal)
+    labels = [False] * 7
+    print("lhand")
+    print("grid: ", grid_idx)
+    for i in range(7):
+        print("{}th prob: {}".format(i, saf_list[i][grid_idx]))
+        labels[i] = False if saf_list[i][grid_idx] < SAFETY_THRESHOLD else True
+
+    return labels
+
+
+def is_rh_reachable(sensor_data, global_goal):
+    """
+    0: falling right
+    1: falling left
+    2: falling forward
+    3: falling backward
+    4: falling down
+    5: falling up
+    6: no reaching
+    """
+    local_goal = global_goal - sensor_data['base_com_pos']
+    local_goal[1] *= -1
+    local_goal[2] = global_goal[2]
+    normalized_goal = local_goal - np.array([0.6, 0.25, 0.85])
+    grid_idx = grid_location.get_grid_idx(normalized_goal)
+    labels = [False] * 7
+    print("rhand")
+    print("grid: ", grid_idx)
+    for i in range(7):
+        print("{}th prob: {}".format(i, saf_list[i][grid_idx]))
+        labels[i] = False if saf_list[i][grid_idx] < SAFETY_THRESHOLD else True
+
+    return labels
+
+
+def is_colliding(start, waypoint, goal, obs_min, obs_max, threshold, n):
+    """
+    start, waypoint, goal, OBS_MIN, OBS_MAX, THRESHOLD: 3d np.array
+    N: number of check point
+    """
+    if util.is_colliding_3d(start, waypoint, obs_min, obs_max, threshold, n):
+        return false
+    if util.is_colliding_3d(waypoint, goal, obs_min, obs_max, threshold, n):
+        return false
+    return true
 
 
 def x_rot(angle):
