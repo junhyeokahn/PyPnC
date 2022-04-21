@@ -14,7 +14,7 @@
         <box size = "0.12 0.12 0.15"/>
       </geometry>
       <material name = "red">
-        <color rgba="1.0 0.1 0.0 1"/>
+        <color rgba="0.8 0.28 0.2 1"/>
       </material>
     </visual>
     <collision>

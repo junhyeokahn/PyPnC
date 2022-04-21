@@ -20,13 +20,17 @@ import pickle
 t_gripper_stab_dur = 0.1
 
 
-SAFETY_THRESHOLD = 0.5
+SAFETY_THRESHOLD = 0.4
 
 grid_location = util.GridLocation(np.array([0.05, 0.05, 0.05]))
 saf_list = [None] * 7
 for i in range(7):
     with open('saf/saf_{}.pkl'.format(i), 'rb') as f:
         saf_list[i] = pickle.load(f)
+# for val in saf_list[6]:
+#     if val[2] == 1:
+#         print(val, saf_list[6][val])
+# quit()
 
 
 def is_lh_reachable(sensor_data, global_goal):
@@ -473,7 +477,9 @@ class DracoManipulationRosnode():
 
         cam_rpy = np.array([0,0,0])
 #         #base
-        cam_pos = [0.2,0.2,0.9]
+#         cam_pos = [0.2,0.2,0.9]
+#         cam_pos = [0.2,0.0,0.9]
+        cam_pos = [-0.2,0.4,0.9]
         cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
         cam_rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
 

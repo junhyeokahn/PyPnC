@@ -141,9 +141,9 @@ if __name__ == "__main__":
         p.connect(p.DIRECT)
     else:
         p.connect(p.GUI)
-        p.resetDebugVisualizerCamera(cameraDistance=2.0,
-                                     cameraYaw=246,
-                                     cameraPitch=-28,
+        p.resetDebugVisualizerCamera(cameraDistance=1.8,
+                                     cameraYaw=218,
+                                     cameraPitch=-31.6,
                                      cameraTargetPosition=[0.5, 0.3, 0.6])
 
     p.setGravity(0, 0, -9.8)
@@ -196,12 +196,12 @@ if __name__ == "__main__":
 #     yOffset = 0.0
 
 #     #Need to take two steps forward
-    xOffset = 0.9 + 0.3 #Each step is 0.125 natively in PyPnC?
-    yOffset = 0.0
+#     xOffset = 0.9 + 0.25 #Each step is 0.125 natively in PyPnC?
+#     yOffset = 0.0
 
 #     #Need to take two steps left
-#     xOffset = 0.9
-#     yOffset = 0.3 #(but 0.15m left)
+    xOffset = 0.8
+    yOffset = 0.0 #(but 0.15m left)
 
     p.loadURDF(cwd + "/robot_model/bookcase/bookshelf.urdf",
                useFixedBase=1,
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     p.loadURDF(cwd + "/robot_model/bookcase/red_can.urdf",
                useFixedBase=0,
 #                basePosition=[-0.4 + xOffset, 0.75 + yOffset, 1.05])
-               basePosition=[-0.35 + xOffset, 0.5 + yOffset, 0.75])
+               basePosition=[-0.35 + xOffset, 0.6 + yOffset, 0.75])
     p.loadURDF(cwd + "/robot_model/bookcase/green_can.urdf",
                useFixedBase=0,
                basePosition=[-0.35 + xOffset, -0.7 + yOffset, 1.35])
@@ -228,7 +228,7 @@ if __name__ == "__main__":
                basePosition=[-0.35 + xOffset, -0.4 + yOffset, 0.75])
     p.loadURDF(cwd + "/robot_model/bookcase/prop4.urdf",
                useFixedBase=0,
-               basePosition=[-0.35 + xOffset, 0.8 + yOffset, 0.75])
+               basePosition=[-0.35 + xOffset, 0.9 + yOffset, 0.75])
     p.loadURDF(cwd + "/robot_model/bookcase/prop5.urdf",
                useFixedBase=0,
                basePosition=[-0.35 + xOffset, -0.5 + yOffset, 1.05])
@@ -303,15 +303,15 @@ if __name__ == "__main__":
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
 
-    # Draw Frames
-    pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
-    pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
-    pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
-    pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
-    pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
-    pybullet_util.draw_link_frame(lh_waypoint_frame, -1)
-    pybullet_util.draw_link_frame(rh_waypoint_frame, -1)
-    pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
+#     # Draw Frames
+#     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
+#     pybullet_util.draw_link_frame(robot, link_id['l_hand_contact'], text="lh")
+#     pybullet_util.draw_link_frame(robot, link_id['camera'], text="camera")
+#     pybullet_util.draw_link_frame(lh_target_frame, -1, text="lh_target")
+#     pybullet_util.draw_link_frame(rh_target_frame, -1, text="rh_target")
+#     pybullet_util.draw_link_frame(lh_waypoint_frame, -1)
+#     pybullet_util.draw_link_frame(rh_waypoint_frame, -1)
+#     pybullet_util.draw_link_frame(com_target_frame, -1, text="com_target")
 
     gripper_command = dict()
     for gripper_joint in gripper_joints:
