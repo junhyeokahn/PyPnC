@@ -1,26 +1,23 @@
-<robot name="blue_can">
+<robot name="green_can">
 
 ` <link name="can">
-    <contact>
-      <lateral_friction value="1"/>
-    </contact>
     <inertial>
-      <mass value="0.01"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size = "0.12 0.12 0.15"/>
+        <cylinder length="0.15" radius="0.05"/>
       </geometry>
-      <material name = "red">
-        <color rgba="0.8 0.28 0.2 1"/>
+      <material name = "green">
+        <color rgba="0.2 0.6 0.4 1"/>
       </material>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size = "0.1 0.1 0.15"/>
+        <cylinder length="0.15" radius="0.05"/>
       </geometry>
     </collision>
   </link>
