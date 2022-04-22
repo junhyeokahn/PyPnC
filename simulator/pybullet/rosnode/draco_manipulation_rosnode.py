@@ -414,12 +414,19 @@ class DracoManipulationRosnode():
         # vision_quat = Rotation.from_euler('xyz', trans_euler, degrees=True).as_quat()
 
         # Works in static case when modifying cloud to align with vision coords
-        vision_quat = Rotation.from_euler('xyz', [-90,0,-90], degrees=True).as_quat()
+        # vision_quat = Rotation.from_euler('xyz', [-90,0,-90], degrees=True).as_quat()
+
+        # view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='F')[:3]])
+        view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='C')[:3]])
+        # print(np.asarray(view_matrix).reshape([4,4],order='C'))
+        # print(np.asarray(view_matrix).reshape([4,4],order='f'))
+        # quit()
+        vision_quat = Rotation.from_matrix(view_mat).as_quat()
 
         camera_transform_msg = TransformStamped()
-        camera_transform_msg.transform.translation.x = cam_pos[0]#cam_pos[0]
-        camera_transform_msg.transform.translation.y = cam_pos[1]#cam_pos[1]
-        camera_transform_msg.transform.translation.z = cam_pos[2]#cam_pos[2]
+        camera_transform_msg.transform.translation.x = view_matrix[12]#cam_pos[0]#cam_pos[0]
+        camera_transform_msg.transform.translation.y = view_matrix[13]#cam_pos[1]#cam_pos[1]
+        camera_transform_msg.transform.translation.z = view_matrix[14]#cam_pos[2]#cam_pos[2]
         camera_transform_msg.transform.rotation.x = vision_quat[0]
         camera_transform_msg.transform.rotation.y = vision_quat[1]
         camera_transform_msg.transform.rotation.z = vision_quat[2]
