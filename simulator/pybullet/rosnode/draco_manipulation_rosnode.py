@@ -426,37 +426,37 @@ class DracoManipulationRosnode():
     def publish_data(self, sensor_data):
         self.sensor_data = sensor_data
 
-# Commenting out for demo speed reasons
-#         #Create ee Pose message
-#         right_ee_transform = pybullet.getLinkState(self._robot, self._link_id['r_hand_contact'],1,1)
-#         r_gripper_pose = Pose()
-#         r_gripper_pose.position.x = right_ee_transform[0][0]
-#         r_gripper_pose.position.y = right_ee_transform[0][1]
-#         r_gripper_pose.position.z = right_ee_transform[0][2]
-#         r_gripper_pose.orientation.x = right_ee_transform[1][0]
-#         r_gripper_pose.orientation.y = right_ee_transform[1][1]
-#         r_gripper_pose.orientation.z = right_ee_transform[1][2]
-#         r_gripper_pose.orientation.w = right_ee_transform[1][3]
-#         left_ee_transform = pybullet.getLinkState(self._robot, self._link_id['l_hand_contact'],1,1)
-#         l_gripper_pose = Pose()
-#         l_gripper_pose.position.x = left_ee_transform[0][0]
-#         l_gripper_pose.position.y = left_ee_transform[0][1]
-#         l_gripper_pose.position.z = left_ee_transform[0][2]
-#         l_gripper_pose.orientation.x = left_ee_transform[1][0]
-#         l_gripper_pose.orientation.y = left_ee_transform[1][1]
-#         l_gripper_pose.orientation.z = left_ee_transform[1][2]
-#         l_gripper_pose.orientation.w = left_ee_transform[1][3]
-#
-#         self._l_ee_pub.publish(l_gripper_pose)
-#         self._r_ee_pub.publish(r_gripper_pose)
-#
-#         # Create JointState message
-#         joint_msg = JointState()
-#         joint_msg.header.stamp = rospy.Time.now()
-#         joint_msg.name = sensor_data['joint_pos'].keys()
-#         joint_msg.position = sensor_data['joint_pos'].values()
-#         joint_msg.velocity = sensor_data['joint_vel'].values()
-#         self._joint_pub.publish(joint_msg)
+        # Commenting out for demo speed reasons
+        #         #Create ee Pose message
+        #         right_ee_transform = pybullet.getLinkState(self._robot, self._link_id['r_hand_contact'],1,1)
+        #         r_gripper_pose = Pose()
+        #         r_gripper_pose.position.x = right_ee_transform[0][0]
+        #         r_gripper_pose.position.y = right_ee_transform[0][1]
+        #         r_gripper_pose.position.z = right_ee_transform[0][2]
+        #         r_gripper_pose.orientation.x = right_ee_transform[1][0]
+        #         r_gripper_pose.orientation.y = right_ee_transform[1][1]
+        #         r_gripper_pose.orientation.z = right_ee_transform[1][2]
+        #         r_gripper_pose.orientation.w = right_ee_transform[1][3]
+        #         left_ee_transform = pybullet.getLinkState(self._robot, self._link_id['l_hand_contact'],1,1)
+        #         l_gripper_pose = Pose()
+        #         l_gripper_pose.position.x = left_ee_transform[0][0]
+        #         l_gripper_pose.position.y = left_ee_transform[0][1]
+        #         l_gripper_pose.position.z = left_ee_transform[0][2]
+        #         l_gripper_pose.orientation.x = left_ee_transform[1][0]
+        #         l_gripper_pose.orientation.y = left_ee_transform[1][1]
+        #         l_gripper_pose.orientation.z = left_ee_transform[1][2]
+        #         l_gripper_pose.orientation.w = left_ee_transform[1][3]
+        #
+        #         self._l_ee_pub.publish(l_gripper_pose)
+        #         self._r_ee_pub.publish(r_gripper_pose)
+        #
+        #         # Create JointState message
+        #         joint_msg = JointState()
+        #         joint_msg.header.stamp = rospy.Time.now()
+        #         joint_msg.name = sensor_data['joint_pos'].keys()
+        #         joint_msg.position = sensor_data['joint_pos'].values()
+        #         joint_msg.velocity = sensor_data['joint_vel'].values()
+        #         self._joint_pub.publish(joint_msg)
 
 
         nearval = 0.1
@@ -469,17 +469,14 @@ class DracoManipulationRosnode():
         # #       link com pos wrt frame, link com ori wrt frame
         # #       frame pos wrt world, frame ori wrt world
         # #       _, _
-        # cam_trans = pybullet.getLinkState(self._robot, self._link_id['camera'],1,1)
-        # cam_pos = np.asarray(cam_trans[0])
-        # cam_rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
+        cam_trans = pybullet.getLinkState(self._robot, self._link_id['camera'],1,1)
+        cam_pos = np.asarray(cam_trans[0])
+        cam_rot = pybullet.getMatrixFromQuaternion(cam_trans[1])
 
         ## Testing: keeping pos and orientation static
-
-        cam_rpy = np.array([0,0,0])
-#         #base
-#         cam_pos = [0.2,0.2,0.9]
-#         cam_pos = [0.2,0.0,0.9]
-        cam_pos = [-0.2,0.4,0.9]
+        cam_rpy = np.array([10,20,10])
+        cam_pos = [0.0,0.0,0.9]
+        # cam_pos = [-0.2,0.4,0.9]
         cam_ori_p = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
         cam_rot = pybullet.getMatrixFromQuaternion(cam_ori_p)
 
@@ -493,45 +490,72 @@ class DracoManipulationRosnode():
         view_matrix = pybullet.computeViewMatrix(camera_eye_pos, camera_target_pos,
                                           camera_up_vector)
 
+        # Using intrinsic parameters and method in vision to get view coords
+        # float fx = 155.88456630706787;
+        # float fy = 277.12812423706055;
+        # float cx = 120;
+        # float cy = 160;
+        # x_ir = ((xx - cx) / fx) * z_ir;
+        # y_ir = ((yy - cy) / fy) * z_ir;
+        # >>> ((xx - cx) / fx) * pc
+        # -0.16013487932956347
+        # >>> ((yy - cy) / fy) * pc
+        # -0.09007586875612396
+        # 0.2496255616575137
 
-        # This works with 3 axes transform for segmentation (was this when applying view matrix to cloud?)
-        # Compute transform we need to send to vision (currently transform between pybullet camera coordinates
-        #   (x left, y down, z backwards) to vision coordinates (x right, y down, z forwards)
-        # Example transform of point: [1,2,3] -> [-1,2,-3]
-        # Matrix to achieve this transform:
-        # # [[-1,0,0]
-        # #  [0,1,0]
-        # #  [0,0,-1]]
-        # # This transformation is a flip about y
+        # Multiplying point by inverse projection matrix to get view coords
+        #              z_ir = 2.0 * z_ir - 1.0;
+        #              x_ir = ((xx - imgWidth/2.0) / (imgWidth/2.0)) * 0.7698;
+        #              y_ir = (((yy - imgHeight/2.0) / (imgHeight/2.0))) * 0.57735;
+        #              scale = (-4.995 * z_ir) + 5.005;
+        #              x_ir = x_ir / scale;
+        #              y_ir = y_ir / scale;
+        #              z_ir = -1.0 / scale;
         #
-        # In terms of euler angles the above is [0,180,0]
-        # Any further rotations in terms of euler adhere to +x,+y,+z -> -z,+x,180-y
-        # # e.g. [10,20,30] -> [20,180-30,-10]
-        # # TODO: don't do this as swapping euler angles
-        # # cam_rpy = Rotation.from_quat(cam_trans[1]).as_euler('xyz', degrees=True)
-        # cam_rpy = (cam_rpy[1],180-cam_rpy[2],-cam_rpy[0])
-        # vision_quat = Rotation.from_euler('xyz', cam_rpy, degrees=True).as_quat()
+        #              //experimenting with aligning points with visions notion of camera axes
+        #              x_ir = x_ir;
+        #              y_ir = y_ir;
+        #              z_ir = -z_ir;
 
-        # This attempt may have been static case built from view matrix?
+        # xx 40 yy 100 z 0.6
+        # Method 1:
+        # -0.102640052255077
+        # -0.04330129037845328
+        # 0.2
+        # Method 2:
+        # -0.2875249003984064
+        # -0.04792081673306773
+        # .2
+        # Either intrinsic parameters are incorrect, or there is no 1:1 correspondence from projection matrix
+
+
+        # view matrix is world to camera
+        # Seemingly pybullet base: (x forward, y left, z up)
+        # Seemingly pybullet cam: (x right, y up, z back)
+        # x becomes neg z
+        # y becomes neg x
+        # z becomes y
+        # [1,2,3] -> [-2,3,-1]
+        # array([-3., -1.,  2.])
+
+        # This view matrix assumes axes of
+        # [[ 0.  -1.   0.  -0. ]
+        #  [-0.   0.   1.  -0.9]
+        # [-1.  -0.  -0.   0. ]
+        # [ 0.   0.   0.   1. ]]
+
+        # From base to vision
         # view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='F')[:3]])
-        # view_rot = Rotation.from_matrix(view_mat).as_euler('xyz',degrees=True)
-        # trans_euler = [view_rot[0] - 180, view_rot[1], view_rot[2]]
-        # vision_quat = Rotation.from_euler('xyz', trans_euler, degrees=True).as_quat()
 
-        # Works in static case when modifying cloud to align with vision coords
-        # vision_quat = Rotation.from_euler('xyz', [-90,0,-90], degrees=True).as_quat()
-
-        # view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='F')[:3]])
-        view_mat = np.array([x[:3] for x in np.asarray(view_matrix).reshape([4,4],order='C')[:3]])
-        # print(np.asarray(view_matrix).reshape([4,4],order='C'))
-        # print(np.asarray(view_matrix).reshape([4,4],order='f'))
-        # quit()
-        vision_quat = Rotation.from_matrix(view_mat).as_quat()
+        # From vision to base
+        view_mat = np.linalg.inv(np.asarray(view_matrix).reshape([4,4],order='F'))
+        view_mat_rot = np.array([x[:3] for x in view_mat[:3]])
+        vision_quat = Rotation.from_matrix(view_mat_rot).as_quat()
 
         camera_transform_msg = TransformStamped()
-        camera_transform_msg.transform.translation.x = view_matrix[12]#cam_pos[0]#cam_pos[0]
-        camera_transform_msg.transform.translation.y = view_matrix[13]#cam_pos[1]#cam_pos[1]
-        camera_transform_msg.transform.translation.z = view_matrix[14]#cam_pos[2]#cam_pos[2]
+        camera_transform_msg.transform.translation.x = view_mat[0][3]#view_matrix[12]#cam_pos[0]#cam_pos[0]
+        camera_transform_msg.transform.translation.y = view_mat[1][3]#view_matrix[13]#cam_pos[1]#cam_pos[1]
+        camera_transform_msg.transform.translation.z = view_mat[2][3]#view_matrix[14]#cam_pos[2]#cam_pos[2]
         camera_transform_msg.transform.rotation.x = vision_quat[0]
         camera_transform_msg.transform.rotation.y = vision_quat[1]
         camera_transform_msg.transform.rotation.z = vision_quat[2]
