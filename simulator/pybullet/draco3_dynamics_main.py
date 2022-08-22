@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     # robot = p.loadURDF(cwd + "/robot_model/draco3/draco3.urdf",
-    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper.urdf",
+    robot = p.loadURDF(cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf",
                        SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
                        SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
