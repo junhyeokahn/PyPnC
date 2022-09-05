@@ -4,7 +4,7 @@ from pnc.mpc.model import Model
 
 
 class CentroidalDynamics(Model):
-    def __init__(self, robot, name='centroidal_model'):
+    def __init__(self, robot, lf_pos_vec, rf_pos_vec, name='centroidal_model'):
         # MPC states
         nx = 9
         nc = 2
@@ -35,8 +35,7 @@ class CentroidalDynamics(Model):
         # dynamics
         g = 9.81
         mass = robot.total_mass
-        lf_pos_vec = np.array([0.0, 0.15, 0.0])  # TODO automate from robot pose
-        rf_pos_vec = np.array([0.0, -0.15, 0.0])  # TODO automate from robot pose
+
         g_vec = np.array([0., 0., -g])
         # a_com = g_vec + (1/M) * (F_lfoot + F_rfoot + F_larm + F_rarm)
         a_com = g_vec + (1 / mass) * (F_lfoot + F_rfoot)
@@ -53,9 +52,8 @@ class CentroidalDynamics(Model):
         F_discrete = integrate_RK4(x_expr, u_expr, x_dot, dt, n_steps)
 
         # steady state
-        initial_height = 0.7  # TODO get from robot
         s_steady_state = np.zeros((nx, 1))
-        s_steady_state[2] = initial_height
+        s_steady_state[0:3, 0] = robot.get_com_pos()
         a_steady_state = np.zeros((nu, 1))
         a_steady_state[2] = mass * g / 2.
         a_steady_state[5] = mass * g / 2.

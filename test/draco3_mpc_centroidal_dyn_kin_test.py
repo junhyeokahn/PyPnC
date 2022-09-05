@@ -9,7 +9,14 @@ from pnc.mpc.mpc_quadratic_cost import MPCQuadraticCost
 from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
 from collections import OrderedDict
 
+from pinocchio.visualize import MeshcatVisualizer
+
 import pinocchio as pin
+import matplotlib.pyplot as plt
+import sys
+
+b_show_plots = False
+b_visualize = False
 
 class TestStaticPoses(unittest.TestCase):
     def setUp(self):
@@ -18,20 +25,36 @@ class TestStaticPoses(unittest.TestCase):
 
         b_fixed_base = False
         b_print_info = False
-        model, collision_model, visual_model = pin.buildModelsFromUrdf(
-            urdf_filename, package_dir, pin.JointModelFreeFlyer())
+        if b_visualize:
+            model, collision_model, visual_model = pin.buildModelsFromUrdf(
+                urdf_filename, package_dir, pin.JointModelFreeFlyer())
+            viz = MeshcatVisualizer(model, collision_model, visual_model)
+            try:
+                viz.initViewer(open=True)
+            except ImportError as err:
+                print(
+                    "Error while initializing the viewer. It seems you should install Python meshcat"
+                )
+                print(err)
+                sys.exit(0)
+            viz.loadViewerModel()
+
         self.robot = PinocchioRobotSystem(urdf_filename, package_dir, b_fixed_base, b_print_info)
 
         # initial state
-        robot_state = self.get_robot_state()
+        non_zero_joints = OrderedDict()
+        self.set_non_zero_joints(non_zero_joints)
+        robot_state = self.initialize_robot_state(non_zero_joints)
         self.robot_state = robot_state
 
         self.robot.update_system(robot_state["base_com_pos"], robot_state["base_com_quat"],
                      robot_state["base_com_lin_vel"], robot_state["base_com_ang_vel"],
                      robot_state["base_joint_pos"], robot_state["base_joint_quat"],
                      robot_state["base_joint_lin_vel"], robot_state["base_joint_ang_vel"],
-                     robot_state["joint_pos"], robot_state["joint_vel"])
-        self.robot._update_centroidal_quantities()
+                     robot_state["joint_pos"], robot_state["joint_vel"], b_cent=True)
+
+        if b_visualize:
+            viz.display(self.robot.get_q())
 
         # MPC control limits
         nu = 6
@@ -42,59 +65,92 @@ class TestStaticPoses(unittest.TestCase):
         u_min[5] = 0.
 
         self.Q = np.diag(1e1 * np.ones(nx))
+        self.Q[0, 0] = 5e4
+        self.Q[1, 1] = 5e4
         self.Q[2, 2] = 5e4
+        self.Q[3, 3] = 1e3
+        self.Q[4, 4] = 1e3
         self.Q[5, 5] = 1e3
-        self.R = np.diag(1e-1 * np.ones(nu))
+        self.R = np.diag(1e-0 * np.ones(nu))
         self.R[2, 2] = 1e-2
         self.R[5, 5] = 1e-2
+        self.P = 10. * self.Q
 
-    def get_robot_state(self):
-        #TODO get from robot states
+
+    def set_non_zero_joints(self, non_zero_joint_dict):
+        # shoulder_z
+        non_zero_joint_dict["l_shoulder_aa"] = np.pi / 6
+        non_zero_joint_dict["r_shoulder_aa"] = -np.pi / 6
+        # elbow_y
+        non_zero_joint_dict["l_elbow_fe"] = -np.pi / 2
+        non_zero_joint_dict["r_elbow_fe"] = -np.pi / 2
+        # hip_y
+        non_zero_joint_dict["l_hip_fe"] = -np.pi / 4
+        non_zero_joint_dict["r_hip_fe"] = -np.pi / 4
+        # knee
+        non_zero_joint_dict["l_knee_fe_jp"] = np.pi / 4
+        non_zero_joint_dict["r_knee_fe_jp"] = np.pi / 4
+        non_zero_joint_dict["l_knee_fe_jd"] = np.pi / 4
+        non_zero_joint_dict["r_knee_fe_jd"] = np.pi / 4
+        # ankle
+        non_zero_joint_dict["l_ankle_fe"] = -np.pi / 4
+        non_zero_joint_dict["r_ankle_fe"] = -np.pi / 4
+
+    def initialize_robot_state(self, non_zero_joint_list):
         robot_state = OrderedDict()
-        robot_state["base_com_pos"] = np.array([0., 0., 0.7])
-        robot_state["base_com_quat"] = np.array([0., 0., 0.7, 0.7])
+        robot_state["base_com_pos"] = np.array([0., 0., 88])
+        robot_state["base_com_quat"] = np.array([0., 0., 0., 1.])
         robot_state["base_com_lin_vel"] = np.zeros((3,))
         robot_state["base_com_ang_vel"] = np.zeros((3,))
-        robot_state["base_joint_pos"] = np.zeros((3,))
-        robot_state["base_joint_quat"] = np.array([0., 0., 0.7, 0.7])
+        robot_state["base_joint_pos"] = np.array([0., 0., 0.74])
+        robot_state["base_joint_quat"] = np.array([0., 0., 0., 1.])
         robot_state["base_joint_lin_vel"] = np.zeros((3,))
         robot_state["base_joint_ang_vel"] = np.zeros((3,))
 
         robot_state["joint_pos"] = OrderedDict()
         robot_state["joint_vel"] = OrderedDict()
         for i, j in self.robot.joint_id.items():
-            robot_state["joint_pos"][i] = 0.
+            if i in non_zero_joint_list:
+                robot_state["joint_pos"][i] = non_zero_joint_list[i]
+            else:
+                robot_state["joint_pos"][i] = 0.
             robot_state["joint_vel"][i] = 0.
 
         return robot_state
 
+    def plot_trajectories_tuples(self, ts, s_traj, pos_labels, s_des_traj, s_offset, plot_sine):
+        plt.figure(figsize=(6, 6))
+        for i in range(3):
+            plt.subplot(3, 1, i + 1)
+            plt.plot(ts, s_traj[i + s_offset, :].T, '-', alpha=0.7)
+            plt.ylabel(pos_labels[i])
+            plt.grid()
+        plt.xlabel(r'time [s]')
+
+        if plot_sine:
+            plt.plot(ts, s_des_traj[2, :].T, 'r--')
+
     def test_standing(self):
         task = Task.STAND
-        centroidal_model = CentroidalDynamics(self.robot)
+        lfoot_pos = self.robot.get_link_iso("l_foot_contact")[0:-1, -1]
+        rfoot_pos = self.robot.get_link_iso("r_foot_contact")[0:-1, -1]
+        centroidal_model = CentroidalDynamics(self.robot, lfoot_pos, rfoot_pos)
 
         # Initial state
         g = 9.81
         mass = self.robot.total_mass
-        com0 = self.robot_state["base_com_pos"]
+        com0 = self.robot.get_com_pos()
         vcom0 = self.robot_state["base_com_lin_vel"]
         L0 = np.array([0., 0., 0.])
         x0 = np.array([com0[0], com0[1], com0[2], vcom0[0], vcom0[1], vcom0[2], L0[0], L0[1], L0[2]])
         u_guess = np.array([0., 0., mass * g / 2., 0., 0., mass * g / 2.])
 
-        Q = np.diag(1e1 * np.ones(centroidal_model.ns))
-        Q[2, 2] = 5e4
-        Q[5, 5] = 1e3
-        R = np.diag(1e-1 * np.ones(centroidal_model.na))
-        R[2, 2] = 1e-2
-        R[5, 5] = 1e-2
-        P = 10. * Q
-
-        mpc_cost = MPCQuadraticCost(centroidal_model, Q, R, P)
+        mpc_cost = MPCQuadraticCost(centroidal_model, self.Q, self.R, self.P)
 
         # Generate trajectory to track
         dt = centroidal_model.dt
         N_horizon = 80      # MPC horizon
-        N_steps = 1000      # simulation steps
+        N_steps = 500      # simulation steps
         traj_freq = np.pi
         traj_amplitude = 0.05
         x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, x0, u_guess, centroidal_model, N_horizon, w=traj_freq,
@@ -140,11 +196,7 @@ class TestStaticPoses(unittest.TestCase):
                     # ocp_solver = OCPSolver.OCPsolver(model, stage_cost, terminal_cost, N_horizon, u_max, u_min,
                     #                                  x_des_traj, u_guess_traj)
 
-                # sys.stdout = open(output_file, 'w')
                 a = mpc_controller.solve(s)
-                # sys.stdout.close()
-
-                # cpu_solve_times[n], number_of_iterations[n] = get_solve_info(output_file)
                 n_mpc = n_mpc + 1
             else:
                 a = u_traj[:, n - 1]
@@ -152,11 +204,29 @@ class TestStaticPoses(unittest.TestCase):
             u_traj[:, n] = a.flatten()
             x_traj[:, [n + 1]] = centroidal_model.simulate(s, a.flatten(), w0=w_traj[:, n])
 
-        epsilon = 1.e-6
+        epsilon = 1.e-3
         final_com_x = x_traj[0, -1]
         final_com_y = x_traj[1, -1]
         final_com_z = x_traj[2, -1]
-        final_com_v = np.linalg.norm(x_traj[3:, -1])
+        final_com_v = np.linalg.norm(x_traj[3:6, -1])
+        if b_show_plots:
+            ts = dt * np.arange(0, N_steps + 1)
+            pos_labels = ["c_x", "c_y", "c_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all[:, :-1], 0, True)
+
+            pos_labels = ["v_x", "v_y", "v_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all, 3, False)
+
+            pos_labels = ["L_x", "L_y", "L_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all, 6, False)
+
+            pos_labels = ["lf_F_x", "lf_F_y", "lf_F_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 0, False)
+
+            pos_labels = ["rf_F_x", "rf_F_y", "rf_F_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 3, False)
+            plt.draw()
+            plt.show()
         self.assertEqual(np.abs(final_com_x - com0[0]) < epsilon, True) # final x-com close to initial
         self.assertEqual(np.abs(final_com_y - com0[1]) < epsilon, True) # final y-com close to initial
         self.assertEqual(np.abs(final_com_z - com0[2]) < epsilon, True) # final z-com close to initial

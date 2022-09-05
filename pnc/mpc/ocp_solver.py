@@ -56,12 +56,12 @@ class OCPsolver:
         self.lbg = vertcat(np.zeros((ns * (N + 1))), repmat(a_min, N, 1))
 
         self.ocp = {'f': cost, 'x': vertcat(s_traj, a_traj), 'g': constraints, 'p': s0_bar}
-        self.solver = nlpsol('solver', 'ipopt', self.ocp)
+        self.opts = {'ipopt.print_level': 0, 'print_time': 0}
+        self.solver = nlpsol('solver', 'ipopt', self.ocp, self.opts)
 
         # initialize current solution guess
-        self.s_current = np.zeros((ns * (N + 1), 1))
+        self.s_current = s_des_traj.flatten()
         self.a_current = a_guess_traj.flatten()
-        # self.a_current = np.zeros((na * N, 1))
 
     def solve(self, s0, s_traj_init=None, a_traj_init=None):
 

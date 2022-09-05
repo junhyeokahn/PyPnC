@@ -15,7 +15,7 @@ def get_desired_mpc_trajectory(task, s0, u_guess, model, N_horizon, w=1, A=0.0):
 
     s_traj = np.zeros((ns, N_horizon))
     if task == Task.STAND:
-        s_traj = np.repeat(np.reshape(s0, [ns, 1]), N_horizon, axis=1)
+        s_traj = np.repeat(np.reshape(s0, [ns, 1]), N_horizon+1, axis=1)
     elif task == Task.SQUAT:
         s_traj[:, 0] = s0
         # change desired CoM-z position and velocity entries
