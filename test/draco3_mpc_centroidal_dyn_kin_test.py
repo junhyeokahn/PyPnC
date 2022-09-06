@@ -4,6 +4,7 @@ import numpy as np
 
 from pnc.mpc import mpc_casadi
 from pnc.mpc.centroidal_dyn_kin.centroidal_dynamics_model import CentroidalDynamics
+from pnc.mpc.centroidal_dyn_kin.cmm_joint_dynamics_model import CMMJointDynamics
 from pnc.mpc.centroidal_dyn_kin.low_dim_trajectory_generator import *
 from pnc.mpc.mpc_quadratic_cost import MPCQuadraticCost
 from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
@@ -17,6 +18,7 @@ import sys
 
 b_show_plots = False
 b_visualize = False
+
 
 class TestStaticPoses(unittest.TestCase):
     def setUp(self):
@@ -48,21 +50,18 @@ class TestStaticPoses(unittest.TestCase):
         self.robot_state = robot_state
 
         self.robot.update_system(robot_state["base_com_pos"], robot_state["base_com_quat"],
-                     robot_state["base_com_lin_vel"], robot_state["base_com_ang_vel"],
-                     robot_state["base_joint_pos"], robot_state["base_joint_quat"],
-                     robot_state["base_joint_lin_vel"], robot_state["base_joint_ang_vel"],
-                     robot_state["joint_pos"], robot_state["joint_vel"], b_cent=True)
+                                 robot_state["base_com_lin_vel"], robot_state["base_com_ang_vel"],
+                                 robot_state["base_joint_pos"], robot_state["base_joint_quat"],
+                                 robot_state["base_joint_lin_vel"], robot_state["base_joint_ang_vel"],
+                                 robot_state["joint_pos"], robot_state["joint_vel"], b_cent=True)
 
         if b_visualize:
             viz.display(self.robot.get_q())
 
+    def setup_centroidal_mpc(self):
         # MPC control limits
         nu = 6
         nx = 9
-        u_max = 500 * np.ones(nu)
-        u_min = -u_max
-        u_min[2] = 0.
-        u_min[5] = 0.
 
         Q = np.diag(1e1 * np.ones(nx))
         Q[0, 0] = 5e4
@@ -78,7 +77,7 @@ class TestStaticPoses(unittest.TestCase):
 
         lfoot_pos = self.robot.get_link_iso("l_foot_contact")[0:-1, -1]
         rfoot_pos = self.robot.get_link_iso("r_foot_contact")[0:-1, -1]
-        self.centroidal_model = CentroidalDynamics(self.robot, lfoot_pos, rfoot_pos)
+        self.model = CentroidalDynamics(self.robot, lfoot_pos, rfoot_pos)
 
         # Initial state
         g = 9.81
@@ -89,8 +88,41 @@ class TestStaticPoses(unittest.TestCase):
         self.x0 = np.array([com0[0], com0[1], com0[2], vcom0[0], vcom0[1], vcom0[2], L0[0], L0[1], L0[2]])
         self.u_guess = np.array([0., 0., mass * g / 2., 0., 0., mass * g / 2.])
 
-        self.mpc_cost = MPCQuadraticCost(self.centroidal_model, Q, R, P)
+        self.mpc_cost = MPCQuadraticCost(self.model, Q, R, P)
 
+    def setup_cmm_mpc(self):
+        # MPC control limits
+        nc = 2
+        nu = 6 * nc
+        nx = 6 + self.robot.n_a
+
+        Q = np.diag(1e1 * np.ones(nx))
+        Q[0, 0] = 5e4
+        Q[1, 1] = 5e4
+        Q[2, 2] = 5e4
+        Q[3, 3] = 1e3
+        Q[4, 4] = 1e3
+        Q[5, 5] = 1e3
+        R = np.diag(1e-1 * np.ones(nu))
+        R[2, 2] = 1e-2
+        R[5, 5] = 1e-2
+        P = 10. * Q
+
+        lfoot_pos = self.robot.get_link_iso("l_foot_contact")[0:-1, -1]
+        rfoot_pos = self.robot.get_link_iso("r_foot_contact")[0:-1, -1]
+        A_cmm = self.robot.get_mass_matrix()
+        self.model = CMMJointDynamics(self.robot, lfoot_pos, rfoot_pos, A_cmm)
+
+        # Initial state
+        g = 9.81
+        mass = self.robot.total_mass
+        com0 = self.robot.get_com_pos()
+        vcom0 = self.robot_state["base_com_lin_vel"]
+        L0 = np.array([0., 0., 0.])
+        self.x0 = np.array([com0[0], com0[1], com0[2], vcom0[0], vcom0[1], vcom0[2], L0[0], L0[1], L0[2]])
+        self.u_guess = np.array([0., 0., mass * g / 2., 0., 0., mass * g / 2.])
+
+        self.mpc_cost = MPCQuadraticCost(self.model, Q, R, P)
 
     def set_non_zero_joints(self, non_zero_joint_dict):
         # shoulder_z
@@ -144,25 +176,28 @@ class TestStaticPoses(unittest.TestCase):
                 plt.plot(ts, s_des_traj[i + s_offset, :].T, 'r--')
         plt.xlabel(r'time [s]')
 
-
     def test_standing(self):
         task = Task.STAND
+        self.setup_centroidal_mpc()
 
         # Generate trajectory to track
-        dt = self.centroidal_model.dt
-        N_horizon = 80      # MPC horizon
-        N_steps = 500      # simulation steps
-        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.centroidal_model, N_horizon)
-        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.centroidal_model, N_steps + 1)
-        mpc_controller = mpc_casadi.MPCCasadi(self.centroidal_model, self.mpc_cost, self.centroidal_model.u_max, self.centroidal_model.u_min,
+        dt = self.model.dt
+        N_horizon = 80  # MPC horizon
+        N_steps = 500  # simulation steps
+        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.model,
+                                                              N_horizon)
+        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess,
+                                                                      self.model, N_steps + 1)
+        mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost, self.model.u_max,
+                                              self.model.u_min,
                                               x_des_traj, u_guess_traj, N_horizon)
 
         # placeholders for MPC outputs
-        x_traj = np.zeros((self.centroidal_model.ns, N_steps + 1))  # trajectory from entire simulation
-        u_traj = np.zeros((self.centroidal_model.na, N_steps))
+        x_traj = np.zeros((self.model.ns, N_steps + 1))  # trajectory from entire simulation
+        u_traj = np.zeros((self.model.na, N_steps))
 
         # generate noise trajectory
-        w_traj = 0.0 * np.random.normal(size=(self.centroidal_model.ns, N_steps))
+        w_traj = 0.0 * np.random.normal(size=(self.model.ns, N_steps))
 
         # closed-loop simulation
         x_traj[:, 0] = self.x0
@@ -180,7 +215,7 @@ class TestStaticPoses(unittest.TestCase):
                 a = u_traj[:, n - 1]
 
             u_traj[:, n] = a.flatten()
-            x_traj[:, [n + 1]] = self.centroidal_model.simulate(s, a.flatten(), w0=w_traj[:, n])
+            x_traj[:, [n + 1]] = self.model.simulate(s, a.flatten(), w0=w_traj[:, n])
 
         epsilon = 1.e-3
         final_com_x = x_traj[0, -1]
@@ -205,25 +240,29 @@ class TestStaticPoses(unittest.TestCase):
             self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 3, False)
             plt.draw()
             plt.show()
-        self.assertEqual(np.abs(final_com_x - self.x0[0]) < epsilon, True)     # final x-com close to initial
-        self.assertEqual(np.abs(final_com_y - self.x0[1]) < epsilon, True)     # final y-com close to initial
-        self.assertEqual(np.abs(final_com_z - self.x0[2]) < epsilon, True)     # final z-com close to initial
-        self.assertEqual(np.abs(final_com_v) < epsilon, True)               # final com velocity close to zero
+        self.assertAlmostEqual(final_com_x, self.x0[0], delta=epsilon)  # final x-com close to initial
+        self.assertAlmostEqual(final_com_y, self.x0[1], delta=epsilon)  # final y-com close to initial
+        self.assertAlmostEqual(final_com_z, self.x0[2], delta=epsilon)  # final z-com close to initial
+        self.assertAlmostEqual(final_com_v, 0., delta=epsilon)          # final com velocity close to zero
 
     def test_squatting(self):
         task = Task.SQUAT
+        self.setup_centroidal_mpc()
 
         # Generate trajectory to track
-        dt = self.centroidal_model.dt
-        N_horizon = 80      # MPC horizon
-        N_steps = 500      # simulation steps
+        dt = self.model.dt
+        N_horizon = 80  # MPC horizon
+        N_steps = 500  # simulation steps
         traj_freq = np.pi
         traj_amplitude = 0.05
-        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.centroidal_model, N_horizon, w=traj_freq,
+        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.model,
+                                                              N_horizon, w=traj_freq,
                                                               A=traj_amplitude)
-        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.centroidal_model, N_steps + 1,
+        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess,
+                                                                      self.model, N_steps + 1,
                                                                       w=traj_freq, A=traj_amplitude)
-        mpc_controller = mpc_casadi.MPCCasadi(self.centroidal_model, self.mpc_cost, self.centroidal_model.u_max, self.centroidal_model.u_min,
+        mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost, self.model.u_max,
+                                              self.model.u_min,
                                               x_des_traj, u_guess_traj, N_horizon)
 
         #
@@ -231,11 +270,11 @@ class TestStaticPoses(unittest.TestCase):
         #
 
         # placeholders for MPC outputs
-        x_traj = np.zeros((self.centroidal_model.ns, N_steps + 1))  # trajectory from entire simulation
-        u_traj = np.zeros((self.centroidal_model.na, N_steps))
+        x_traj = np.zeros((self.model.ns, N_steps + 1))  # trajectory from entire simulation
+        u_traj = np.zeros((self.model.na, N_steps))
 
         # generate noise trajectory
-        w_traj = 0.0 * np.random.normal(size=(self.centroidal_model.ns, N_steps))
+        w_traj = 0.0 * np.random.normal(size=(self.model.ns, N_steps))
 
         # closed-loop simulation
         x_traj[:, 0] = self.x0
@@ -253,16 +292,20 @@ class TestStaticPoses(unittest.TestCase):
 
                     # change/update desired trajectory accordingly
                     x_des_traj[:, :-mpc_hold] = x_des_traj[:, mpc_hold:]  # shift series to the left
-                    x_des_traj[:, -mpc_hold:] = np.zeros((self.centroidal_model.ns, mpc_hold))  # add zeros on new spaces
+                    x_des_traj[:, -mpc_hold:] = np.zeros(
+                        (self.model.ns, mpc_hold))  # add zeros on new spaces
                     for n_new in range(mpc_hold):
                         idx_offset = N_horizon - mpc_hold + n_new
                         x_des_traj[0, idx_offset] = self.x0[0]
                         x_des_traj[1, idx_offset] = self.x0[1]
-                        x_des_traj[2, idx_offset] = self.x0[2] + traj_amplitude * np.sin(traj_freq * (n_offset + n_new) * dt)
-                        x_des_traj[5, idx_offset] = self.x0[5] + traj_amplitude * np.cos(traj_freq * (n_offset + n_new) * dt)
+                        x_des_traj[2, idx_offset] = self.x0[2] + traj_amplitude * np.sin(
+                            traj_freq * (n_offset + n_new) * dt)
+                        x_des_traj[5, idx_offset] = self.x0[5] + traj_amplitude * np.cos(
+                            traj_freq * (n_offset + n_new) * dt)
 
-                    mpc_controller = mpc_casadi.MPCCasadi(self.centroidal_model, self.mpc_cost, self.centroidal_model.u_max,
-                                                      self.centroidal_model.u_min, x_des_traj, u_guess_traj)
+                    mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost,
+                                                          self.model.u_max,
+                                                          self.model.u_min, x_des_traj, u_guess_traj)
 
                 a = mpc_controller.solve(s)
                 n_mpc = n_mpc + 1
@@ -270,7 +313,7 @@ class TestStaticPoses(unittest.TestCase):
                 a = u_traj[:, n - 1]
 
             u_traj[:, n] = a.flatten()
-            x_traj[:, [n + 1]] = self.centroidal_model.simulate(s, a.flatten(), w0=w_traj[:, n])
+            x_traj[:, [n + 1]] = self.model.simulate(s, a.flatten(), w0=w_traj[:, n])
 
         epsilon = 1.e-3
         final_com_x = x_traj[0, -1]
@@ -295,10 +338,11 @@ class TestStaticPoses(unittest.TestCase):
             self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 3, False)
             plt.draw()
             plt.show()
-        self.assertEqual(np.abs(final_com_x - x_des_traj_all[0, N_steps+1]) < epsilon, True)     # final x-com close to desired
-        self.assertEqual(np.abs(final_com_y - x_des_traj_all[1, N_steps+1]) < epsilon, True)     # final y-com close to desired
-        self.assertEqual(np.abs(final_com_z - x_des_traj_all[2, N_steps+1]) < 2. * epsilon, True)     # final z-com close to desired
-        self.assertEqual(np.abs(final_com_v) < epsilon, True)               # final x,y-com velocity close to zero
+        self.assertAlmostEqual(final_com_x, x_des_traj_all[0, N_steps + 1], delta=epsilon)  # final x-com close to desired
+        self.assertAlmostEqual(final_com_y, x_des_traj_all[1, N_steps + 1], delta=epsilon)  # final y-com close to desired
+        self.assertAlmostEqual(final_com_z, x_des_traj_all[2, N_steps + 1], delta=2. * epsilon)  # final z-com close to desired
+        self.assertAlmostEqual(final_com_v, 0., delta=epsilon)  # final x,y-com velocity close to zero
+
 
 if __name__ == '__main__':
     unittest.main()
