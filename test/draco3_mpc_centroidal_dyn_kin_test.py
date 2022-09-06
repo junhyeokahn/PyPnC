@@ -343,6 +343,51 @@ class TestStaticPoses(unittest.TestCase):
         self.assertAlmostEqual(final_com_z, x_des_traj_all[2, N_steps + 1], delta=2. * epsilon)  # final z-com close to desired
         self.assertAlmostEqual(final_com_v, 0., delta=epsilon)  # final x,y-com velocity close to zero
 
+    @unittest.skip("testing new setup structure")
+    def test_standing_cmm(self):
+        task = Task.STAND
+
+        # Generate trajectory to track
+        dt = self.model.dt
+        N_horizon = 80  # MPC horizon
+        N_steps = 500  # simulation steps
+        traj_freq = np.pi
+        traj_amplitude = 0.05
+        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.model,
+                                                              N_horizon, w=traj_freq,
+                                                              A=traj_amplitude)
+        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess,
+                                                                      self.model, N_steps + 1,
+                                                                      w=traj_freq, A=traj_amplitude)
+        mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost, self.model.u_max,
+                                              self.model.u_min,
+                                              x_des_traj, u_guess_traj, N_horizon)
+
+        # placeholders for MPC outputs
+        x_traj = np.zeros((self.model.ns, N_steps + 1))  # trajectory from entire simulation
+        u_traj = np.zeros((self.model.na, N_steps))
+
+        # generate noise trajectory
+        w_traj = 0.0 * np.random.normal(size=(self.model.ns, N_steps))
+
+        # closed-loop simulation
+        x_traj[:, 0] = self.x0
+
+        n_mpc = 0  # counter for times the MPC has been run
+        mpc_hold = mpc_controller.mpc_hold
+        for n in range(N_steps):
+            s = x_traj[:, n]  # get state at beginning of this MPC loop
+
+            # run MPC
+            if n % mpc_hold == 0:
+                a = mpc_controller.solve(s)
+                n_mpc = n_mpc + 1
+            else:
+                a = u_traj[:, n - 1]
+
+            u_traj[:, n] = a.flatten()
+            x_traj[:, [n + 1]] = self.model.simulate(s, a.flatten(), w0=w_traj[:, n])
+
 
 if __name__ == '__main__':
     unittest.main()
