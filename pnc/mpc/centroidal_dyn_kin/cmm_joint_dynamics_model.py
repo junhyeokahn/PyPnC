@@ -30,25 +30,28 @@ class CMMJointDynamics(Model):
         u_expr = vertcat(F_lfoot, m_lfoot, F_rfoot, m_rfoot, v_joint)
 
         # MPC control limits
-        feet_force_ulim = np.array([500., 500., 0.])
-        feet_moment_ulim = np.array([100., 100., 0.])
+        feet_force_ulim = np.array([500., 500., 500.])
+        feet_moment_ulim = np.array([100., 100., 100.])
         v_joint_ulim = robot.joint_vel_limit[:, 1]
-        feet_force_llim = -feet_force_ulim
+        feet_force_llim = np.array([-500., -500., 0.])
         feet_moment_llim = -feet_moment_ulim
         v_joint_llim = robot.joint_vel_limit[:, 0]
-        self.u_max = np.append(feet_force_ulim, feet_moment_ulim, v_joint_ulim)
-        self.u_min = np.append(feet_force_llim, feet_moment_llim, v_joint_llim)
+        self.u_max = np.concatenate((feet_force_ulim, feet_moment_ulim, feet_force_ulim, feet_moment_ulim, v_joint_ulim))
+        self.u_min = np.concatenate((feet_force_llim, feet_moment_llim, feet_force_llim, feet_moment_llim, v_joint_llim))
 
         # dynamics
         g = 9.81
         mass = robot.total_mass
 
         g_vec = np.array([0., 0., -g])
-        A_b_inv = np.linalg.inv(A_cmm[:, :6])
+        A_b = np.zeros((6, 6))
+        A_b[0:3, 0:6] = np.copy(A_cmm[3:6, 0:6])
+        A_b[3:6, 0:6] = np.copy(A_cmm[0:3, 0:6])
+        A_b_inv = np.linalg.inv(A_b)
         A_j = A_cmm[:, 6:]
         hdot_lin = mass * g_vec + (F_lfoot + F_rfoot)
         hdot_ang = cross(r_com_lf, F_lfoot) + m_lfoot + cross(r_com_rf, F_rfoot) + m_rfoot
-        qdot_base = A_b_inv * (vertcat(h_lin, h_ang) - A_j * v_joint)
+        qdot_base = A_b_inv @ (vertcat(h_lin, h_ang) - A_j @ v_joint)
 
         x_dot = vertcat(hdot_lin,
                         hdot_ang,
@@ -63,7 +66,9 @@ class CMMJointDynamics(Model):
 
         # steady state
         s_steady_state = np.zeros((nx, 1))
+        s_steady_state[8] = robot.get_q()[2]
+        s_steady_state[12:, 0] = robot.get_q()[7:]
         a_steady_state = np.zeros((nu, 1))
         a_steady_state[2] = mass * g / 2.
-        a_steady_state[2+6] = mass * g / 2.
+        a_steady_state[8] = mass * g / 2.
         super().__init__(x_expr, u_expr, F_discrete, s_steady_state, a_steady_state, name, dt)
