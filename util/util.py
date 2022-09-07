@@ -88,6 +88,9 @@ def exp_to_quat(exp):
     return np.copy(ret)
 
 
+def quat_to_euler(quat):
+    return (R.from_quat(quat)).as_euler('zyx')
+
 def weighted_pinv(A, W, rcond=1e-15):
     return np.dot(
         W,
