@@ -99,12 +99,16 @@ class TestStaticPoses(unittest.TestCase):
 
         Q = np.diag(1e1 * np.ones(nx))
         # Q[0:6, 0:6] = 1e2 * np.identity(6)     # centroidal momentum
-        Q[6:9, 6:9] = 1e4 * np.identity(3)     # base position
+        # Q[2, 2] = 1e2
+        Q[6:9, 6:9] = 1e3 * np.identity(3)     # base position
+        Q[8, 8] = 5e4
         Q[9:12, 9:12] = 1e3 * np.identity(3)   # base orientation
         # Q[12:, 12:] = 1e2 * np.identity(self.robot.n_a)   # joints
         R = np.diag(1e-1 * np.ones(nu))
-        R[2, 2] = 1e-0
-        R[8, 8] = 1e-0
+        R[2, 2] = 1e-1
+        R[8, 8] = 1e-1
+        R[12+7:12+17, 12+7:12+17] = 1e2 * np.identity(10)       # penalize differently upper body motions
+        R[12+25:12+34, 12+25:12+34] = 1e2 * np.identity(9)      # penalize differently upper body motions
         P = 10. * Q
 
         com0 = self.robot.get_com_pos()
@@ -352,6 +356,7 @@ class TestStaticPoses(unittest.TestCase):
         self.assertAlmostEqual(final_com_z, x_des_traj_all[2, N_steps + 1], delta=2. * epsilon)  # final z-com close to desired
         self.assertAlmostEqual(final_com_v, 0., delta=epsilon)  # final x,y-com velocity close to zero
 
+    @unittest.skip("Skipping standing test with CMM model. Was passing and has not been modified since then")
     def test_standing_cmm(self):
         task = Task.STAND
         self.setup_cmm_mpc()
@@ -414,6 +419,10 @@ class TestStaticPoses(unittest.TestCase):
 
             pos_labels = ["rf_M_x", "rf_M_y", "rf_M_z"]
             self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 9, False)
+            plt.figure(figsize=(6, 6))
+            plt.plot(ts[:-1], u_traj[12:, :].T, '-', alpha=0.7)
+            plt.grid()
+            plt.ylabel("joint_vel")
             plt.draw()
             plt.show()
         epsilon = 1.e-3
@@ -425,6 +434,115 @@ class TestStaticPoses(unittest.TestCase):
         self.assertAlmostEqual(final_base_y, x_des_traj_all[7, N_steps + 1], delta=epsilon)  # final y-com close to desired
         self.assertAlmostEqual(final_base_z, x_des_traj_all[8, N_steps + 1], delta=epsilon)  # final z-com close to desired
         self.assertAlmostEqual(final_com_v, 0., delta=epsilon)  # final x,y-com velocity close to zero
+
+    @unittest.skip("Skipping squatting test with CMM model. Was passing and has not been modified since then")
+    def test_squatting_cmm(self):
+        task = Task.SQUAT
+        self.setup_cmm_mpc()
+
+        # Generate trajectory to track
+        dt = self.model.dt
+        N_horizon = 80  # MPC horizon
+        N_steps = 100  # simulation steps
+        traj_freq = np.pi
+        traj_amplitude = 0.05
+        x_des_traj, u_guess_traj = get_desired_mpc_trajectory(task, self.x0, self.u_guess, self.model,
+                                                              N_horizon, w=traj_freq, A=traj_amplitude,
+                                                              pos_idx=8, vel_idx=2)
+        x_des_traj_all, u_guess_traj_all = get_desired_mpc_trajectory(task, self.x0, self.u_guess,
+                                                              self.model, N_steps, w=traj_freq,
+                                                              A=traj_amplitude, pos_idx=8, vel_idx=2)
+        x_des_traj[2, :] = self.robot.total_mass * x_des_traj[2, :]
+        x_des_traj_all[2, :] = self.robot.total_mass * x_des_traj_all[2, :]
+        mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost, self.model.u_max,
+                                              self.model.u_min,
+                                              x_des_traj, u_guess_traj, N_horizon)
+
+        # placeholders for MPC outputs
+        x_traj = np.zeros((self.model.ns, N_steps + 1))  # trajectory from entire simulation
+        u_traj = np.zeros((self.model.na, N_steps))
+
+        # generate noise trajectory
+        w_traj = 0.0 * np.random.normal(size=(self.model.ns, N_steps))
+
+        # closed-loop simulation
+        x_traj[:, 0] = self.x0
+
+        n_mpc = 0  # counter for times the MPC has been run
+        mpc_hold = mpc_controller.mpc_hold
+        for n in range(N_steps):
+            s = x_traj[:, n]  # get state at beginning of this MPC loop
+
+            # run MPC
+            if n % mpc_hold == 0:
+                if n_mpc != 0:
+                    n_offset = (mpc_hold * (n_mpc - 1) + N_horizon)
+
+                    # change/update desired trajectory accordingly
+                    x_des_traj[:, :-mpc_hold] = x_des_traj[:, mpc_hold:]  # shift series to the left
+                    for n_new in range(mpc_hold+1):
+                        idx_offset = N_horizon - mpc_hold + n_new
+                        x_des_traj[8, idx_offset] = self.x0[8] + traj_amplitude * np.sin(
+                            traj_freq * (n_offset + n_new) * dt)
+                        x_des_traj[2, idx_offset] = self.x0[2] + self.robot.total_mass * traj_amplitude * np.cos(
+                            traj_freq * (n_offset + n_new) * dt)
+
+                        mpc_controller = mpc_casadi.MPCCasadi(self.model, self.mpc_cost,
+                                                              self.model.u_max,
+                                                              self.model.u_min, x_des_traj, u_guess_traj)
+
+                a = mpc_controller.solve(s)
+                n_mpc = n_mpc + 1
+            else:
+                a = u_traj[:, n - 1]
+
+            u_traj[:, n] = a.flatten()
+            x_traj[:, [n + 1]] = self.model.simulate(s, a.flatten(), w0=w_traj[:, n])
+
+        if b_show_plots:
+            ts = dt * np.arange(0, N_steps + 1)
+            pos_labels = ["l_x", "l_y", "l_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all, 0, True)
+
+            pos_labels = ["k_x", "k_y", "k_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all, 3, False)
+
+            pos_labels = ["base_x", "base_y", "base_z"]
+            self.plot_trajectories_tuples(ts, x_traj, pos_labels, x_des_traj_all, 6, True)
+
+            pos_labels = ["lf_F_x", "lf_F_y", "lf_F_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 0, False)
+
+            pos_labels = ["lf_M_x", "lf_M_y", "lf_M_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 3, False)
+
+            pos_labels = ["rf_F_x", "rf_F_y", "rf_F_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 6, False)
+
+            pos_labels = ["rf_M_x", "rf_M_y", "rf_M_z"]
+            self.plot_trajectories_tuples(ts[:-1], u_traj, pos_labels, x_des_traj_all, 9, False)
+            plt.figure(figsize=(6, 6))
+            plt.plot(ts[:-1], u_traj[12:, :].T, '-', alpha=0.7)
+            plt.grid()
+            plt.draw()
+            plt.show()
+        epsilon = 1.e-3
+        final_base_x = x_traj[6, -1]
+        final_base_y = x_traj[7, -1]
+        final_base_z = x_traj[8, -1]
+        final_h_com_lin = np.linalg.norm(x_traj[:3, -1] - x_des_traj_all[:3, -1]) / self.robot.total_mass
+        final_h_com_ang = np.linalg.norm(x_traj[3:6, -1] - x_des_traj_all[3:6, -1]) / self.robot.total_mass
+        final_joint_pos = np.linalg.norm(x_traj[12:, -1] - x_des_traj_all[12:, -1])
+        final_upperbody_ljoints_vel = np.linalg.norm(u_traj[12 + 7:12 + 17, :])
+        final_upperbody_rjoints_vel = np.linalg.norm(u_traj[12 + 25:12 + 34, :])
+        self.assertAlmostEqual(final_base_x, x_des_traj_all[6, N_steps], delta=epsilon)  # final x-base close to desired
+        self.assertAlmostEqual(final_base_y, x_des_traj_all[7, N_steps], delta=epsilon)  # final y-base close to desired
+        self.assertAlmostEqual(final_base_z, x_des_traj_all[8, N_steps], delta=epsilon)  # final z-base close to desired
+        self.assertAlmostEqual(final_h_com_lin, 0., delta=0.1)  # final linear momentum close to zero
+        self.assertAlmostEqual(final_h_com_ang, 0., delta=0.01)  # final angular momentum close to zero
+        self.assertAlmostEqual(final_joint_pos, 0., delta=0.1)  # final angular momentum close to zero
+        self.assertAlmostEqual(final_upperbody_ljoints_vel, 0., delta=0.5)  # final upper body velocities close to zero
+        self.assertAlmostEqual(final_upperbody_rjoints_vel, 0., delta=0.5)  # final upper body velocities close to zero
 
 if __name__ == '__main__':
     unittest.main()
