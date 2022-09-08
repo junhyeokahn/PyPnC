@@ -7,7 +7,7 @@ class Task(Enum):
     SQUAT = 2
 
 
-def get_desired_mpc_trajectory(task, s0, u_guess, model, N_horizon, w=1, A=0.0):
+def get_desired_mpc_trajectory(task, s0, u_guess, model, N_horizon, w=1, A=0.0, pos_idx=2, vel_idx=5):
 
     ns = model.ns
     na = model.na
@@ -19,8 +19,8 @@ def get_desired_mpc_trajectory(task, s0, u_guess, model, N_horizon, w=1, A=0.0):
     elif task == Task.SQUAT:
         # change desired CoM-z position and velocity entries
         for n in range(N_horizon+1):
-            s_traj[2, n] = s0[2] + A*np.sin(w * n*dt)
-            s_traj[5, n] = s0[5] + A*np.cos(w * n*dt)
+            s_traj[pos_idx, n] = s0[pos_idx] + A*np.sin(w * n*dt)
+            s_traj[vel_idx, n] = s0[vel_idx] + A*np.cos(w * n*dt)
     u_guess_traj = np.repeat(np.reshape(u_guess, [na, 1]), N_horizon, axis=1)
 
     return s_traj, u_guess_traj
