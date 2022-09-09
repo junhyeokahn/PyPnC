@@ -3,7 +3,7 @@ from pnc.mpc import ocp_solver
 
 class MPCCasadi:
     def __init__(self, model, mpc_cost, u_max, u_min, x_des_traj, u_guess_traj,
-                N_horizon=80, mpc_hold=5):
+                N_horizon=80, mpc_hold=2):
         self.N_horizon = N_horizon  # horizon in seconds is: N_horizon * dt
         self.mpc_hold = mpc_hold       # dt's for which the previous control input is held
 
