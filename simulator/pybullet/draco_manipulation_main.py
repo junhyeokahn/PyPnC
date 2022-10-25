@@ -337,6 +337,10 @@ if __name__ == "__main__":
     nominal_sensor_data = pybullet_util.get_sensor_data(
         robot, joint_id, link_id, pos_basejoint_to_basecom,
         rot_basejoint_to_basecom)
+    lh_pose_ini = pybullet_util.get_link_iso(robot,
+                                             link_id['l_hand_contact'])[0:3, 3]
+    rh_pose_ini = pybullet_util.get_link_iso(robot,
+                                             link_id['r_hand_contact'])[0:3, 3]
 
     # Draw Frames
     pybullet_util.draw_link_frame(robot, link_id['r_hand_contact'], text="rh")
@@ -391,14 +395,16 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_zero = True
         elif pybullet_util.is_key_triggered(keys, '1'):
             ## Update target pos and quat here
-            lh_target_pos = np.array([0.6, 0.02, 0.83])
+            # lh_target_pos = np.array([0.6, 0.02, 0.83])
+            lh_target_pos = np.copy(lh_pose_ini)
+            lh_target_pos[0] += 0.02
             lh_target_rot = np.dot(RIGHTUP_GRIPPER, x_rot(0.))
             lh_target_quat = util.rot_to_quat(lh_target_rot)
             lh_target_iso = liegroup.RpToTrans(lh_target_rot, lh_target_pos)
             lh_waypoint_pos = generate_keypoint(lh_target_iso)[0:3, 3]
 
-            print("lh reachability: ",
-                  is_lh_reachable(sensor_data, lh_target_pos))
+            # print("lh reachability: ",
+            # is_lh_reachable(sensor_data, lh_target_pos))
 
             interface.interrupt_logic.lh_target_pos = lh_target_pos
             interface.interrupt_logic.lh_waypoint_pos = lh_waypoint_pos
@@ -406,14 +412,16 @@ if __name__ == "__main__":
             interface.interrupt_logic.b_interrupt_button_one = True
         elif pybullet_util.is_key_triggered(keys, '3'):
             ## Update target pos and quat here
-            rh_target_pos = np.array([0.4, 0., 0.83])
+            # rh_target_pos = np.array([0.4, 0., 0.83])
+            lh_target_pos = np.copy(rh_pose_ini)
+            lh_target_pos[1] -= 0.02
             rh_target_rot = np.dot(RIGHTUP_GRIPPER, x_rot(0.))
             rh_target_quat = util.rot_to_quat(rh_target_rot)
             rh_target_iso = liegroup.RpToTrans(rh_target_rot, rh_target_pos)
             rh_waypoint_pos = generate_keypoint(rh_target_iso)[0:3, 3]
 
-            print("rh reachability: ",
-                  is_rh_reachable(sensor_data, rh_target_pos))
+            # print("rh reachability: ",
+            # is_rh_reachable(sensor_data, rh_target_pos))
 
             interface.interrupt_logic.rh_target_pos = rh_target_pos
             interface.interrupt_logic.rh_waypoint_pos = rh_waypoint_pos
