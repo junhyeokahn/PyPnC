@@ -86,19 +86,19 @@ class FootTrajectoryManager(object):
         s = (curr_time - self._swing_start_time) / self._swing_duration
 
         if s <= 0.5:
-            s = 2.0 * s
-            foot_pos_des = self._pos_traj_init_to_mid.evaluate(s)
+            mid_s = 2.0 * s
+            foot_pos_des = self._pos_traj_init_to_mid.evaluate(mid_s)
             foot_vel_des = self._pos_traj_init_to_mid.evaluate_first_derivative(
-                s)
+                mid_s)
             foot_acc_des = self._pos_traj_init_to_mid.evaluate_second_derivative(
-                s)
+                mid_s)
         else:
-            s = 2.0 * (s - 0.5)
-            foot_pos_des = self._pos_traj_mid_to_end.evaluate(s)
+            mid_s = 2.0 * (s - 0.5)
+            foot_pos_des = self._pos_traj_mid_to_end.evaluate(mid_s)
             foot_vel_des = self._pos_traj_mid_to_end.evaluate_first_derivative(
-                s)
+                mid_s)
             foot_acc_des = self._pos_traj_mid_to_end.evaluate_second_derivative(
-                s)
+                mid_s)
 
         foot_quat_des = self._quat_hermite_curve.evaluate(s)
         foot_ang_vel_des = self._quat_hermite_curve.evaluate_ang_vel(s)
