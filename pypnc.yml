@@ -2,6 +2,11 @@ name: pypnc
 channels:
   - anaconda
   - conda-forge
+  - conda-forge:
+      - crocoddyl
+#      - gepetto-viewer
+#      - gepetto-viewer-corba
+      - example-robot-data
 dependencies:
   - libcblas=3.9.0
   - liblapack=3.9.0
