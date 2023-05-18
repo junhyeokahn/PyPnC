@@ -5,12 +5,11 @@ import numpy as np
 import pinocchio as pin
 
 import plot.meshcat_utils as vis_tools
-from pnc.robot_system.pinocchio_robot_system import PinocchioRobotSystem
-
 
 cwd = os.getcwd()
 sys.path.append(cwd)
 
+B_SHOW_PLOTS = False
 
 def createActionModel(target):
     # Creating a double-support contact (feet support)
@@ -178,11 +177,17 @@ actuation = crocoddyl.ActuationModelFloatingBase(state)
 # Solve the problem
 #
 DT, N = 5e-2, 20
-target = np.array([0.4, 0, 1.2])
+targets = []
+targets += [np.array([0.4, 0.2, 0.8])]
+targets += [np.array([0.4, 0.2, 1.0])]
+targets += [np.array([0.4, 0.4, 1.0])]
+targets += [np.array([0.4, 0.4, 0.8])]
 
-# Creating a running model for the target
-dmodel = createActionModel(target)
-seqs = createSequence([dmodel], DT, N)
+# Creating a running model for each target
+seqs = []
+for t in targets:
+    dmodel = createActionModel(t)
+    seqs += createSequence([dmodel], DT, N)
 
 # Defining the problem and the solver
 problem = crocoddyl.ShootingProblem(x0, sum(seqs, [])[:-1], seqs[-1][-1])
@@ -194,7 +199,7 @@ display = vis_tools.MeshcatPinocchioAnimation(rob_model,
 col_model, vis_model, rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
 
 # Adding callbacks to inspect the evolution of the solver (logs are printed in the terminal)
-fddp.setCallbacks([crocoddyl.CallbackVerbose()])
+fddp.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 
 
 print("Problem solved:", fddp.solve())
@@ -202,5 +207,11 @@ print("Number of iterations:", fddp.iter)
 print("Total cost:", fddp.cost)
 print("Gradient norm:", fddp.stoppingCriteria())
 
-display.display_targets([target])
+display.display_targets(targets)
 display.displayFromCrocoddylSolver(fddp)
+
+if B_SHOW_PLOTS:
+    log = fddp.getCallbacks()[0]
+    crocoddyl.plotOCSolution(log.xs, log.us, figIndex=1, show=False)
+    crocoddyl.plotConvergence(log.costs, log.u_regs, log.x_regs, log.grads, log.stops, log.steps, figIndex=2)
+
