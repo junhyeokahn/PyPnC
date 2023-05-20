@@ -11,7 +11,7 @@ sys.path.append(cwd)
 
 B_SHOW_PLOTS = False
 
-def createActionModel(target):
+def createActionModel(lh_target, rh_target):
     # Creating a double-support contact (feet support)
     contacts = crocoddyl.ContactModelMultiple(state, actuation.nu)
     lf_contact = crocoddyl.ContactModel6D(
@@ -35,16 +35,25 @@ def createActionModel(target):
     costs = crocoddyl.CostModelSum(state, actuation.nu)
 
     # Adding the hand-placement cost
-    w_hand = np.array([1] * 3 + [0.0001] * 3)
-    lh_Mref = pin.SE3(np.eye(3), target)
-    activation_hand = crocoddyl.ActivationModelWeightedQuad(w_hand**2)
+    w_lhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+    lh_Mref = pin.SE3(np.eye(3), lh_target)
+    activation_lhand = crocoddyl.ActivationModelWeightedQuad(w_lhand**2)
     lh_cost = crocoddyl.CostModelResidual(
         state,
-        activation_hand,
+        activation_lhand,
         crocoddyl.ResidualModelFramePlacement(state, lh_id, lh_Mref, actuation.nu),
     )
-
     costs.addCost("lh_goal", lh_cost, 1e2)
+
+    w_rhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+    rh_Mref = pin.SE3(np.eye(3), rh_target)
+    activation_rhand = crocoddyl.ActivationModelWeightedQuad(w_rhand**2)
+    rh_cost = crocoddyl.CostModelResidual(
+        state,
+        activation_rhand,
+        crocoddyl.ResidualModelFramePlacement(state, rh_id, rh_Mref, actuation.nu),
+    )
+    costs.addCost("rh_goal", rh_cost, 1e2)
 
     # Adding state and control regularization terms
     w_x = np.array([0] * 3 + [10.0] * 3 + [0.01] * (state.nv - 6) + [10] * state.nv)
@@ -163,30 +172,39 @@ x0 = np.concatenate([q0, np.zeros(rob_model.nv)])
 rf_name = "r_foot_contact"
 lf_name = "l_foot_contact"
 lh_name = "l_hand_contact"
+rh_name = "r_hand_contact"
 
 # Getting the frame ids
 rf_id = rob_model.getFrameId(rf_name)
 lf_id = rob_model.getFrameId(lf_name)
 lh_id = rob_model.getFrameId(lh_name)
+rh_id = rob_model.getFrameId(rh_name)
 
 # Define the robot's state and actuation
 state = crocoddyl.StateMultibody(rob_model)
 actuation = crocoddyl.ActuationModelFloatingBase(state)
 
+# Create left and right hand targets
+lh_targets = []
+lh_targets += [np.array([0.3, 0.3, 0.8])]
+lh_targets += [np.array([0.35, 0.35, 1.0])]
+lh_targets += [np.array([0.35, 0.35, 1.2])]
+# lh_targets += [np.array([0.4, 0.4, 0.8])]
+
+rh_targets = []
+rh_targets += [np.array([0.3, -0.3, 0.8])]
+rh_targets += [np.array([0.35, -0.35, 1.0])]
+rh_targets += [np.array([0.35, -0.35, 1.2])]
+
 #
 # Solve the problem
 #
-DT, N = 5e-2, 20
-targets = []
-targets += [np.array([0.4, 0.2, 0.8])]
-targets += [np.array([0.4, 0.2, 1.0])]
-targets += [np.array([0.4, 0.4, 1.0])]
-targets += [np.array([0.4, 0.4, 0.8])]
+DT, N = 1e-2, 100
 
 # Creating a running model for each target
 seqs = []
-for t in targets:
-    dmodel = createActionModel(t)
+for left_t, right_t in zip(lh_targets, rh_targets):
+    dmodel = createActionModel(left_t, right_t)
     seqs += createSequence([dmodel], DT, N)
 
 # Defining the problem and the solver
@@ -207,7 +225,8 @@ print("Number of iterations:", fddp.iter)
 print("Total cost:", fddp.cost)
 print("Gradient norm:", fddp.stoppingCriteria())
 
-display.display_targets(targets)
+display.display_targets("lhand_traget", lh_targets)
+display.display_targets("rhand_traget", rh_targets)
 display.displayFromCrocoddylSolver(fddp)
 
 if B_SHOW_PLOTS:
