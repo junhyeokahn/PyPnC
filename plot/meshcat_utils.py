@@ -83,14 +83,15 @@ class MeshcatPinocchioAnimation:
             # Update viewer configuration.
             frame[viewer_name].set_transform(T)
 
-    def display_targets(self, end_effector_name, targets):
-        color = [1, 0, 0]       # rgb
+    def display_targets(self, end_effector_name, targets, color=None):
+        if color is None:
+            color = [1, 0, 0]
         material = g.MeshPhongMaterial()
         material.color = int(color[0] * 255) * 256 ** 2 + int(
             color[1] * 255) * 256 + int(color[2] * 255)
         material.opacity = 0.4
         for i, target in enumerate(targets):
-            self.viz.viewer[end_effector_name + "_" + str(i)].set_object(g.Sphere(0.02),  material)
+            self.viz.viewer[end_effector_name + "_" + str(i)].set_object(g.Sphere(0.01),  material)
             Href = np.array(
                 [
                     [1.0, 0.0, 0.0, target[0]],
