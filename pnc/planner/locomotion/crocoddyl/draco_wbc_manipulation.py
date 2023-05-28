@@ -324,10 +324,10 @@ lh_targets = knot.linear_knots(lhand_ini_pos, lhand_end_pos, lhand_waypoints)
 base_ini_pos = rob_data.oMf[base_id].translation + np.array([0., 0., 0.08])
 base_end_pos = base_ini_pos + np.array([0.15, 0.0, 0.0])    # base after passing door
 lf_ini_pos = rob_data.oMf[lf_id].translation
-lf_end_pos = lf_ini_pos + np.array([0.3, 0.0, 0.0])    # base after passing door
-base_waypoints = 7
+lf_end_pos = lf_ini_pos + np.array([0.4, 0.0, 0.0])    # base after passing door
+base_waypoints = 5
 base_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
-lf_targets = knot.swing_knots(lf_ini_pos, lf_end_pos, base_waypoints, swing_height=0.2)
+lf_targets = knot.swing_knots(lf_ini_pos, lf_end_pos, base_waypoints, swing_height=0.3)
 
 # Move left hand away from door frame (get it out of the way)
 # Switch contact to left/right feet
@@ -347,45 +347,55 @@ lf_targets = knot.swing_knots(lf_ini_pos, lf_end_pos, base_waypoints, swing_heig
 DT = 2e-2
 
 # Connecting the sequences of models
-model_seqs = []
-N_lhand_to_door = 20                                # knots for left hand reaching
-for lhand_t in lh_targets:
-    dmodel = createDoubleSupportActionModel(lhand_t)
-    model_seqs += createSequence([dmodel], DT, N_lhand_to_door)
-
-
-N_base_through_door = 30                           # knots to pass through door
-for base_t, lfoot_t in zip(base_targets, lf_targets):
-    dmodel = createSingleSupportHandActionModel(base_t, lfoot_t, lhand_end_pos)
-    model_seqs += createSequence([dmodel], DT, N_base_through_door)
+NUM_OF_CONTACT_CONFIGURATIONS = 2
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
 #     model_seqs += createSequence([dmodel], DT, N)
 
 # Defining the problem and the solver
-problem = crocoddyl.ShootingProblem(x0, sum(model_seqs, [])[:-1], model_seqs[-1][-1])
-fddp = crocoddyl.SolverFDDP(problem)
+fddp = [None] * NUM_OF_CONTACT_CONFIGURATIONS
+for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
+    model_seqs = []
+    if i == 0:
+        # Reach door with left hand
+        N_lhand_to_door = 20  # knots for left hand reaching
+        for lhand_t in lh_targets:
+            dmodel = createDoubleSupportActionModel(lhand_t)
+            model_seqs += createSequence([dmodel], DT, N_lhand_to_door)
+
+    elif i == 1:
+        # Using left-hand and right-foot supports, pass left-leg through door
+        N_base_through_door = 30  # knots to pass through door
+        for base_t, lfoot_t in zip(base_targets, lf_targets):
+            dmodel = createSingleSupportHandActionModel(base_t, lfoot_t, lhand_end_pos)
+            model_seqs += createSequence([dmodel], DT, N_base_through_door)
+
+    problem = crocoddyl.ShootingProblem(x0, sum(model_seqs, [])[:-1], model_seqs[-1][-1])
+    fddp[i] = crocoddyl.SolverFDDP(problem)
+
+    # Adding callbacks to inspect the evolution of the solver (logs are printed in the terminal)
+    fddp[i].setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
+
+    # Solver settings
+    max_iter = 150
+    fddp[i].th_stop = 1e-7
+
+    # Set initial guess
+    xs = [x0] * (fddp[i].problem.T + 1)
+    us = fddp[i].problem.quasiStatic([x0] * fddp[i].problem.T)
+    print("Problem solved:", fddp[i].solve(xs, us, max_iter))
+    print("Number of iterations:", fddp[i].iter)
+    print("Total cost:", fddp[i].cost)
+    print("Gradient norm:", fddp[i].stoppingCriteria())
+
+    # Set final state as initial state of next phase
+    x0 = fddp[i].xs[-1]
 
 # Creating display
 save_freq = 1
-display = vis_tools.MeshcatPinocchioAnimation(rob_model,
-col_model, vis_model, rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
-
-# Adding callbacks to inspect the evolution of the solver (logs are printed in the terminal)
-fddp.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
-
-# Solver settings
-max_iter = 500
-fddp.th_stop = 1e-7
-
-xs = [x0] * (fddp.problem.T + 1)
-us = fddp.problem.quasiStatic([x0] * fddp.problem.T)
-print("Problem solved:", fddp.solve(xs, us, max_iter))
-print("Number of iterations:", fddp.iter)
-print("Total cost:", fddp.cost)
-print("Gradient norm:", fddp.stoppingCriteria())
-
+display = vis_tools.MeshcatPinocchioAnimation(rob_model, col_model, vis_model,
+                              rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
 display.display_targets("lhand_traget", lh_targets)
 display.display_targets("lfoot_traget", lf_targets, [0, 0, 1])
 display.display_targets("base_traget", base_targets, [0, 1, 0])

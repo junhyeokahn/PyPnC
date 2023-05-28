@@ -44,17 +44,18 @@ class MeshcatPinocchioAnimation:
         self.visual_data = visual_data
 
     def displayFromCrocoddylSolver(self, solver):
-        models = solver.problem.runningModels.tolist() + [solver.problem.terminalModel]
-        dts = [m.dt if hasattr(m, "differential") else 0. for m in models]
+        for it in solver:
+            models = it.problem.runningModels.tolist() + [it.problem.terminalModel]
+            dts = [m.dt if hasattr(m, "differential") else 0. for m in models]
 
-        for sim_time_idx in np.arange(0, len(dts), self.save_freq):
-            q = np.array(solver.xs[int(sim_time_idx)][:self.robot_nq])
-            self.viz.display(q)
+            for sim_time_idx in np.arange(0, len(dts), self.save_freq):
+                q = np.array(it.xs[int(sim_time_idx)][:self.robot_nq])
+                self.viz.display(q)
 
-            with self.anim.at_frame(self.viz.viewer, self.frame_idx) as frame:
-                self.display_visualizer_frames(frame, q)
+                with self.anim.at_frame(self.viz.viewer, self.frame_idx) as frame:
+                    self.display_visualizer_frames(frame, q)
 
-            self.frame_idx += 1     # increase frame index counter
+                self.frame_idx += 1     # increase frame index counter
 
         # save animation
         self.viz.viewer.set_animation(self.anim, play=False)
