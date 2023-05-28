@@ -375,12 +375,13 @@ col_model, vis_model, rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
 # Adding callbacks to inspect the evolution of the solver (logs are printed in the terminal)
 fddp.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
 
-max_iter = 200
-initial_guess = np.repeat(np.reshape(x0, [len(x0), 1]).T, len(fddp.xs), axis=0)
-xs_copy = copy.deepcopy(fddp.xs)
-for i in range(len(fddp.xs)):
-    xs_copy[i] = initial_guess[i]
-print("Problem solved:", fddp.solve(fddp.xs, fddp.us, max_iter))
+# Solver settings
+max_iter = 500
+fddp.th_stop = 1e-7
+
+xs = [x0] * (fddp.problem.T + 1)
+us = fddp.problem.quasiStatic([x0] * fddp.problem.T)
+print("Problem solved:", fddp.solve(xs, us, max_iter))
 print("Number of iterations:", fddp.iter)
 print("Total cost:", fddp.cost)
 print("Gradient norm:", fddp.stoppingCriteria())
