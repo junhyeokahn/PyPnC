@@ -314,7 +314,7 @@ pin.updateFramePlacements(rob_model, rob_data)
 
 # Approach left hand to door frame
 lhand_ini_pos = rob_data.oMf[lh_id].translation
-lhand_end_pos = np.array([0.4, 0.35, 1.2])          # door frame location
+lhand_end_pos = np.array([0.45, 0.35, 1.2])          # door frame location
 lhand_waypoints = 2
 lh_targets = knot.linear_knots(lhand_ini_pos, lhand_end_pos, lhand_waypoints)
 
@@ -322,12 +322,26 @@ lh_targets = knot.linear_knots(lhand_ini_pos, lhand_end_pos, lhand_waypoints)
 
 # Switch to left hand - right foot contacts and move base through door
 base_ini_pos = rob_data.oMf[base_id].translation + np.array([0., 0., 0.08])
-base_end_pos = base_ini_pos + np.array([0.15, 0.0, 0.0])    # base after passing door
+base_pre_mid_pos = base_ini_pos + np.array([0.06, 0.0, 0.02])
+base_post_mid_pos = base_ini_pos + np.array([0.14, 0.0, 0.02])
+base_end_pos = base_ini_pos + np.array([0.25, 0.0, 0.0])    # base after passing door
+base_waypoints = 6
+base_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
+                                      list((base_pre_mid_pos, base_end_pos)),
+                                      [base_waypoints/2, base_waypoints/2])
+# base_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
+
+# swing foot trajectory
+step_length = 0.45
+swing_height = 0.40
 lf_ini_pos = rob_data.oMf[lf_id].translation
-lf_end_pos = lf_ini_pos + np.array([0.4, 0.0, 0.0])    # base after passing door
-base_waypoints = 5
-base_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
-lf_targets = knot.swing_knots(lf_ini_pos, lf_end_pos, base_waypoints, swing_height=0.3)
+lf_mid_pre_door_pos = lf_ini_pos + np.array([0.25*step_length, 0.0, swing_height])    # foot on top of door
+lf_mid_post_door_pos = lf_ini_pos + np.array([0.65*step_length, 0.0, swing_height])    # foot on top of door
+lf_end_pos = lf_ini_pos + np.array([step_length, 0.0, 0.0])    # foot after passing door
+lf_targets = knot.linear_connection(list((lf_ini_pos, lf_mid_post_door_pos)),
+                                    list((lf_mid_pre_door_pos, lf_end_pos)),
+                                    [base_waypoints/2, base_waypoints/2])
+# lf_targets = knot.swing_knots(lf_ini_pos, lf_end_pos, base_waypoints, swing_height)
 
 # Move left hand away from door frame (get it out of the way)
 # Switch contact to left/right feet
@@ -365,8 +379,9 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
             model_seqs += createSequence([dmodel], DT, N_lhand_to_door)
 
     elif i == 1:
+        DT = 0.015
         # Using left-hand and right-foot supports, pass left-leg through door
-        N_base_through_door = 30  # knots to pass through door
+        N_base_through_door = 30  # knots per waypoint to pass through door
         for base_t, lfoot_t in zip(base_targets, lf_targets):
             dmodel = createSingleSupportHandActionModel(base_t, lfoot_t, lhand_end_pos)
             model_seqs += createSequence([dmodel], DT, N_base_through_door)
@@ -379,7 +394,7 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
 
     # Solver settings
     max_iter = 150
-    fddp[i].th_stop = 1e-7
+    fddp[i].th_stop = 1e-4
 
     # Set initial guess
     xs = [x0] * (fddp[i].problem.T + 1)

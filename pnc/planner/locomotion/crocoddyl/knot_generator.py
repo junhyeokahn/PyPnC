@@ -46,3 +46,10 @@ def swing_knots(ini_pos, end_pos, number_of_waypoints, swing_height):
             equidistant_segment = equidistant_down
         knots += [current_knot + equidistant_segment]
     return knots
+
+
+def linear_connection(ini_points, end_points, number_of_waypoints):
+    waypoints = []
+    for point_ini, point_end, n_waypoints in zip(ini_points, end_points, number_of_waypoints):
+        waypoints += linear_knots(point_ini, point_end, n_waypoints)
+    return waypoints
