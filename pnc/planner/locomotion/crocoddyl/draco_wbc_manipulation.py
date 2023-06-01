@@ -323,7 +323,7 @@ lh_targets = knot.linear_knots(lhand_ini_pos, lhand_end_pos, lhand_waypoints)
 # Switch to left hand - right foot contacts and move base through door
 base_ini_pos = rob_data.oMf[base_id].translation + np.array([0., 0., 0.08])
 base_pre_mid_pos = base_ini_pos + np.array([0.06, 0.0, 0.02])
-base_post_mid_pos = base_ini_pos + np.array([0.14, 0.0, 0.02])
+base_post_mid_pos = base_ini_pos + np.array([0.18, 0.0, 0.02])
 base_end_pos = base_ini_pos + np.array([0.25, 0.0, 0.0])    # base after passing door
 base_waypoints = 6
 base_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
@@ -333,7 +333,7 @@ base_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
 
 # swing foot trajectory
 step_length = 0.45
-swing_height = 0.40
+swing_height = 0.45
 lf_ini_pos = rob_data.oMf[lf_id].translation
 lf_mid_pre_door_pos = lf_ini_pos + np.array([0.25*step_length, 0.0, swing_height])    # foot on top of door
 lf_mid_post_door_pos = lf_ini_pos + np.array([0.65*step_length, 0.0, swing_height])    # foot on top of door
