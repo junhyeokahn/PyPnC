@@ -178,7 +178,7 @@ def createSingleSupportHandActionModel(base_target, lfoot_target=None, rfoot_tar
 
         # Adding the friction cone penalization
         surf_rotation = util.util.euler_to_rot([np.pi / 2., 0., 0.])
-        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, False)
+        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, True)
         wall_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
             crocoddyl.ActivationBounds(wall_cone.lb, wall_cone.ub)
         )
@@ -202,7 +202,7 @@ def createSingleSupportHandActionModel(base_target, lfoot_target=None, rfoot_tar
 
         # Adding the friction cone penalization
         surf_rotation = util.util.euler_to_rot([-np.pi / 2., 0., 0.])
-        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, False)
+        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, True)
         wall_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
             crocoddyl.ActivationBounds(wall_cone.lb, wall_cone.ub)
         )
@@ -486,7 +486,7 @@ rf_targets = knot.linear_connection(list((rf_ini_pos, rf_mid_post_door_pos)),
 DT = 2e-2
 
 # Connecting the sequences of models
-NUM_OF_CONTACT_CONFIGURATIONS = 3
+NUM_OF_CONTACT_CONFIGURATIONS = 4
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
@@ -527,7 +527,7 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         for base_t, rfoot_t in zip(base_outof_targets, rf_targets):
             dmodel = createSingleSupportHandActionModel(base_t, rfoot_target=rfoot_t,
                                 lhand_target=lhand_end_pos, lh_contact=True,
-                                rhand_target=rhand_end_pos, rh_contact=True)
+                                rhand_target=rhand_inner_contact_pos, rh_contact=True)
             model_seqs += createSequence([dmodel], DT, N_base_square_up)
 
 
@@ -569,6 +569,9 @@ display.add_arrow("forces/l_wrist_pitch", color=[0, 1, 0])
 display.add_arrow("forces/r_wrist_pitch", color=[0, 1, 0])
 # display.displayForcesFromCrocoddylSolver(fddp)
 display.displayFromCrocoddylSolver(fddp)
+viz_to_hide = list(("lfoot_target", "rfoot_target", "lhand_target", "lhand_inner_targets",
+               "rhand_target", "base_pass_target", "base_square_target"))
+display.hide_visuals(viz_to_hide)
 
 fig_idx = 1
 if B_SHOW_JOINT_PLOTS:
@@ -608,8 +611,8 @@ if B_SHOW_GRF_PLOTS:
             sim_time[time_idx+1] = sim_time[time_idx] + dt
             time_idx += 1
 
-    plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot', Fxyz_labels)
-    plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot', Fxyz_labels)
-    plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist', Fxyz_labels)
-    plot_vector_traj(sim_time, rf_rwrist.T, 'RF RWrist', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot (Local)', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot (Local)', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist (Local)', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_rwrist.T, 'RF RWrist (Local)', Fxyz_labels)
 plt.show()

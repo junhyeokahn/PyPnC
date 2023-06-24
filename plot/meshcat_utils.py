@@ -271,3 +271,8 @@ class MeshcatPinocchioAnimation:
                 ]
             )
             self.viz.viewer[end_effector_name+"/" + str(i)].set_transform(Href)
+
+
+    def hide_visuals(self, viz_list):
+        for viz in viz_list:
+            self.viz.viewer[viz].set_property("visible", False)
