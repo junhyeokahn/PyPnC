@@ -196,7 +196,7 @@ class MeshcatPinocchioAnimation:
                 force_ori = fs_ti[contact]['oMf'].rotation
                 force_dir = fs_ti[contact]['f'].linear
 
-                scale = force_dir[2] / 500.
+                scale = force_dir[2] / 1000.
                 # tf_S = tf.scale_matrix(scale, [0., 0., 0.], [0., 0., 1.])
                 tf_S = tf.translation_matrix([0., 0., scale])
                 tf_pos = tf.translation_matrix(pos)
