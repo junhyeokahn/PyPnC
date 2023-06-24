@@ -2,7 +2,7 @@ import os
 import sys
 import crocoddyl
 import matplotlib.pyplot as plt
-from plot.helper import plot_vector_traj
+from plot.helper import plot_vector_traj, Fxyz_labels
 import numpy as np
 import pinocchio as pin
 
@@ -16,7 +16,7 @@ sys.path.append(cwd)
 B_SHOW_JOINT_PLOTS = False
 B_SHOW_GRF_PLOTS = True
 
-def createDoubleSupportActionModel(lh_target, rh_target=None, N_horizon=1):
+def createDoubleSupportActionModel(lh_target=None, rh_target=None, N_horizon=1):
     # Creating a double-support contact (feet support)
     contacts = crocoddyl.ContactModelMultiple(state, actuation.nu)
     lf_contact = crocoddyl.ContactModel6D(
@@ -41,15 +41,16 @@ def createDoubleSupportActionModel(lh_target, rh_target=None, N_horizon=1):
     costs = crocoddyl.CostModelSum(state, actuation.nu)
 
     # Adding the hand-placement cost
-    w_lhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
-    lh_Mref = pin.SE3(np.eye(3), lh_target)
-    activation_lhand = crocoddyl.ActivationModelWeightedQuad(w_lhand**2)
-    lh_cost = crocoddyl.CostModelResidual(
-        state,
-        activation_lhand,
-        crocoddyl.ResidualModelFramePlacement(state, lh_id, lh_Mref, actuation.nu),
-    )
-    costs.addCost("lh_goal", lh_cost, 1e2)
+    if lh_target is not None:
+        w_lhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+        lh_Mref = pin.SE3(np.eye(3), lh_target)
+        activation_lhand = crocoddyl.ActivationModelWeightedQuad(w_lhand**2)
+        lh_cost = crocoddyl.CostModelResidual(
+            state,
+            activation_lhand,
+            crocoddyl.ResidualModelFramePlacement(state, lh_id, lh_Mref, actuation.nu),
+        )
+        costs.addCost("lh_goal", lh_cost, 1e2)
 
     if rh_target is not None:
         w_rhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
@@ -351,6 +352,11 @@ lf_targets = knot.linear_connection(list((lf_ini_pos, lf_mid_post_door_pos)),
 
 #  Use right hand to complete step through the door
 # Switch to right hand - left foot contacts and move foot through door
+# Approach left hand to door frame
+rhand_ini_pos = rob_data.oMf[rh_id].translation + np.array([base_end_pos[0], 0., 0.])
+rhand_end_pos = np.array([0.45, -0.35, 1.2])          # door frame location
+rhand_waypoints = 2
+rh_targets = knot.linear_knots(rhand_ini_pos, rhand_end_pos, rhand_waypoints)
 
 # Approach right hand to body
 # rhand_ini_pos = rob_data.oMf[rh_id].translation
@@ -364,7 +370,7 @@ lf_targets = knot.linear_connection(list((lf_ini_pos, lf_mid_post_door_pos)),
 DT = 2e-2
 
 # Connecting the sequences of models
-NUM_OF_CONTACT_CONFIGURATIONS = 2
+NUM_OF_CONTACT_CONFIGURATIONS = 3
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
@@ -378,7 +384,7 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         # Reach door with left hand
         N_lhand_to_door = 20  # knots for left hand reaching
         for lhand_t in lh_targets:
-            dmodel = createDoubleSupportActionModel(lhand_t)
+            dmodel = createDoubleSupportActionModel(lh_target=lhand_t)
             model_seqs += createSequence([dmodel], DT, N_lhand_to_door)
 
     elif i == 1:
@@ -388,6 +394,14 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         for base_t, lfoot_t in zip(base_targets, lf_targets):
             dmodel = createSingleSupportHandActionModel(base_t, lfoot_t, lhand_end_pos)
             model_seqs += createSequence([dmodel], DT, N_base_through_door)
+
+    elif i == 2:
+        DT = 0.02
+        # Reach door with right hand
+        N_rhand_to_door = 20  # knots for left hand reaching
+        for rhand_t in rh_targets:
+            dmodel = createDoubleSupportActionModel(rh_target=rhand_t)
+            model_seqs += createSequence([dmodel], DT, N_rhand_to_door)
 
     problem = crocoddyl.ShootingProblem(x0, sum(model_seqs, [])[:-1], model_seqs[-1][-1])
     fddp[i] = crocoddyl.SolverFDDP(problem)
@@ -414,9 +428,10 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
 save_freq = 1
 display = vis_tools.MeshcatPinocchioAnimation(rob_model, col_model, vis_model,
                               rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
-display.display_targets("lhand_traget", lh_targets)
+display.display_targets("lhand_traget", lh_targets, [0.7, 0, 0])
 display.display_targets("lfoot_traget", lf_targets, [0, 0, 1])
 display.display_targets("base_traget", base_targets, [0, 1, 0])
+display.display_targets("rhand_traget", rh_targets, [0, 0, 0.7])
 display.add_arrow("forces/l_ankle_ie", color=[1, 0, 0])
 display.add_arrow("forces/r_ankle_ie", color=[0, 0, 1])
 display.add_arrow("forces/l_wrist_pitch", color=[0, 1, 0])
@@ -459,7 +474,7 @@ if B_SHOW_GRF_PLOTS:
             sim_time[time_idx+1] = sim_time[time_idx] + dt
             time_idx += 1
 
-    plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot')
-    plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot')
-    plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist')
+    plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist', Fxyz_labels)
 plt.show()

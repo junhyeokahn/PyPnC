@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+Fxyz_labels = ['Fx', 'Fy', 'Fz']
 xyz_label = ['x', 'y', 'z']
 quat_label = ['x', ' y', ' z', 'w']
 markers = ['*', '+', 'h', 'x', 'o', 'v', 'd']
@@ -139,11 +140,15 @@ def plot_rf_z_max(time, rf_z_max, phase):
     fig.suptitle('rf_z_max')
 
 
-def plot_vector_traj(time, vector, suptitle):
+def plot_vector_traj(time, vector, suptitle, ax_labels=None):
     dim = vector.shape[1]
+    if ax_labels is None:
+        ax_labels = [None] * dim
+
     fig, axes = plt.subplots(dim, 1)
     for i in range(dim):
         axes[i].plot(time, vector[:, i], color='k', linewidth=3)
+        axes[i].set_ylabel(ax_labels[i])
         axes[i].grid(True)
     axes[dim - 1].set_xlabel('time')
     fig.suptitle(suptitle)
