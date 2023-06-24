@@ -115,39 +115,106 @@ def createDoubleSupportActionModel(lh_target=None, rh_target=None, N_horizon=1):
     return dmodel
 
 
-def createSingleSupportHandActionModel(base_target, lfoot_target, lhand_target):
-    # Creating a double-support contact (feet support)
-    contacts = crocoddyl.ContactModelMultiple(state, actuation.nu)
-    rf_contact = crocoddyl.ContactModel6D(
-        state,
-        rf_id,
-        pin.SE3.Identity(),
-        actuation.nu,
-        np.array([0, 0]),
-    )
-    lh_contact = crocoddyl.ContactModel6D(
-        state,
-        lh_id,
-        pin.SE3.Identity(),
-        actuation.nu,
-        np.array([0, 0]),
-    )
-    contacts.addContact("rf_contact", rf_contact)
-    contacts.addContact("lh_contact", lh_contact)
-
+def createSingleSupportHandActionModel(base_target, lfoot_target=None, rfoot_target=None,
+               lhand_target=None, lh_contact=False, rhand_target=None, rh_contact=False):
     # Define the cost sum (cost manager)
     costs = crocoddyl.CostModelSum(state, actuation.nu)
 
-    # Add the foot-placement cost
-    w_lfoot = np.array([1.] * 3 + [0.000001] * 3)        # (lin, ang)
-    lf_Mref = pin.SE3(np.eye(3), lfoot_target)
-    activation_lfoot = crocoddyl.ActivationModelWeightedQuad(w_lfoot**2)
-    lf_cost = crocoddyl.CostModelResidual(
-        state,
-        activation_lfoot,
-        crocoddyl.ResidualModelFramePlacement(state, lf_id, lf_Mref, actuation.nu),
+    # Define contacts (e.g., feet /hand supports)
+    contacts = crocoddyl.ContactModelMultiple(state, actuation.nu)
+
+    floor_rotation, mu = np.eye(3), 0.7
+    floor_cone = crocoddyl.FrictionCone(floor_rotation, mu, 4, False)
+    floor_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
+        crocoddyl.ActivationBounds(floor_cone.lb, floor_cone.ub)
     )
-    costs.addCost("lf_goal", lf_cost, 1e2)
+
+    # if foot is not moving (e.g., tracking some trajectory), set it as in contact
+    if rfoot_target is None:
+        rf_contact = crocoddyl.ContactModel6D(
+            state,
+            rf_id,
+            pin.SE3.Identity(),
+            actuation.nu,
+            np.array([0, 0]),
+        )
+        contacts.addContact("rf_contact", rf_contact)
+
+        rf_friction = crocoddyl.CostModelResidual(
+            state,
+            floor_activation_friction,
+            crocoddyl.ResidualModelContactFrictionCone(state, rf_id, floor_cone, actuation.nu),
+        )
+        costs.addCost("rf_friction", rf_friction, 1e1)
+
+    # if foot is not moving (e.g., tracking some trajectory), set it as in contact
+    if lfoot_target is None:
+        lf_contact = crocoddyl.ContactModel6D(
+            state,
+            lf_id,
+            pin.SE3.Identity(),
+            actuation.nu,
+            np.array([0, 0]),
+        )
+        contacts.addContact("lf_contact", lf_contact)
+
+        lf_friction = crocoddyl.CostModelResidual(
+            state,
+            floor_activation_friction,
+            crocoddyl.ResidualModelContactFrictionCone(state, lf_id, floor_cone, actuation.nu),
+        )
+        costs.addCost("lf_friction", lf_friction, 1e1)
+
+    # hand is in contact if directly specified
+    if lh_contact is True:
+        lh_contact = crocoddyl.ContactModel6D(
+            state,
+            lh_id,
+            pin.SE3.Identity(),
+            actuation.nu,
+            np.array([0, 0]),
+        )
+        contacts.addContact("lh_contact", lh_contact)
+
+        # Adding the friction cone penalization
+        nsurf = np.array([0, 0, 1])
+        surf_rotation = util.util.euler_to_rot([0., -np.pi / 2., 0.])
+        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, False)
+        wall_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
+            crocoddyl.ActivationBounds(wall_cone.lb, wall_cone.ub)
+        )
+        lh_friction = crocoddyl.CostModelResidual(
+            state,
+            wall_activation_friction,
+            crocoddyl.ResidualModelContactFrictionCone(state, lh_id, wall_cone, actuation.nu),
+        )
+        costs.addCost("lh_friction", lh_friction, 1e1)
+
+    # hand is in contact if directly specified
+    if rh_contact is True:
+        rh_contact = crocoddyl.ContactModel6D(
+            state,
+            rh_id,
+            pin.SE3.Identity(),
+            actuation.nu,
+            np.array([0, 0]),
+        )
+        contacts.addContact("rh_contact", rh_contact)
+
+        # Adding the friction cone penalization
+        nsurf = np.array([0, 0, 1])
+        surf_rotation = util.util.euler_to_rot([0., -np.pi / 2., 0.])
+        wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, False)
+        wall_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
+            crocoddyl.ActivationBounds(wall_cone.lb, wall_cone.ub)
+        )
+        rh_friction = crocoddyl.CostModelResidual(
+            state,
+            wall_activation_friction,
+            crocoddyl.ResidualModelContactFrictionCone(state, rh_id, wall_cone, actuation.nu),
+        )
+        costs.addCost("rh_friction", rh_friction, 1e1)
+
 
     # Add the base-placement cost
     w_base = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
@@ -160,16 +227,51 @@ def createSingleSupportHandActionModel(base_target, lfoot_target, lhand_target):
     )
     costs.addCost("base_goal", base_cost, 1e2)
 
+    # Add the foot-placement cost
+    if lfoot_target is not None:
+        w_lfoot = np.array([1.] * 3 + [0.000001] * 3)        # (lin, ang)
+        lf_Mref = pin.SE3(np.eye(3), lfoot_target)
+        activation_lfoot = crocoddyl.ActivationModelWeightedQuad(w_lfoot**2)
+        lf_cost = crocoddyl.CostModelResidual(
+            state,
+            activation_lfoot,
+            crocoddyl.ResidualModelFramePlacement(state, lf_id, lf_Mref, actuation.nu),
+        )
+        costs.addCost("lf_goal", lf_cost, 1e2)
+
+    if rfoot_target is not None:
+        w_rfoot = np.array([1.] * 3 + [0.000001] * 3)        # (lin, ang)
+        rf_Mref = pin.SE3(np.eye(3), rfoot_target)
+        activation_rfoot = crocoddyl.ActivationModelWeightedQuad(w_rfoot**2)
+        rf_cost = crocoddyl.CostModelResidual(
+            state,
+            activation_rfoot,
+            crocoddyl.ResidualModelFramePlacement(state, rf_id, rf_Mref, actuation.nu),
+        )
+        costs.addCost("rf_goal", rf_cost, 1e2)
+
     # Adding the hand-placement cost
-    w_lhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
-    lh_Mref = pin.SE3(np.eye(3), lhand_target)
-    activation_lhand = crocoddyl.ActivationModelWeightedQuad(w_lhand**2)
-    lh_cost = crocoddyl.CostModelResidual(
-        state,
-        activation_lhand,
-        crocoddyl.ResidualModelFramePlacement(state, lh_id, lh_Mref, actuation.nu),
-    )
-    costs.addCost("lh_goal", lh_cost, 1e2)
+    if lhand_target is not None:
+        w_lhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+        lh_Mref = pin.SE3(np.eye(3), lhand_target)
+        activation_lhand = crocoddyl.ActivationModelWeightedQuad(w_lhand**2)
+        lh_cost = crocoddyl.CostModelResidual(
+            state,
+            activation_lhand,
+            crocoddyl.ResidualModelFramePlacement(state, lh_id, lh_Mref, actuation.nu),
+        )
+        costs.addCost("lh_goal", lh_cost, 1e2)
+
+    if rhand_target is not None:
+        w_rhand = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+        rh_Mref = pin.SE3(np.eye(3), rhand_target)
+        activation_rhand = crocoddyl.ActivationModelWeightedQuad(w_rhand**2)
+        rh_cost = crocoddyl.CostModelResidual(
+            state,
+            activation_rhand,
+            crocoddyl.ResidualModelFramePlacement(state, rh_id, rh_Mref, actuation.nu),
+        )
+        costs.addCost("rh_goal", rh_cost, 1e2)
 
     # Adding state and control regularization terms
     w_x = np.array([0] * 3 + [10.0] * 3 + [0.01] * (state.nv - 6) + [10] * state.nv)
@@ -195,31 +297,6 @@ def createSingleSupportHandActionModel(base_target, lfoot_target, lhand_target):
         crocoddyl.ResidualModelState(state, 0 * x0, actuation.nu),
     )
     costs.addCost("xBounds", x_bounds, 1.0)
-
-    # Adding the friction cone penalization
-    nsurf, mu = np.array([0, 0, 1]), 0.7
-    surf_rotation = util.util.euler_to_rot([0., -np.pi/2., 0.])
-    wall_cone = crocoddyl.FrictionCone(surf_rotation, mu, 4, False)
-    wall_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
-        crocoddyl.ActivationBounds(wall_cone.lb, wall_cone.ub)
-    )
-    lh_friction = crocoddyl.CostModelResidual(
-        state,
-        wall_activation_friction,
-        crocoddyl.ResidualModelContactFrictionCone(state, lh_id, wall_cone, actuation.nu),
-    )
-    floor_rotation = np.eye(3)
-    floor_cone = crocoddyl.FrictionCone(floor_rotation, mu, 4, False)
-    floor_activation_friction = crocoddyl.ActivationModelQuadraticBarrier(
-        crocoddyl.ActivationBounds(floor_cone.lb, floor_cone.ub)
-    )
-    rf_friction = crocoddyl.CostModelResidual(
-        state,
-        floor_activation_friction,
-        crocoddyl.ResidualModelContactFrictionCone(state, rf_id, floor_cone, actuation.nu),
-    )
-    costs.addCost("lh_friction", lh_friction, 1e1)
-    costs.addCost("rf_friction", rf_friction, 1e1)
 
     # Creating the action model
     dmodel = crocoddyl.DifferentialActionModelContactFwdDynamics(
@@ -330,10 +407,10 @@ base_pre_mid_pos = base_ini_pos + np.array([0.06, 0.0, 0.02])
 base_post_mid_pos = base_ini_pos + np.array([0.18, 0.0, 0.02])
 base_end_pos = base_ini_pos + np.array([0.25, 0.0, 0.0])    # base after passing door
 base_waypoints = 6
-base_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
-                                      list((base_pre_mid_pos, base_end_pos)),
-                                      [base_waypoints/2, base_waypoints/2])
-# base_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
+base_into_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
+                                           list((base_pre_mid_pos, base_end_pos)),
+                                           [base_waypoints/2, base_waypoints/2])
+# base_into_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
 
 # swing foot trajectory
 step_length = 0.45
@@ -364,13 +441,31 @@ rh_targets = knot.linear_knots(rhand_ini_pos, rhand_end_pos, rhand_waypoints)
 # rh_targets = knot.linear_knots(rhand_ini_pos, rhand_end_pos, duration)
 
 
+# Swing right foot to square up
+# Switch to left hand - right foot contacts and move base through door
+base_pre_squareup_pos = base_end_pos + np.array([0.02, 0.02, 0.0])
+base_squareup_pos = base_end_pos + np.array([0.05, 0.01, 0.0])
+base_post_squareup_pos = base_end_pos + np.array([0.10, 0.0, 0.0])    # final base position
+base_waypoints = 6
+base_outof_targets = knot.linear_connection(list((base_end_pos, base_squareup_pos)),
+                               list((base_pre_squareup_pos, base_post_squareup_pos)),
+                               [base_waypoints/2, base_waypoints/2])
+
+rf_ini_pos = rob_data.oMf[rf_id].translation
+rf_mid_pre_door_pos = rf_ini_pos + np.array([0.25*step_length, 0.0, swing_height])    # foot on top of door
+rf_mid_post_door_pos = rf_ini_pos + np.array([0.65*step_length, 0.0, swing_height])    # foot on top of door
+rf_end_pos = rf_ini_pos + np.array([step_length, 0.0, 0.0])    # foot after passing door
+rf_targets = knot.linear_connection(list((rf_ini_pos, rf_mid_post_door_pos)),
+                                    list((rf_mid_pre_door_pos, rf_end_pos)),
+                                    [base_waypoints/2, base_waypoints/2])
+
 #
 # Solve the problem
 #
 DT = 2e-2
 
 # Connecting the sequences of models
-NUM_OF_CONTACT_CONFIGURATIONS = 3
+NUM_OF_CONTACT_CONFIGURATIONS = 4
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
@@ -391,8 +486,9 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         DT = 0.015
         # Using left-hand and right-foot supports, pass left-leg through door
         N_base_through_door = 30  # knots per waypoint to pass through door
-        for base_t, lfoot_t in zip(base_targets, lf_targets):
-            dmodel = createSingleSupportHandActionModel(base_t, lfoot_t, lhand_end_pos)
+        for base_t, lfoot_t in zip(base_into_targets, lf_targets):
+            dmodel = createSingleSupportHandActionModel(base_t,
+                            lfoot_target=lfoot_t, lhand_target=lhand_end_pos, lh_contact=True)
             model_seqs += createSequence([dmodel], DT, N_base_through_door)
 
     elif i == 2:
@@ -402,6 +498,17 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         for rhand_t in rh_targets:
             dmodel = createDoubleSupportActionModel(rh_target=rhand_t)
             model_seqs += createSequence([dmodel], DT, N_rhand_to_door)
+
+    elif i == 3:
+        DT = 0.015
+        # Using left-hand and right-foot supports, pass right-leg through door
+        N_base_square_up = 30  # knots per waypoint to pass through door
+        for base_t, rfoot_t in zip(base_outof_targets, rf_targets):
+            dmodel = createSingleSupportHandActionModel(base_t, rfoot_target=rfoot_t,
+                                lhand_target=lhand_end_pos, lh_contact=True,
+                                rhand_target=rhand_end_pos, rh_contact=True)
+            model_seqs += createSequence([dmodel], DT, N_base_square_up)
+
 
     problem = crocoddyl.ShootingProblem(x0, sum(model_seqs, [])[:-1], model_seqs[-1][-1])
     fddp[i] = crocoddyl.SolverFDDP(problem)
@@ -428,13 +535,16 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
 save_freq = 1
 display = vis_tools.MeshcatPinocchioAnimation(rob_model, col_model, vis_model,
                               rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
-display.display_targets("lhand_traget", lh_targets, [0.7, 0, 0])
-display.display_targets("lfoot_traget", lf_targets, [0, 0, 1])
-display.display_targets("base_traget", base_targets, [0, 1, 0])
-display.display_targets("rhand_traget", rh_targets, [0, 0, 0.7])
+display.display_targets("lhand_target", lh_targets, [0.5, 0, 0])
+display.display_targets("lfoot_target", lf_targets, [0, 0, 1])
+display.display_targets("base_pass_target", base_into_targets, [0, 1, 0])
+display.display_targets("rhand_target", rh_targets, [0, 0, 0.5])
+display.display_targets("base_square_target", base_outof_targets, [0, 1, 0])
+display.display_targets("rfoot_target", rf_targets, [1, 0, 0])
 display.add_arrow("forces/l_ankle_ie", color=[1, 0, 0])
 display.add_arrow("forces/r_ankle_ie", color=[0, 0, 1])
 display.add_arrow("forces/l_wrist_pitch", color=[0, 1, 0])
+display.add_arrow("forces/r_wrist_pitch", color=[0, 1, 0])
 # display.displayForcesFromCrocoddylSolver(fddp)
 display.displayFromCrocoddylSolver(fddp)
 
@@ -449,12 +559,12 @@ if B_SHOW_JOINT_PLOTS:
         fig_idx +=1
 
 if B_SHOW_GRF_PLOTS:
-    # Note: contact_links are l_ankle_ie, r_ankle_ie, l_wrist_pitch
+    # Note: contact_links are l_ankle_ie, r_ankle_ie, l_wrist_pitch, r_wrist_pitch
     sim_steps_list = [len(fddp[i].xs) for i in range(len(fddp))]
     sim_steps = np.sum(sim_steps_list) + 1
     sim_time = np.zeros((sim_steps,))
-    rf_lfoot, rf_rfoot, rf_lwrist = np.zeros((3, sim_steps)), \
-                    np.zeros((3, sim_steps)), np.zeros((3, sim_steps))
+    rf_lfoot, rf_rfoot, rf_lwrist, rf_rwrist = np.zeros((3, sim_steps)), \
+        np.zeros((3, sim_steps)), np.zeros((3, sim_steps)), np.zeros((3, sim_steps))
     time_idx = 0
     for it in fddp:
         rf_list = vis_tools.get_force_trajectory_from_solver(it)
@@ -468,6 +578,8 @@ if B_SHOW_GRF_PLOTS:
                     rf_rfoot[:, time_idx] = contact['f'].linear
                 elif rob_model.names[cur_link] == "l_wrist_pitch":
                     rf_lwrist[:, time_idx] = contact['f'].linear
+                elif rob_model.names[cur_link] == "r_wrist_pitch":
+                    rf_rwrist[:, time_idx] = contact['f'].linear
                 else:
                     print("ERROR: Non-specified contact")
             dt = it.problem.runningModels[0].dt     # assumes constant dt over fddp sequence
@@ -477,4 +589,5 @@ if B_SHOW_GRF_PLOTS:
     plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot', Fxyz_labels)
     plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot', Fxyz_labels)
     plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist', Fxyz_labels)
+    plot_vector_traj(sim_time, rf_rwrist.T, 'RF RWrist', Fxyz_labels)
 plt.show()
