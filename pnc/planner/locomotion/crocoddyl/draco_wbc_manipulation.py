@@ -1,18 +1,20 @@
 import os
 import sys
 import crocoddyl
+import matplotlib.pyplot as plt
+from plot.helper import plot_vector_traj
 import numpy as np
 import pinocchio as pin
 
 import plot.meshcat_utils as vis_tools
 import knot_generator as knot
 import util.util
-import copy
 
 cwd = os.getcwd()
 sys.path.append(cwd)
 
-B_SHOW_PLOTS = False
+B_SHOW_JOINT_PLOTS = False
+B_SHOW_GRF_PLOTS = True
 
 def createDoubleSupportActionModel(lh_target, rh_target=None, N_horizon=1):
     # Creating a double-support contact (feet support)
@@ -33,6 +35,7 @@ def createDoubleSupportActionModel(lh_target, rh_target=None, N_horizon=1):
     )
     contacts.addContact("lf_contact", lf_contact)
     contacts.addContact("rf_contact", rf_contact)
+    contact_data = contacts.createData(rob_data)
 
     # Define the cost sum (cost manager)
     costs = crocoddyl.CostModelSum(state, actuation.nu)
@@ -414,10 +417,49 @@ display = vis_tools.MeshcatPinocchioAnimation(rob_model, col_model, vis_model,
 display.display_targets("lhand_traget", lh_targets)
 display.display_targets("lfoot_traget", lf_targets, [0, 0, 1])
 display.display_targets("base_traget", base_targets, [0, 1, 0])
+display.add_arrow("forces/l_ankle_ie", color=[1, 0, 0])
+display.add_arrow("forces/r_ankle_ie", color=[0, 0, 1])
+display.add_arrow("forces/l_wrist_pitch", color=[0, 1, 0])
+# display.displayForcesFromCrocoddylSolver(fddp)
 display.displayFromCrocoddylSolver(fddp)
 
-if B_SHOW_PLOTS:
-    log = fddp.getCallbacks()[0]
-    crocoddyl.plotOCSolution(log.xs, log.us, figIndex=1, show=False)
-    crocoddyl.plotConvergence(log.costs, log.u_regs, log.x_regs, log.grads, log.stops, log.steps, figIndex=2)
+fig_idx = 1
+if B_SHOW_JOINT_PLOTS:
+    for it in fddp:
+        log = it.getCallbacks()[0]
+        crocoddyl.plotOCSolution(log.xs, log.us, figIndex=fig_idx, show=False)
+        fig_idx += 1
+        crocoddyl.plotConvergence(log.costs, log.u_regs, log.x_regs, log.grads,
+                                  log.stops, log.steps, figIndex=fig_idx, show=False)
+        fig_idx +=1
 
+if B_SHOW_GRF_PLOTS:
+    # Note: contact_links are l_ankle_ie, r_ankle_ie, l_wrist_pitch
+    sim_steps_list = [len(fddp[i].xs) for i in range(len(fddp))]
+    sim_steps = np.sum(sim_steps_list) + 1
+    sim_time = np.zeros((sim_steps,))
+    rf_lfoot, rf_rfoot, rf_lwrist = np.zeros((3, sim_steps)), \
+                    np.zeros((3, sim_steps)), np.zeros((3, sim_steps))
+    time_idx = 0
+    for it in fddp:
+        rf_list = vis_tools.get_force_trajectory_from_solver(it)
+        for rf_t in rf_list:
+            for contact in rf_t:
+                # determine contact link
+                cur_link = int(contact['key'])
+                if rob_model.names[cur_link] == "l_ankle_ie":
+                    rf_lfoot[:, time_idx] = contact['f'].linear
+                elif rob_model.names[cur_link] == "r_ankle_ie":
+                    rf_rfoot[:, time_idx] = contact['f'].linear
+                elif rob_model.names[cur_link] == "l_wrist_pitch":
+                    rf_lwrist[:, time_idx] = contact['f'].linear
+                else:
+                    print("ERROR: Non-specified contact")
+            dt = it.problem.runningModels[0].dt     # assumes constant dt over fddp sequence
+            sim_time[time_idx+1] = sim_time[time_idx] + dt
+            time_idx += 1
+
+    plot_vector_traj(sim_time, rf_lfoot.T, 'RF LFoot')
+    plot_vector_traj(sim_time, rf_rfoot.T, 'RF RFoot')
+    plot_vector_traj(sim_time, rf_lwrist.T, 'RF LWrist')
+plt.show()
