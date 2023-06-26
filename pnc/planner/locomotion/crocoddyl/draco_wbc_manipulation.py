@@ -355,15 +355,22 @@ def get_default_initial_pose():
 
 
 # Load robot
-urdf_file = cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf"
+draco_urdf_file = cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf"
 package_dir = cwd + "/robot_model/draco3"
-rob_model, col_model, vis_model = pin.buildModelsFromUrdf(urdf_file,
-                                      package_dir, pin.JointModelFreeFlyer())
+rob_model, col_model, vis_model = pin.buildModelsFromUrdf(draco_urdf_file,
+                                                          package_dir, pin.JointModelFreeFlyer())
 rob_data, col_data, vis_data = pin.createDatas(rob_model, col_model, vis_model)
-# robot = PinocchioRobotSystem(urdf_file, package_dir, False, False)
 q0 = get_default_initial_pose()
 v0 = np.zeros(rob_model.nv)
 x0 = np.concatenate([q0, v0])
+
+# Load navy door
+door_urdf_file = cwd + "/robot_model/ground/navy_door.urdf"
+door_package_dir = cwd + "/robot_model/ground"
+door_model, door_col_model, door_vis_model = pin.buildModelsFromUrdf(
+    door_urdf_file, door_package_dir)
+door_ini_pos = np.array([0.30, 0., 0.0])
+door_ini_quat = np.array([0.7071068, 0., 0., 0.7071068])
 
 # Declaring the foot and hand names
 rf_name = "r_foot_contact"
@@ -398,7 +405,7 @@ door_l_inner_location = np.array([0.52, 0.3, 1.2])
 door_r_inner_location = np.array([0.52, -0.3, 1.2])
 
 # swing foot trajectory parameters
-step_length = 0.4
+step_length = 0.45
 swing_height = 0.45
 
 # Approach left hand to door frame
@@ -574,7 +581,8 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
 # Creating display
 save_freq = 1
 display = vis_tools.MeshcatPinocchioAnimation(rob_model, col_model, vis_model,
-                              rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
+                  rob_data, vis_data, ctrl_freq=1/DT, save_freq=save_freq)
+display.add_robot("door", door_model, door_col_model, door_vis_model, door_ini_pos, door_ini_quat)
 display.display_targets("lfoot_target", lf_targets, [1, 0, 0])
 display.display_targets("rfoot_target", rf_targets, [0, 0, 1])
 display.display_targets("lhand_target", lh_targets, [0.5, 0, 0])
@@ -590,9 +598,7 @@ display.add_arrow("forces/r_wrist_pitch", color=[0, 1, 0])
 # display.displayForcesFromCrocoddylSolver(fddp)
 display.displayFromCrocoddylSolver(fddp)
 viz_to_hide = list(("lfoot_target", "rfoot_target", "lhand_target", "lhand_inner_targets",
-               "rhand_target"))
-# viz_to_hide = list(("lfoot_target", "rfoot_target", "lhand_target", "lhand_inner_targets",
-#                "rhand_target", "base_pass_target", "base_square_target"))
+               "rhand_target", "base_pass_target", "base_ffoot_targets", "base_square_target"))
 display.hide_visuals(viz_to_hide)
 
 fig_idx = 1

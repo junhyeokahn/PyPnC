@@ -173,6 +173,17 @@ class MeshcatPinocchioAnimation:
         self.visual_model = visual_model
         self.visual_data = visual_data
 
+    def add_robot(self, robot_name, pin_rob_model, collision_model, visual_model,
+                  rob_position, rob_quaternion):
+        viz = MeshcatVisualizer(pin_rob_model, collision_model, visual_model)
+        viz.initViewer(self.viz.viewer)
+        viz.loadViewerModel(rootNodeName=robot_name)
+
+        tf_transl = tf.translation_matrix(rob_position)
+        tf_rot = tf.quaternion_matrix(rob_quaternion)
+        tf_pose = tf.concatenate_matrices(tf_transl, tf_rot)
+        viz.viewer[robot_name].set_transform(tf_pose)
+
     def add_arrow(self, obj_name, color=[1, 0, 0], height=0.1):
         arrow_shaft = g.Cylinder(height, 0.01)
         arrow_head = g.Cylinder(0.04, 0.04, radiusTop=0.001, radiusBottom=0.04)
