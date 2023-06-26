@@ -397,6 +397,10 @@ door_r_outer_location = np.array([0.45, -0.35, 1.2])
 door_l_inner_location = np.array([0.52, 0.3, 1.2])
 door_r_inner_location = np.array([0.52, -0.3, 1.2])
 
+# swing foot trajectory parameters
+step_length = 0.4
+swing_height = 0.45
+
 # Approach left hand to door frame
 lhand_ini_pos = rob_data.oMf[lh_id].translation
 lhand_end_pos = door_l_outer_location          # door frame location
@@ -407,9 +411,10 @@ lh_targets = knot.linear_knots(lhand_ini_pos, lhand_end_pos, lhand_waypoints)
 
 # Switch to left hand - right foot contacts and move base through door
 base_ini_pos = rob_data.oMf[base_id].translation + np.array([0., 0., 0.08])
-base_pre_mid_pos = base_ini_pos + np.array([0.06, 0.0, 0.02])
-base_post_mid_pos = base_ini_pos + np.array([0.18, 0.0, 0.02])
-base_end_pos = base_ini_pos + np.array([0.25, 0.0, 0.0])    # base after passing door
+base_expected_end_pos = base_ini_pos + np.array([step_length, 0., 0.])
+base_pre_mid_pos = base_ini_pos + np.array([0.1, 0.0, 0.02])
+base_post_mid_pos = base_ini_pos + np.array([0.2, 0.0, 0.02])
+base_end_pos = base_ini_pos + np.array([0.65*step_length, 0.0, 0.0])    # base after passing door
 base_waypoints = 6
 base_into_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos)),
                                            list((base_pre_mid_pos, base_end_pos)),
@@ -417,8 +422,6 @@ base_into_targets = knot.linear_connection(list((base_ini_pos, base_post_mid_pos
 # base_into_targets = knot.linear_knots(base_ini_pos, base_end_pos, base_waypoints)
 
 # swing foot trajectory
-step_length = 0.45
-swing_height = 0.45
 lf_ini_pos = rob_data.oMf[lf_id].translation
 lf_mid_pre_door_pos = lf_ini_pos + np.array([0.25*step_length, 0.0, swing_height])    # foot on top of door
 lf_mid_post_door_pos = lf_ini_pos + np.array([0.65*step_length, 0.0, swing_height])    # foot on top of door
@@ -460,21 +463,27 @@ lh_inner_targets = knot.linear_connection(list((lhand_break_contact_pos, lhand_i
 # rhand_end_pos = np.array([0.3, -0.20, 0.8])         # door frame location
 # rh_targets = knot.linear_knots(rhand_ini_pos, rhand_end_pos, duration)
 
+# Transfer weight to front foot (and gain momentum?)
+base_to_front_foot_ini = base_end_pos + np.array([0., 0., 0.02])
+base_to_front_foot = base_end_pos + np.array([0.07, 0.07, 0.02])
+base_ffoot_waypoints = 2
+base_ffoot_targets = knot.linear_knots(base_to_front_foot_ini,
+                                       base_to_front_foot, base_ffoot_waypoints)
 
 # Swing right foot to square up
 # Switch to left hand - right foot contacts and move base through door
-base_push_pre_square_pos = base_end_pos + np.array([-0.04, 0.0, -0.02])
-base_pre_squareup_pos = base_end_pos + np.array([0.04, 0.06, 0.0])
-base_squareup_pos = base_end_pos + np.array([0.12, 0.01, 0.0])
-base_post_squareup_pos = base_end_pos + np.array([0.18, 0.0, 0.0])    # final base position
+base_push_pre_square_pos = base_to_front_foot + np.array([0.01, 0.01, 0.0])
+base_pre_squareup_pos = base_to_front_foot + np.array([0.03, -0.03, 0.0])
+base_squareup_pos = base_to_front_foot + np.array([0.04, -0.06, 0.0])
+base_post_squareup_pos = base_expected_end_pos    # final base position
 base_waypoints = 6
 base_outof_targets = knot.linear_connection(list((base_push_pre_square_pos, base_squareup_pos)),
                                list((base_pre_squareup_pos, base_post_squareup_pos)),
                                [base_waypoints/2, base_waypoints/2])
 
 rf_ini_pos = rob_data.oMf[rf_id].translation
-rf_mid_pre_door_pos = rf_ini_pos + np.array([0.25*step_length, 0.0, swing_height])    # foot on top of door
-rf_mid_post_door_pos = rf_ini_pos + np.array([0.65*step_length, 0.0, swing_height])    # foot on top of door
+rf_mid_pre_door_pos = rf_ini_pos + np.array([0.15*step_length, 0.0, 0.9*swing_height])    # foot on top of door
+rf_mid_post_door_pos = rf_ini_pos + np.array([0.6*step_length, 0.0, swing_height])    # foot on top of door
 rf_end_pos = rf_ini_pos + np.array([step_length, 0.0, 0.0])    # foot after passing door
 rf_targets = knot.linear_connection(list((rf_ini_pos, rf_mid_post_door_pos)),
                                     list((rf_mid_pre_door_pos, rf_end_pos)),
@@ -486,7 +495,7 @@ rf_targets = knot.linear_connection(list((rf_ini_pos, rf_mid_post_door_pos)),
 DT = 2e-2
 
 # Connecting the sequences of models
-NUM_OF_CONTACT_CONFIGURATIONS = 4
+NUM_OF_CONTACT_CONFIGURATIONS = 5
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
@@ -521,9 +530,19 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
             model_seqs += createSequence([dmodel], DT, N_rhand_to_door)
 
     elif i == 3:
+        DT = 0.03
+        # Reach door with right hand
+        N_base_to_ffoot = 15  # knots for left hand reaching
+        for base_t in base_ffoot_targets:
+            dmodel = createSingleSupportHandActionModel(base_t,
+                        lhand_target=door_l_inner_location, lh_contact=True,
+                        rhand_target=door_r_inner_location, rh_contact=True)
+            model_seqs += createSequence([dmodel], DT, N_base_to_ffoot)
+
+    elif i == 4:
         DT = 0.015
         # Using left-hand and right-foot supports, pass right-leg through door
-        N_base_square_up = 30  # knots per waypoint to pass through door
+        N_base_square_up = 40  # knots per waypoint to pass through door
         for base_t, rfoot_t in zip(base_outof_targets, rf_targets):
             dmodel = createSingleSupportHandActionModel(base_t, rfoot_target=rfoot_t,
                                 lhand_target=lhand_end_pos, lh_contact=True,
@@ -562,6 +581,7 @@ display.display_targets("lhand_target", lh_targets, [0.5, 0, 0])
 display.display_targets("lhand_inner_targets", lh_inner_targets, [0.5, 0, 0])
 display.display_targets("rhand_target", rh_targets, [0, 0, 0.5])
 display.display_targets("base_pass_target", base_into_targets, [0, 1, 0])
+display.display_targets("base_ffoot_targets", base_ffoot_targets, [0, 1, 0])
 display.display_targets("base_square_target", base_outof_targets, [0, 1, 0])
 display.add_arrow("forces/l_ankle_ie", color=[1, 0, 0])
 display.add_arrow("forces/r_ankle_ie", color=[0, 0, 1])
@@ -570,7 +590,9 @@ display.add_arrow("forces/r_wrist_pitch", color=[0, 1, 0])
 # display.displayForcesFromCrocoddylSolver(fddp)
 display.displayFromCrocoddylSolver(fddp)
 viz_to_hide = list(("lfoot_target", "rfoot_target", "lhand_target", "lhand_inner_targets",
-               "rhand_target", "base_pass_target", "base_square_target"))
+               "rhand_target"))
+# viz_to_hide = list(("lfoot_target", "rfoot_target", "lhand_target", "lhand_inner_targets",
+#                "rhand_target", "base_pass_target", "base_square_target"))
 display.hide_visuals(viz_to_hide)
 
 fig_idx = 1
