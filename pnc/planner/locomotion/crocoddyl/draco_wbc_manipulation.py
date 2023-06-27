@@ -116,7 +116,8 @@ def createDoubleSupportActionModel(lh_target=None, rh_target=None, N_horizon=1):
 
 
 def createSingleSupportHandActionModel(base_target, lfoot_target=None, rfoot_target=None,
-               lhand_target=None, lh_contact=False, rhand_target=None, rh_contact=False):
+               lhand_target=None, lh_contact=False, rhand_target=None, rh_contact=False,
+               ang_weights=0.00001):
     # Define the cost sum (cost manager)
     costs = crocoddyl.CostModelSum(state, actuation.nu)
 
@@ -215,7 +216,7 @@ def createSingleSupportHandActionModel(base_target, lfoot_target=None, rfoot_tar
 
 
     # Add the base-placement cost
-    w_base = np.array([1.] * 3 + [0.00001] * 3)        # (lin, ang)
+    w_base = np.array([1.] * 3 + [ang_weights] * 3)        # (lin, ang)
     base_Mref = pin.SE3(np.eye(3), base_target)
     activation_base = crocoddyl.ActivationModelWeightedQuad(w_base**2)
     base_cost = crocoddyl.CostModelResidual(
@@ -444,13 +445,14 @@ lf_targets = knot.linear_connection(list((lf_ini_pos, lf_mid_post_door_pos)),
 #  Use right hand to complete step through the door
 # Switch to right hand - left foot contacts and move foot through door
 # Approach right hand to door frame
-rhand_ini_pos = rob_data.oMf[rh_id].translation + np.array([base_end_pos[0], 0.05, 0.])
-rhand_inside_door_bwd_pos = rhand_ini_pos + np.array([0.0, 0.2, 0.])
+rhand_ini_pos = rob_data.oMf[rh_id].translation
+rhand_door_ini_pos = rhand_ini_pos + np.array([base_end_pos[0], 0.05, 0.])
+rhand_inside_door_bwd_pos = rhand_door_ini_pos + np.array([0.0, 0.2, 0.])
 rhand_inside_door_fwd_pos = door_r_inner_location + np.array([-0.01, 0.2, 0.])
 rhand_inner_contact_pos = door_r_inner_location          # door frame right inner contact location
 rhand_waypoints = 4
-# rh_targets = knot.linear_knots(rhand_ini_pos, rhand_end_pos, rhand_waypoints)
-rh_targets = knot.linear_connection(list((rhand_ini_pos, rhand_inside_door_fwd_pos)),
+# rh_targets = knot.linear_knots(rhand_door_ini_pos, rhand_end_pos, rhand_waypoints)
+rh_targets = knot.linear_connection(list((rhand_door_ini_pos, rhand_inside_door_fwd_pos)),
                                           list((rhand_inside_door_bwd_pos, rhand_inner_contact_pos)),
                                           [rhand_waypoints/2, rhand_waypoints/2])
 
@@ -496,13 +498,18 @@ rf_targets = knot.linear_connection(list((rf_ini_pos, rf_mid_post_door_pos)),
                                     list((rf_mid_pre_door_pos, rf_end_pos)),
                                     [base_waypoints/2, base_waypoints/2])
 
+# Set reasonable position for hands for aesthetics (and to get ready for next task)
+lhand_final_pos = lhand_ini_pos + np.array([step_length, 0., 0.])
+rhand_final_pos = rhand_ini_pos + np.array([step_length, 0., 0.])
+
+
 #
 # Solve the problem
 #
 DT = 2e-2
 
 # Connecting the sequences of models
-NUM_OF_CONTACT_CONFIGURATIONS = 5
+NUM_OF_CONTACT_CONFIGURATIONS = 7
 
 # for left_t, right_t in zip(lh_targets, rh_targets):
 #     dmodel = createDoubleSupportActionModel(left_t, right_t)
@@ -552,9 +559,44 @@ for i in range(NUM_OF_CONTACT_CONFIGURATIONS):
         N_base_square_up = 40  # knots per waypoint to pass through door
         for base_t, rfoot_t in zip(base_outof_targets, rf_targets):
             dmodel = createSingleSupportHandActionModel(base_t, rfoot_target=rfoot_t,
-                                lhand_target=lhand_end_pos, lh_contact=True,
+                                lhand_target=lhand_inner_contact_pos, lh_contact=True,
                                 rhand_target=rhand_inner_contact_pos, rh_contact=True)
             model_seqs += createSequence([dmodel], DT, N_base_square_up)
+
+    elif i == 5:
+        DT = 0.02
+        # Push forward while straightening up torso
+        N_straighten_torso = 20  # knots per waypoint to pass through door
+        dmodel = createSingleSupportHandActionModel(base_outof_targets[-1],
+                            lhand_target=lhand_inner_contact_pos, lh_contact=True,
+                            rhand_target=rhand_inner_contact_pos, rh_contact=True,
+                                                    ang_weights=0.1)
+        model_seqs += createSequence([dmodel], DT, N_straighten_torso)
+
+    elif i == 6:
+        DT = 0.02
+        # Finish straightening torso
+        N_straighten_torso = 30  # knots per waypoint to pass through door
+        dmodel = createSingleSupportHandActionModel(base_outof_targets[-1],
+                            ang_weights=0.8)
+        model_seqs += createSequence([dmodel], DT, N_straighten_torso)
+
+    # elif i == 7:
+    #     DT = 0.02
+    #     # Update model
+    #     q_current = np.array(fddp[i-1].xs[-7])[:len(q0)]
+    #     pin.forwardKinematics(rob_model, rob_data, q_current)
+    #     pin.updateFramePlacements(rob_model, rob_data)
+    #
+    #     # Get hands to some 'ready' configuration
+    #     lh_current = rob_data.oMf[lh_id].translation
+    #     rh_current = rob_data.oMf[rh_id].translation
+    #     lh_ready_targets = knot.linear_knots(lh_current, lhand_final_pos, 3)
+    #     rh_ready_targets = knot.linear_knots(rh_current, rhand_final_pos, 3)
+    #     N_hands_ready = 20  # knots per waypoint to pass through door
+    #     for (lh_t, rh_t) in zip(lh_ready_targets, rh_ready_targets):
+    #         dmodel = createDoubleSupportActionModel(lh_target=lh_t, rh_target=rh_t)
+    #         model_seqs += createSequence([dmodel], DT, N_hands_ready)
 
 
     problem = crocoddyl.ShootingProblem(x0, sum(model_seqs, [])[:-1], model_seqs[-1][-1])
@@ -587,7 +629,9 @@ display.display_targets("lfoot_target", lf_targets, [1, 0, 0])
 display.display_targets("rfoot_target", rf_targets, [0, 0, 1])
 display.display_targets("lhand_target", lh_targets, [0.5, 0, 0])
 display.display_targets("lhand_inner_targets", lh_inner_targets, [0.5, 0, 0])
+# display.display_targets("lhand_ready_targets", lh_ready_targets, [0.5, 0, 0])
 display.display_targets("rhand_target", rh_targets, [0, 0, 0.5])
+# display.display_targets("rhand_ready_targets", rh_ready_targets, [0, 0, 0.5])
 display.display_targets("base_pass_target", base_into_targets, [0, 1, 0])
 display.display_targets("base_ffoot_targets", base_ffoot_targets, [0, 1, 0])
 display.display_targets("base_square_target", base_outof_targets, [0, 1, 0])
