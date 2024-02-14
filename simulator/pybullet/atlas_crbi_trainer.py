@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 cwd = os.getcwd()
 sys.path.append(cwd)
@@ -8,7 +9,7 @@ import math
 import copy
 from collections import OrderedDict
 import shutil
-
+import matplotlib.pyplot as plt
 import pybullet as p
 import numpy as np
 np.set_printoptions(precision=3)
@@ -613,6 +614,51 @@ if __name__ == "__main__":
                 'output_mean': output_mean.tolist(),
                 'output_std': output_std.tolist()
             }
+
+            #####################################################
+            '''plot centroidal inertia dim = 6'''
+            #####################################################
+            num_test_points = int(0.1 * N_MOTION_PER_LEG)
+            test_idxs = random.sample(range(int(N_MOTION_PER_LEG)), num_test_points)
+            gt_inertia_list, predict_inertia_list = [], []
+            iter_list = []
+            num_iter = 0
+            for idx in test_idxs:
+                norm_data_tf = np.reshape(normalized_data_x[idx], [1, 6])
+                output = crbi_model.predict(norm_data_tf)
+                gt_denormalized_output = util.denormalize(normalized_data_y[idx],
+                     output_mean, output_std)
+                predict_denormalized_output = util.denormalize(output[0],
+                     output_mean, output_std)
+                iter_list.append(num_iter)
+                gt_inertia_list.append(gt_denormalized_output)
+                predict_inertia_list.append(predict_denormalized_output)
+                num_iter += 1
+
+            ##plot
+            fig, axes = plt.subplots(6, 1)
+            for i in range(6):
+                if i == 0:
+                    axes[i].plot(iter_list,
+                                 [gt_inertia[i] for gt_inertia in gt_inertia_list],
+                                 'r')
+                    axes[i].plot(iter_list, [
+                        predict_inertia[i]
+                        for predict_inertia in predict_inertia_list
+                    ], 'b')
+                    axes[i].grid(True)
+                else:
+                    axes[i] = plt.subplot(6, 1, i + 1, sharex=axes[i-1])
+                    axes[i].plot(iter_list,
+                                 [gt_inertia[i] for gt_inertia in gt_inertia_list],
+                                 'r')
+                    axes[i].plot(iter_list, [
+                        predict_inertia[i]
+                        for predict_inertia in predict_inertia_list
+                    ], 'b')
+                    axes[i].grid(True)
+            plt.show()
+
             with open(model_path + '/data_stat.yaml', 'w') as f:
                 yml = YAML()
                 yml.dump(data_stats, f)
