@@ -33,7 +33,7 @@ def generate_random_joint_dict(joint_id):
 
 # Load Draco3 robot model
 robot = PinocchioRobotSystem(
-                cwd + "/robot_model/draco3/draco3.urdf",
+                cwd + "/robot_model/draco3/draco3_pin_model.urdf",
                 cwd + "/robot_model/draco3", b_fixed_base=True)
 
 joint_id = robot.joint_id

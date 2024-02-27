@@ -11,7 +11,7 @@ import meshcat.geometry as g
 
 # Display Robot in Meshcat Visualizer
 model, collision_model, visual_model = pin.buildModelsFromUrdf(
-    cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf",
+    cwd + "/robot_model/draco3/draco3.urdf",
     cwd + "/robot_model/draco3", pin.JointModelFreeFlyer())
 viz = MeshcatVisualizer(model, collision_model, visual_model)
 try:

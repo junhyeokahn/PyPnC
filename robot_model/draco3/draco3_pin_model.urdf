@@ -22,6 +22,7 @@
   </material>
 
   <!--=============================== root (torso) ===========================-->
+
   <link name="torso_link">
     <visual>
       <origin rpy="0 -0 0" xyz="0 0 0"/>
@@ -63,8 +64,7 @@
   </joint>
   <link name="neck_pitch_link">
     <visual>
-      <!--<origin rpy="0 -0 0" xyz="0 0 0"/>-->
-      <origin rpy="0 0 0" xyz="0 0 -0.35"/>
+      <origin rpy="0 -0 0" xyz="0 0 -0.35"/>
       <geometry>
         <!--<mesh filename="package://meshes/neck_pitch_link.stl"/>-->
         <mesh filename="package://meshes/neck_pitch_link3.obj"/>
@@ -78,28 +78,6 @@
     </inertial>
   </link>
 
-
-  <!--=============================== camera frame ===========================-->
-  <joint name="camera_frame" type="fixed">
-    <origin rpy="0 0 0" xyz="0.08 0 0.08"/>
-    <parent link="neck_pitch_link"/>
-    <child link="camera"/>
-    <axis xyz="0 0 0"/>
-  </joint>
-  <link name="camera">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="1e-9"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-          <sphere radius="0.001"/>
-      </geometry>
-    </visual>
-  </link>
-
   <!--=============================== l_shoulder_fe (l_shoulder_fe_link) ===========================-->
   <joint name="l_shoulder_fe" type="revolute">
     <origin rpy="0.523599 0 0" xyz="-0.05 0.156 0.2625"/>
@@ -111,7 +89,7 @@
   </joint>
   <link name="l_shoulder_fe_link">
     <visual>
-      <origin rpy="-0.523599 0 0" xyz="0.05 -0.27 -0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_shoulder_fe_link.stl"/>
       </geometry>
@@ -159,7 +137,7 @@
   </joint>
   <link name="l_shoulder_ie_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.05 -0.15 -0.26"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/l_shoulder_ie_link.stl"/>-->
         <mesh filename="package://meshes/l_shoulder_ie_link3.obj"/>
@@ -184,7 +162,7 @@
   </joint>
   <link name="l_elbow_fe_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.055 -0.15 -0.01"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_elbow_fe_link.stl"/>
       </geometry>
@@ -208,7 +186,7 @@
   </joint>
   <link name="l_wrist_ps_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.05 -0.15 0"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_wrist_ps_link.stl"/>
       </geometry>
@@ -246,133 +224,44 @@
   </joint>
   <link name="l_sake_gripper_link">
     <visual>
-      <!--<origin rpy="0 0 0" xyz="0.05 -0.15 0.17"/>-->
-      <origin rpy="0 0 0" xyz="0. 0. 0."/>
+      <origin rpy="0 -0 3.14" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://meshes/l_sake_gripper_mount.stl"/>
+        <mesh filename="package://meshes/l_sake_gripper_link.stl"/>
       </geometry>
       <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="5.4498e-05 0.000382544 -0.0372594"/>
-      <mass value="0.145"/>
+      <mass value="0.545"/>
       <inertia ixx="0.001" ixy="3.07738e-09" ixz="2.26958e-07" iyy="0.0004628" iyz="-6.35882e-06" izz="0.001"/>
     </inertial>
   </link>
 
-  <joint name="l_wrist_mount2" type="fixed">
-    <origin rpy="0 1.57 0" xyz="0 0 -0.053"/>
-    <parent link="l_wrist_pitch_link"/>
-    <child link="left_ezgripper_palm_link"/>
+  <!--=============================== l_camera_frame (l_camera) ===========================-->
+  <joint name="l_camera_frame" type="fixed">
+      <!--circle-->
+      <!--<origin rpy="0 0 0" xyz="-0.05535 0 -0.0975"/> -->
+      <!--camera (45 deg)-->
+      <!--<origin rpy="0 2.355 0" xyz="-0.07267 0 -0.0802"/> -->
+      <!--camera (90 deg)-->
+      <origin rpy="0 3.14 0" xyz="-0.05535 0 -0.073"/>
+    <parent link="l_sake_gripper_link"/>
+    <child link="l_camera"/>
+    <axis xyz="0 0 0"/>
   </joint>
-  <link name="left_ezgripper_palm_link">
+  <link name="l_camera">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Palm_Dual_Gen2.stl"/>
+          <sphere radius="0.01"/>
       </geometry>
-      <material name="white"/>
     </visual>
-    <inertial>
-      <mass value=".3"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
   </link>
-
-  <link name="left_ezgripper_finger_L1_1">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="left_ezgripper_finger_L1_2">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="left_ezgripper_finger_L2_1">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </collision>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="left_ezgripper_finger_L2_2">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </collision>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <joint name="left_ezgripper_knuckle_palm_L1_1" type="revolute">
-    <parent link="left_ezgripper_palm_link"/>
-    <child link="left_ezgripper_finger_L1_1"/>
-    <origin rpy="-1.5708 0 1.57075" xyz="0.072569 0.03 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="left_ezgripper_knuckle_palm_L1_2" type="revolute">
-    <parent link="left_ezgripper_palm_link"/>
-    <child link="left_ezgripper_finger_L1_2"/>
-    <origin rpy="1.5708 0 -1.57075" xyz="0.072569 -0.03 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="left_ezgripper_knuckle_L1_L2_1" type="revolute">
-    <parent link="left_ezgripper_finger_L1_1"/>
-    <child link="left_ezgripper_finger_L2_1"/>
-    <origin rpy="0 0 0" xyz="0.052 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="left_ezgripper_knuckle_L1_L2_2" type="revolute">
-    <parent link="left_ezgripper_finger_L1_2"/>
-    <child link="left_ezgripper_finger_L2_2"/>
-    <origin rpy="0 0 0" xyz="0.052 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
 
   <!--=============================== l_hand_contact_frame (l_hand_contact) ===========================-->
   <joint name="l_hand_contact_frame" type="fixed">
@@ -387,12 +276,6 @@
       <mass value="1e-9"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-          <sphere radius="0.001"/>
-      </geometry>
-    </visual>
   </link>
 
   <!--=============================== r_shoulder_fe (r_shoulder_fe_link) ===========================-->
@@ -406,7 +289,7 @@
   </joint>
   <link name="r_shoulder_fe_link">
     <visual>
-      <origin rpy="0.523599 0.0 0.0" xyz="0.05 0.27 -0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_shoulder_fe_link.stl"/>
       </geometry>
@@ -454,7 +337,7 @@
   </joint>
   <link name="r_shoulder_ie_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.05 0.15 -0.26"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/r_shoulder_ie_link.stl"/>-->
         <mesh filename="package://meshes/r_shoulder_ie_link3.obj"/>
@@ -479,7 +362,7 @@
   </joint>
   <link name="r_elbow_fe_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.055 0.15 -0.01"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_elbow_fe_link.stl"/>
       </geometry>
@@ -503,7 +386,7 @@
   </joint>
   <link name="r_wrist_ps_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.05 0.15 0"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_wrist_ps_link.stl"/>
       </geometry>
@@ -541,133 +424,44 @@
   </joint>
   <link name="r_sake_gripper_link">
     <visual>
-      <!--<origin rpy="0 0 0" xyz="0.05 0.15 0.17"/>-->
-      <origin rpy="0 0 0" xyz="0. 0. 0."/>
+      <origin rpy="0 -0 3.14" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://meshes/r_sake_gripper_mount.stl"/>
+        <mesh filename="package://meshes/r_sake_gripper_link.stl"/>
       </geometry>
       <material name="white"/>
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="5.4498e-05 0.000382544 -0.0372594"/>
-      <mass value="0.145"/>
+      <mass value="0.545"/>
       <inertia ixx="0.001" ixy="3.07738e-09" ixz="2.26958e-07" iyy="0.0004628" iyz="-6.35882e-06" izz="0.001"/>
     </inertial>
   </link>
 
-  <joint name="r_wrist_mount2" type="fixed">
-    <origin rpy="0 1.57 0" xyz="0 0 -0.053"/>
-    <parent link="r_wrist_pitch_link"/>
-    <child link="right_ezgripper_palm_link"/>
+  <!--=============================== r_camera_frame (r_camera) ===========================-->
+  <joint name="r_camera_frame" type="fixed">
+      <!--circle-->
+      <!--<origin rpy="0 0 0" xyz="-0.05535 0 -0.0975"/> -->
+      <!--camera (45 deg)-->
+      <!--<origin rpy="0 2.355 0" xyz="-0.07267 0 -0.0802"/> -->
+      <!--camera (90 deg)-->
+      <origin rpy="0 3.14 0" xyz="-0.05535 0 -0.073"/>
+    <parent link="r_sake_gripper_link"/>
+    <child link="r_camera"/>
+    <axis xyz="0 0 0"/>
   </joint>
-  <link name="right_ezgripper_palm_link">
+  <link name="r_camera">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Palm_Dual_Gen2.stl"/>
+          <sphere radius="0.01"/>
       </geometry>
-      <material name="white"/>
     </visual>
-    <inertial>
-      <mass value=".3"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
   </link>
-
-  <link name="right_ezgripper_finger_L1_1">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="right_ezgripper_finger_L1_2">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="right_ezgripper_finger_L2_1">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </collision>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <link name="right_ezgripper_finger_L2_2">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
-      </geometry>
-      <material name="white"/>
-    </collision>
-    <inertial>
-      <mass value=".025"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-    </inertial>
-  </link>
-  <joint name="right_ezgripper_knuckle_palm_L1_1" type="revolute">
-    <parent link="right_ezgripper_palm_link"/>
-    <child link="right_ezgripper_finger_L1_1"/>
-    <origin rpy="-1.5708 0 1.57075" xyz="0.072569 0.03 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="right_ezgripper_knuckle_palm_L1_2" type="revolute">
-    <parent link="right_ezgripper_palm_link"/>
-    <child link="right_ezgripper_finger_L1_2"/>
-    <origin rpy="1.5708 0 -1.57075" xyz="0.072569 -0.03 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="right_ezgripper_knuckle_L1_L2_1" type="revolute">
-    <parent link="right_ezgripper_finger_L1_1"/>
-    <child link="right_ezgripper_finger_L2_1"/>
-    <origin rpy="0 0 0" xyz="0.052 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
-  <joint name="right_ezgripper_knuckle_L1_L2_2" type="revolute">
-    <parent link="right_ezgripper_finger_L1_2"/>
-    <child link="right_ezgripper_finger_L2_2"/>
-    <origin rpy="0 0 0" xyz="0.052 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1" lower="0" upper="1.94" velocity="3.67"/>
-  </joint>
 
   <!--=============================== r_hand_contact_frame (r_hand_contact) ===========================-->
   <joint name="r_hand_contact_frame" type="fixed">
@@ -682,12 +476,6 @@
       <mass value="1e-9"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-          <sphere radius="0.001"/>
-      </geometry>
-    </visual>
   </link>
 
   <!--=============================== l_hip_ie (l_hip_ie_link) ===========================-->
@@ -725,7 +513,7 @@
   </joint>
   <link name="l_hip_aa_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.0 -0.1 0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_hip_aa_link.stl"/>
       </geometry>
@@ -749,7 +537,7 @@
   </joint>
   <link name="l_hip_fe_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 -0.1 0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/l_hip_fe_link.stl"/>-->
         <mesh filename="package://meshes/l_hip_fe_link3.obj"/>
@@ -774,7 +562,7 @@
   </joint>
   <link name="l_knee_fe_lp">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.005 -0.1 0.47"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_knee_fe_lp.stl"/>
       </geometry>
@@ -818,12 +606,12 @@
   </joint>
   <link name="l_knee_fe_ld">
     <visual>
-      <origin rpy="0 -0 0" xyz="0 -0.1 0.59"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/l_knee_fe_ld.stl"/>-->
         <mesh filename="package://meshes/l_knee_fe_ld3.obj"/>
       </geometry>
-      <!--<material name="gray"/>-->
+      <!--<material name="black"/>-->
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0.00392246 0.00238405 -0.07941"/>
@@ -843,7 +631,7 @@
   </joint>
   <link name="l_ankle_fe_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0 -0.105 0.83"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_ankle_fe_link.stl"/>
       </geometry>
@@ -867,7 +655,7 @@
   </joint>
   <link name="l_ankle_ie_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.01 -0.08 0.835"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/l_ankle_ie_link.stl"/>
       </geometry>
@@ -942,7 +730,7 @@
   </joint>
   <link name="r_hip_aa_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.0 0.1 0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_hip_aa_link.stl"/>
       </geometry>
@@ -966,7 +754,7 @@
   </joint>
   <link name="r_hip_fe_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.0 0.1 0.15"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/r_hip_fe_link.stl"/>-->
         <mesh filename="package://meshes/r_hip_fe_link3.obj"/>
@@ -991,7 +779,7 @@
   </joint>
   <link name="r_knee_fe_lp">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.005 0.1 0.47"/>
+      <origin rpy="0 -0 0" xyz="0 -0.01 0"/>
       <geometry>
         <mesh filename="package://meshes/r_knee_fe_lp.stl"/>
       </geometry>
@@ -1036,7 +824,7 @@
   </joint>
   <link name="r_knee_fe_ld">
     <visual>
-      <origin rpy="0 -0 0" xyz="0 0.1 0.59"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <!--<mesh filename="package://meshes/r_knee_fe_ld.stl"/>-->
         <mesh filename="package://meshes/r_knee_fe_ld3.obj"/>
@@ -1061,7 +849,7 @@
   </joint>
   <link name="r_ankle_fe_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0 0.105 0.83"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_ankle_fe_link.stl"/>
       </geometry>
@@ -1085,7 +873,7 @@
   </joint>
   <link name="r_ankle_ie_link">
     <visual>
-      <origin rpy="0 -0 0" xyz="0.01 0.08 0.835"/>
+      <origin rpy="0 -0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://meshes/r_ankle_ie_link.stl"/>
       </geometry>

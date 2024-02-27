@@ -23,7 +23,7 @@ class DracoManipulationInterface(Interface):
         super(DracoManipulationInterface, self).__init__()
 
         self._robot = PinocchioRobotSystem(
-            cwd + "/robot_model/draco3/draco3.urdf",
+            cwd + "/robot_model/draco3/draco3_pin_model.urdf",
             cwd + "/robot_model/draco3", False, False)
 
         self._sp = DracoManipulationStateProvider(self._robot)

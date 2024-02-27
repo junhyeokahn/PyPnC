@@ -225,7 +225,7 @@ if __name__ == "__main__":
     # Create Robot, Ground
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
     robot = p.loadURDF(
-        cwd + "/robot_model/draco3/draco3_gripper_mesh_updated.urdf",
+        cwd + "/robot_model/draco3/draco3.urdf",
         SimConfig.INITIAL_POS_WORLD_TO_BASEJOINT,
         SimConfig.INITIAL_QUAT_WORLD_TO_BASEJOINT)
 
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     if SimConfig.B_USE_MESHCAT:
         # Create Robot for Meshcat Visualization
         model, collision_model, visual_model = pin.buildModelsFromUrdf(
-            cwd + "/robot_model/draco3/draco3.urdf",
+            cwd + "/robot_model/draco3/draco3_pin_model.urdf",
             cwd + "/robot_model/draco3", pin.JointModelFreeFlyer())
         viz = MeshcatVisualizer(model, collision_model, visual_model)
         try:
